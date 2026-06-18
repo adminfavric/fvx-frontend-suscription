@@ -1,0 +1,38 @@
+<section id="docuserie" class="docuserie">
+  <div class="docuserie-bg"></div>
+  <div class="docuserie-container">
+    <div class="docuserie-header docuserie-animate">
+      <h2 class="docuserie-title">
+        <span class="title-gold">Docuserie</span>
+        <span class="title-main">María Magdalena</span>
+      </h2>
+      <p class="docuserie-desc">
+        Una serie audiovisual de 4 capítulos sobre uno de los personajes más poderosos, incomprendidos y luminosos de la historia sagrada.
+      </p>
+    </div>
+
+    <div class="docuserie-card docuserie-animate animate-delay-2">
+      <div class="card-image">
+        <img src="assets/documental.jpg" alt="Docuserie María Magdalena" />
+      </div>
+      <div class="card-body">
+        <h3 class="card-name">Docuserie María Magdalena</h3>
+        <p class="card-subtitle">LITA DONOSO OCAMPO Presenta la Serie Documental MARÍA MAGDALENA La Santa del Fin del Mundo &reg;</p>
+        
+        <!-- Capítulos Grid -->
+        <div class="chapters-home-grid">
+          <app-chapter-card
+            *ngFor="let card of chapterCards"
+            [image]="card.image"
+            [title]="card.title"
+            [body]="card.body"
+            [chapterNumber]="card.chapterNumber"
+            buttonText="Ver más">
+          </app-chapter-card>
+        </div>
+
+        <button class="card-cta" (click)="openDocuserie()">Ver más información</button>
+      </div>
+    </div>
+  </div>
+</section>

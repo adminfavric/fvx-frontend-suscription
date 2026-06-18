@@ -1,0 +1,5 @@
+@use '../theme-palettes' as palettes;
+
+html.theme-tmp-light {
+  @include palettes.fvx-palette-tmp-light;
+}

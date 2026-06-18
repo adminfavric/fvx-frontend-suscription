@@ -1,0 +1,126 @@
+// ============================================================
+// FVX Design Tokens
+// Single source of truth for all design decisions
+// ============================================================
+
+// --- Colors ---
+$color-primary: #2563eb;
+$color-primary-light: #3b82f6;
+$color-primary-dark: #1d4ed8;
+$color-primary-50: #eff6ff;
+$color-primary-100: #dbeafe;
+
+$color-accent: #0891b2;
+$color-warn: #dc2626;
+$color-success: #16a34a;
+$color-warning: #d97706;
+
+$color-bg-page: #f7fafc;
+$color-bg-card: #ffffff;
+$color-bg-sidebar: #0f172a;
+$color-bg-toolbar: #ffffff;
+$color-bg-hover: #f8fafc;
+$color-bg-table-row-alt: #f1f5f9; // filas pares en tablas CRUD (zebra)
+$color-bg-selected: #eff6ff;
+
+$color-border: #e2e8f0;
+$color-border-light: #f1f5f9;
+$color-divider: #e2e8f0;
+
+$color-text-primary: #1e293b;
+$color-text-secondary: #475569;
+$color-text-muted: #94a3b8;
+$color-text-disabled: #cbd5e1;
+$color-text-inverse: #ffffff;
+
+// --- Typography ---
+// Geist: UI sans moderna, neutra, números tabulares nativos (admin denso).
+// Carga vía Google Fonts en `index.html`. Pesos cargados: 400 / 500 / 600 / 700 / 800.
+// Fallbacks: SF Pro (Apple) → Segoe UI (Win) → Roboto (Android) → sans-serif.
+$font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+// ─── Escala tipográfica (FUENTE DE VERDAD — spec DISENO-FVX) ────────────
+// Base body = 15px (subida desde 14 para compensar el x-height más bajo de
+// Geist; con base 14px Geist se siente más chico que Inter al mismo px).
+// NUNCA hardcodear font-size en componentes — usar SIEMPRE estos tokens (o
+// las CSS vars --fvx-text-* en styles.scss).
+//
+// Densidad → reducir PADDING, NO font-size. Mínimo absoluto 11px y solo
+// para TH / labels uppercase.
+//
+//   token              valor    px    uso típico
+//   $font-size-xs      0.6875   11    TH tabla · labels grupo (uppercase)
+//   $font-size-sm      0.8125   13    chips · hints · field labels · celdas de tabla (-13% vs body)
+//   $font-size-compact 0.875    14    botones · nav items · subtítulos · breadcrumbs
+//   $font-size-base    0.9375   15    BODY · celdas de tabla · contenido
+//   $font-size-md      1        16    título de card / section card
+//   $font-size-lg      1.125    18    cabeceras grandes / texto enfatizado
+//   $font-size-xl      1.5      24    H1 de entity / ficha
+//   $font-size-2xl     1.625    26    H1 de página
+//   $font-size-kpi     1.75     28    valor de KPI / stat-card
+//
+// Aliasan los tokens runtime --fvx-text-* (definidos en styles.scss). Así un
+// `font-size: $font-size-base` compila a `font-size: var(--fvx-text-base)` y
+// hereda la escala única + el reescalado mobile por media query. NO hacer
+// aritmética SCSS con estos (son var() de runtime); usar otro token si hace falta.
+$font-size-2xs: var(--fvx-text-2xs);          // 10px — micro-labels UPPERCASE
+$font-size-xs: var(--fvx-text-xs);            // 11px — chips · hints · captions
+$font-size-sm: var(--fvx-text-sm);            // 13px — celdas · field labels · secundario
+$font-size-compact: var(--fvx-text-compact);  // 13px — botones · breadcrumb
+$font-size-base: var(--fvx-text-base);        // 14px — BODY · contenido
+$font-size-md: var(--fvx-text-md);            // 16px — título de card / sección / modal
+$font-size-lg: var(--fvx-text-lg);            // 16px — énfasis
+$font-size-xl: var(--fvx-text-xl);            // 20px — sub-página / h2 empty
+$font-size-2xl: var(--fvx-text-2xl);          // 24px — h1 página / entity
+$font-size-kpi: var(--fvx-text-kpi);          // 28px — KPI / stat value
+
+$font-weight-regular: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+$line-height-tight: 1.25;
+$line-height-base: 1.5;
+
+// --- Spacing ---
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 12px;
+$spacing-lg: 16px;
+$spacing-xl: 24px;
+$spacing-2xl: 32px;
+
+// --- Border radius ---
+$radius-sm: 4px;
+$radius-md: 6px;
+$radius-lg: 8px;
+$radius-xl: 12px;
+$radius-full: 9999px;
+
+// --- Shadows ---
+$shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+$shadow-md: 0 4px 6px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
+$shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.08), 0 4px 6px rgba(0, 0, 0, 0.04);
+$shadow-dialog: 0 20px 40px rgba(0, 0, 0, 0.12);
+
+// --- Transitions ---
+$transition-fast: 0.1s ease;
+$transition-base: 0.15s ease;
+$transition-slow: 0.25s ease;
+
+// --- Z-index ---
+$z-sidebar: 100;
+$z-toolbar: 200;
+$z-dialog: 1000;
+$z-snackbar: 1100;
+
+// --- Component sizes (compact) ---
+$input-height: 36px;
+$button-height: 34px;
+$button-height-sm: 28px;
+$toolbar-height: 52px;
+$sidebar-width: 256px;
+$sidebar-width-collapsed: 64px;
+$table-row-height: 44px;
+$chip-height: 24px;

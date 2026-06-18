@@ -1,0 +1,2445 @@
+// ============================================================
+// FVX Material Component Overrides
+// Global style overrides for all Angular Material components
+// ============================================================
+@use 'variables' as v;
+
+// ============================================================
+// FORM FIELDS (mat-form-field) — soft fill, rounded, professional
+// ============================================================
+.mat-mdc-form-field {
+  font-size: v.$font-size-base;
+  letter-spacing: 0.01em;
+
+  // Outline appearance — white bg, soft 1px border, rounded
+  &.mat-form-field-appearance-outline {
+    // Token MDC (por defecto 2px al enfocar); alinear con nuestro borde 1.5px.
+    --mat-form-field-outlined-focus-outline-width: 1.5px;
+
+    .mdc-text-field--focused .mdc-notched-outline .mat-mdc-notch-piece {
+      border-width: 1.5px !important;
+    }
+
+    .mat-mdc-form-field-infix {
+      min-height: v.$input-height;
+      padding-top: 10px;
+      padding-bottom: 10px;
+      display: flex;
+      align-items: center;
+    }
+
+    .mat-mdc-text-field-wrapper {
+      padding-left: 14px;
+      padding-right: 14px;
+      background: v.$color-bg-card !important;
+      border-radius: v.$radius-lg !important;
+    }
+
+    // Default — soft light border
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__notch,
+    .mdc-notched-outline__trailing {
+      border-color: v.$color-border !important;
+      border-width: 1px !important;
+      transition: border-color 0.15s ease;
+    }
+
+    .mdc-notched-outline__leading {
+      border-radius: v.$radius-lg 0 0 v.$radius-lg !important;
+    }
+
+    .mdc-notched-outline__trailing {
+      border-radius: 0 v.$radius-lg v.$radius-lg 0 !important;
+    }
+
+    // Material (6× .mat-mdc-form-field) fuerza border-left transparente en el notch para un bug
+    // de Chrome al hacer zoom; con outline personalizado al foco se traduce en franja azul gruesa.
+    .mdc-notched-outline .mdc-notched-outline__notch {
+      border-left: none !important;
+    }
+
+    [dir='rtl'] & .mdc-notched-outline .mdc-notched-outline__notch {
+      border-left: none !important;
+      border-right: none !important;
+    }
+
+    // Hover — slightly darker border
+    &:hover:not(.mat-focused):not(.mat-form-field-invalid) .mdc-notched-outline {
+      .mdc-notched-outline__leading,
+      .mdc-notched-outline__notch,
+      .mdc-notched-outline__trailing {
+        border-color: v.$color-text-muted !important;
+      }
+    }
+
+    // Focus — primary accent border (tokenizado, ver docs/Re-estilado _ Indigo _ Ambar.md §5.3).
+    // Antes: hardcoded ``v.$color-primary`` (azul Tailwind); ahora respeta el acento del tema.
+    &.mat-focused .mdc-notched-outline {
+      .mdc-notched-outline__leading,
+      .mdc-notched-outline__notch,
+      .mdc-notched-outline__trailing {
+        border-color: var(--fvx-border-focus, var(--fvx-link, #{v.$color-primary})) !important;
+        border-width: 1.5px !important;
+      }
+    }
+
+    // Error state
+    &.mat-form-field-invalid .mdc-notched-outline {
+      .mdc-notched-outline__leading,
+      .mdc-notched-outline__notch,
+      .mdc-notched-outline__trailing {
+        border-color: v.$color-warn !important;
+        border-width: 1.5px !important;
+      }
+    }
+  }
+
+  // Labels / placeholders — light muted
+  .mat-mdc-floating-label {
+    font-size: v.$font-size-base;
+    font-weight: v.$font-weight-regular;
+    color: v.$color-text-disabled !important;
+  }
+
+  .mat-mdc-form-field-hint-wrapper,
+  .mat-mdc-form-field-error-wrapper {
+    padding: 0 14px;
+  }
+
+  .mat-mdc-form-field-hint {
+    font-size: v.$font-size-xs;
+    color: v.$color-text-muted;
+  }
+
+  .mat-mdc-form-field-error {
+    font-size: v.$font-size-xs;
+  }
+
+  .mat-mdc-form-field-subscript-wrapper {
+    margin-top: 2px;
+  }
+
+  // Input text
+  .mat-mdc-input-element {
+    font-size: v.$font-size-base !important;
+    color: v.$color-text-primary;
+
+    &::placeholder {
+      color: v.$color-text-disabled !important;
+      font-weight: v.$font-weight-regular;
+    }
+  }
+
+  // Parent flex que agrupa prefix / infix / suffix. Forzamos centrado vertical
+  // para que el icono del datepicker (mat-icon-button 32px) quede a la misma
+  // altura que el texto del label/placeholder dentro del infix.
+  .mat-mdc-form-field-flex {
+    align-items: center !important;
+  }
+
+  // Prefix / suffix icons — color tokenizado, no hardcoded (la versión anterior
+  // usaba la var SCSS `$color-text-muted` que no reacciona a temas oscuros y
+  // hacía invisible el toggle del datepicker contra fondos densos).
+  .mat-mdc-form-field-icon-prefix,
+  .mat-mdc-form-field-icon-suffix {
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    .mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: var(--fvx-text-secondary);
+    }
+  }
+
+  .mat-mdc-form-field-icon-prefix {
+    padding-right: 8px;
+  }
+
+  .mat-mdc-form-field-icon-suffix {
+    padding-left: 4px;
+  }
+
+  // Datepicker / Date-range toggle: el icono va dentro de un mat-icon-button cuyo
+  // color se controla con la var `--mat-icon-button-icon-color`. Forzamos también
+  // tamaño consistente para que el centro del botón coincida con el del input;
+  // sin overrides explícitos MDC le mete 48px de touch-target que rompe el centrado.
+  .mat-datepicker-toggle {
+    --mat-icon-button-icon-color: var(--fvx-text-secondary);
+    color: var(--fvx-text-secondary);
+    display: inline-flex;
+    align-items: center;
+    .mat-icon { color: inherit; }
+    .mat-mdc-icon-button {
+      width: 32px !important;
+      height: 32px !important;
+      padding: 6px !important;
+      line-height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .mat-mdc-button-touch-target {
+      width: 32px !important;
+      height: 32px !important;
+    }
+    &:hover { --mat-icon-button-icon-color: var(--fvx-text-primary); color: var(--fvx-text-primary); }
+  }
+}
+
+// ============================================================
+// Autofill (Chrome, Edge, Safari): credenciales guardadas sin fondo claro/celeste
+// ============================================================
+// WebKit pinta un fondo propio sobre :autofill e ignora background-color.
+// El box-shadow inset grande simula el fondo del campo con --fvx-bg-card
+// (alineado con mat-form-field outline). La transición muy larga evita parpadeos
+// en algunos Chromium al re-aplicar el estilo de autofill.
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+textarea:-webkit-autofill:active,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus,
+select:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--fvx-text-primary) !important;
+  caret-color: var(--fvx-text-primary) !important;
+  -webkit-box-shadow: 0 0 0 1000px var(--fvx-bg-card) inset !important;
+  box-shadow: 0 0 0 1000px var(--fvx-bg-card) inset !important;
+  transition: background-color 99999s ease-out 0s !important;
+}
+
+// Firefox 94+ (nombre estándar; el tinte es más suave que en WebKit)
+input:autofill,
+textarea:autofill,
+select:autofill {
+  transition: background-color 99999s ease-out 0s !important;
+  box-shadow: 0 0 0 1000px var(--fvx-bg-card) inset !important;
+}
+
+// ============================================================
+// SELECT (mat-select) — compact
+// ============================================================
+.mat-mdc-select {
+  font-size: v.$font-size-base !important;
+
+  .mat-mdc-select-arrow-wrapper {
+    transform: none;
+  }
+}
+
+.mat-mdc-option {
+  font-size: v.$font-size-base;
+  min-height: 36px;
+  padding: 0 12px;
+  letter-spacing: 0.01em;
+
+  // MDC pone el texto real en `.mdc-list-item__primary-text`, dimensionado por el
+  // token `--mat-option-label-text-size` (16px). La regla del tema de Material se
+  // emite DESPUÉS con la misma especificidad, así que sin `!important` ganaba ella
+  // y las opciones salían más grandes que el texto del sitio (14px).
+  .mdc-list-item__primary-text {
+    font-size: v.$font-size-base !important;
+  }
+
+  &.mdc-list-item--selected {
+    font-weight: v.$font-weight-medium;
+  }
+}
+
+.mat-mdc-select-panel {
+  border-radius: v.$radius-lg !important;
+  box-shadow: v.$shadow-lg !important;
+  border: 1px solid v.$color-border-light;
+  padding: 4px 0;
+}
+
+// ============================================================
+// BUTTONS — pill-shaped, soft, minimal
+// :root CSS vars ensure shape applies EVERYWHERE (app + CDK overlay)
+//
+// Semántica plantilla (detalle en docs/design-fvx.md — botones):
+// - ``mat-flat-button color="primary"`` → CTA principal (en ``theme-tmp-dark`` = ``--fvx-link`` / agua).
+// - ``mat-flat-button color="warn"`` → peligro / eliminar (rojo ``v.$color-warn`` en oscuro).
+// - ``mat-flat-button`` + clase ``.fvx-btn-caution`` → advertencia / revisión (tokens ``--fvx-button-caution-*``).
+// - ``mat-stroked-button color="primary"`` → acento con borde; ``[disabled]``: bloque ``html`` + ``--fvx-*`` (todas las paletas); refinar en ``html.theme-tmp-dark`` / ``html.theme-tmp-blackandwhite``.
+// ============================================================
+:root {
+  // Radio unificado en todas las variantes Material (spec: 9px = ``--fvx-radius``).
+  --mat-button-text-container-shape: var(--fvx-radius, 9px);
+  --mat-button-outlined-container-shape: var(--fvx-radius, 9px);
+  --mat-button-filled-container-shape: var(--fvx-radius, 9px);
+  --mat-button-protected-container-shape: var(--fvx-radius, 9px);
+
+  // Divisores: por defecto M3 caen a --mat-sys-outline-variant / -surface-variant,
+  // grises claros que se ven como LÍNEA BLANCA en los temas oscuros. Los unificamos
+  // con nuestro borde sutil --fvx-border en todos los temas. OJO: cada contexto usa
+  // un token DISTINTO — hay que cubrirlos todos:
+  //   --mat-divider-color       → <mat-divider> suelto
+  //   --mat-menu-divider-color  → <mat-divider> DENTRO de mat-menu (regla más específica)
+  //   --mat-tab-divider-color   → línea inferior de mat-tab-group
+  --mat-divider-color: var(--fvx-border, #e2e8f0);
+  --mat-menu-divider-color: var(--fvx-border, #e2e8f0);
+  --mat-tab-divider-color: var(--fvx-border, #e2e8f0);
+}
+
+// Direct class targeting — no nesting, maximum specificity.
+// Spec: mismo radio (9px) + misma altura (40px min) + peso 600 + gap 6px ícono↔texto
+// en TODAS las variantes (text/outlined/flat/raised) para que la fila alinee.
+.mat-mdc-button,
+.mat-mdc-outlined-button,
+.mat-mdc-unelevated-button,
+.mat-mdc-raised-button {
+  font-size: v.$font-size-compact !important;           // 13px (escala FVX — botones)
+  font-weight: 600 !important;                          // spec: 600 (era 500)
+  letter-spacing: 0.01em !important;
+  border-radius: var(--fvx-radius, 9px) !important;     // spec: 9px (era 12px)
+  min-height: 40px !important;                          // spec: 40px (era 34px fijo)
+  padding: 0 20px !important;
+  min-width: auto !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;                                              // spec: ícono ↔ texto
+  transition: background 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+
+  .mat-icon {
+    font-size: 18px !important;
+    width: 18px !important;
+    height: 18px !important;
+    margin-right: 0;                                     // gap del flex maneja la separación
+  }
+
+  .mat-mdc-button-persistent-ripple,
+  .mdc-button__ripple {
+    border-radius: var(--fvx-radius, 9px) !important;
+  }
+
+  // Focus visible — anillo accent-soft (spec accesibilidad). El global
+  // ``:focus-visible`` en styles.scss ya lo aplica, este override garantiza
+  // que Material no lo anule con su propio outline en variantes raised.
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--fvx-accent-soft, color-mix(in srgb, var(--fvx-link) 24%, transparent)) !important;
+  }
+}
+
+// Flat / raised — no shadow by default
+.mat-mdc-unelevated-button,
+.mat-mdc-raised-button {
+  box-shadow: none !important;
+
+  &:hover {
+    box-shadow: v.$shadow-sm !important;
+  }
+}
+
+// Outlined — soft border, clean hover
+.mat-mdc-outlined-button {
+  --mat-button-outlined-outline-color: #{v.$color-border};
+  border: 1px solid v.$color-border !important;
+  color: v.$color-text-primary !important;
+  background: v.$color-bg-card !important;
+
+  &:hover {
+    background: v.$color-bg-hover !important;
+    border-color: v.$color-text-muted !important;
+  }
+
+  &.mat-primary {
+    // Tokenizado para que el acento siga la paleta (índigo en default/light,
+    // verde bosque en beige, negro en blackandwhite — cada paleta puede tener
+    // su propio override más específico).
+    --mat-button-outlined-outline-color: var(--fvx-link, #{v.$color-primary});
+    border-color: var(--fvx-link, #{v.$color-primary}) !important;
+    color: var(--fvx-link, #{v.$color-primary}) !important;
+
+    &:hover {
+      background: color-mix(in srgb, var(--fvx-link, #{v.$color-primary}) 8%, transparent) !important;
+      border-color: var(--fvx-link, #{v.$color-primary}) !important;
+    }
+  }
+}
+
+// Text button (Cancel, etc.)
+.mat-mdc-button {
+  color: v.$color-text-secondary !important;
+
+  &:hover {
+    background: v.$color-bg-hover !important;
+  }
+}
+
+// Flat primary — filled pill (tokenizado: el acento sigue la paleta del tema).
+// Glow sutil al reposo (spec opcional): refuerza jerarquía como CTA principal
+// sin gritar. En hover el glow se intensifica con ``--fvx-shadow-primary``.
+.mat-mdc-unelevated-button.mat-primary {
+  background: var(--fvx-link, #{v.$color-primary}) !important;
+  color: var(--fvx-accent-text, #{v.$color-text-inverse}) !important;
+  border-radius: var(--fvx-radius, 9px) !important;
+  // Glow índigo al reposo — 60% del de hover para ser más sutil.
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--fvx-accent-glow, rgba(79, 91, 213, 0.22)) 60%, transparent) !important;
+
+  &:hover {
+    background: var(--fvx-accent-hover, #{v.$color-primary-dark}) !important;
+    box-shadow: var(--fvx-shadow-primary, none) !important;
+  }
+}
+
+// Flat warn — filled pill (rojo SÓLIDO). Reservado para el CTA de confirmación
+// en diálogos de borrado ("¿Eliminar usuario? — Sí, eliminar"). En barras de
+// acciones de páginas/diálogos NO usar relleno rojo (usar outline-danger o
+// mover al kebab); el rojo relleno pierde poder de alerta si se reparte por
+// todas las toolbars. Material 3 no expone palette "warn", así que se fuerza
+// globalmente.
+.mat-mdc-unelevated-button.mat-warn,
+.mat-mdc-raised-button.mat-warn {
+  background: #{v.$color-warn} !important;
+  color: #ffffff !important;
+  --mat-button-filled-container-color: #{v.$color-warn};
+  --mat-button-filled-label-text-color: #ffffff;
+  border-radius: var(--fvx-radius, 9px) !important;
+
+  &:hover:not([disabled]):not(.mat-mdc-button-disabled) {
+    background: color-mix(in srgb, #{v.$color-warn} 88%, #000) !important;
+    --mat-button-filled-container-color: color-mix(in srgb, #{v.$color-warn} 88%, #000);
+  }
+}
+
+// Mini-fab y icon-button warn (kebab / íconos sueltos) — mismo rojo.
+.mat-mdc-mini-fab.mat-warn {
+  background-color: #{v.$color-warn} !important;
+  color: #ffffff !important;
+
+  &:hover:not([disabled]) {
+    background-color: color-mix(in srgb, #{v.$color-warn} 88%, #000) !important;
+  }
+}
+
+.mat-mdc-icon-button.mat-warn {
+  color: #{v.$color-warn} !important;
+  --mat-icon-button-icon-color: #{v.$color-warn};
+
+  .mat-icon {
+    color: inherit !important;
+  }
+}
+
+// Outline danger — borde + texto rojo, **fondo transparente** (spec).
+// Es la variante recomendada para "Eliminar" en BARRAS DE ACCIONES (toolbars
+// de páginas o diálogos de edición). Reserva el ``mat-flat-button color=warn``
+// (relleno rojo) para el CTA de confirmación dentro de un confirm-dialog.
+// Uso típico: ``<button mat-stroked-button color="warn">Eliminar</button>``
+.mat-mdc-outlined-button.mat-warn {
+  --mat-button-outlined-outline-color: #{v.$color-warn};
+  border-color: #{v.$color-warn} !important;
+  color: #{v.$color-warn} !important;
+  background: transparent !important;
+
+  &:hover:not([disabled]):not(.mat-mdc-button-disabled) {
+    background: color-mix(in srgb, #{v.$color-warn} 14%, transparent) !important;
+    border-color: #{v.$color-warn} !important;
+  }
+}
+
+// ``html`` + ``--fvx-*`` (default + tmp-light + tmp-dark + tmp-blackandwhite): disabled legible.
+// Los bloques ``html.theme-tmp-dark`` / ``html.theme-tmp-blackandwhite`` tienen mayor especificidad y refinan.
+html .mat-mdc-unelevated-button.mat-primary[disabled],
+html .mat-mdc-unelevated-button.mat-primary.mat-mdc-button-disabled,
+html .mat-mdc-raised-button.mat-primary[disabled],
+html .mat-mdc-raised-button.mat-primary.mat-mdc-button-disabled {
+  background: color-mix(in srgb, var(--fvx-text-primary) 8%, var(--fvx-bg-page)) !important;
+  color: var(--fvx-text-muted) !important;
+  --mat-button-filled-container-color: color-mix(in srgb, var(--fvx-text-primary) 8%, var(--fvx-bg-page));
+  --mat-button-filled-label-text-color: var(--fvx-text-muted);
+  opacity: 0.72;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+
+  .mat-icon {
+    color: inherit !important;
+  }
+
+  mat-progress-spinner,
+  .mat-mdc-progress-spinner {
+    --mat-progress-spinner-active-indicator-color: currentColor;
+  }
+}
+
+html .mat-mdc-unelevated-button.mat-warn[disabled],
+html .mat-mdc-unelevated-button.mat-warn.mat-mdc-button-disabled,
+html .mat-mdc-raised-button.mat-warn[disabled],
+html .mat-mdc-raised-button.mat-warn.mat-mdc-button-disabled {
+  background: color-mix(in srgb, var(--fvx-text-primary) 10%, var(--fvx-bg-page)) !important;
+  color: var(--fvx-text-muted) !important;
+  --mat-button-filled-container-color: color-mix(in srgb, var(--fvx-text-primary) 10%, var(--fvx-bg-page));
+  --mat-button-filled-label-text-color: var(--fvx-text-muted);
+  opacity: 0.72;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+
+  .mat-icon {
+    color: inherit !important;
+  }
+}
+
+html .mat-mdc-button[disabled],
+html .mat-mdc-button.mat-mdc-button-disabled {
+  color: var(--fvx-text-muted) !important;
+  opacity: 0.55;
+  background: transparent !important;
+}
+
+html .mat-mdc-outlined-button[disabled],
+html .mat-mdc-outlined-button.mat-mdc-button-disabled {
+  --mat-button-outlined-outline-color: var(--fvx-border);
+  border-color: var(--fvx-border) !important;
+  color: var(--fvx-text-muted) !important;
+  background: color-mix(in srgb, var(--fvx-bg-card) 96%, var(--fvx-border)) !important;
+  opacity: 0.78;
+  box-shadow: none !important;
+
+  .mat-icon {
+    color: var(--fvx-text-muted) !important;
+    opacity: 0.88;
+  }
+}
+
+html .mat-mdc-outlined-button.mat-primary[disabled],
+html .mat-mdc-outlined-button.mat-primary.mat-mdc-button-disabled {
+  border-color: var(--fvx-border) !important;
+  color: var(--fvx-text-muted) !important;
+  background: transparent !important;
+  opacity: 0.58;
+
+  .mat-icon {
+    color: var(--fvx-text-muted) !important;
+    opacity: 0.88;
+  }
+}
+
+html .mat-mdc-icon-button.mat-primary[disabled],
+html .mat-mdc-icon-button.mat-primary.mat-mdc-button-disabled {
+  color: var(--fvx-text-muted) !important;
+  --mat-icon-button-icon-color: var(--fvx-text-muted);
+  opacity: 0.48;
+
+  .mat-icon {
+    color: inherit !important;
+  }
+}
+
+html .mat-mdc-mini-fab.mat-primary[disabled],
+html .mat-mdc-mini-fab.mat-primary.mat-mdc-button-disabled {
+  background-color: color-mix(in srgb, var(--fvx-text-primary) 12%, var(--fvx-bg-page)) !important;
+  color: var(--fvx-text-muted) !important;
+  opacity: 0.68;
+  box-shadow: none !important;
+
+  .mat-icon {
+    color: inherit !important;
+  }
+}
+
+// Icon button — tighter
+html .mat-mdc-icon-button {
+  --mat-icon-button-state-layer-size: 32px;
+  --mat-icon-button-icon-size: 20px;
+  width: 32px !important;
+  height: 32px !important;
+  padding: 4px !important;
+
+  .mat-icon {
+    font-size: 20px !important;
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .mat-mdc-button-touch-target {
+    width: 32px !important;
+    height: 32px !important;
+  }
+}
+
+// Actions toolbar in tables (global, avoids encapsulation issues).
+// Patrón actual: botón primario texto+icono + kebab `⋮`. SIN contenedor pill —
+// el diseño anterior (icon-only chips dentro de píldora) se reemplazó por el
+// patrón spec FVX (ver docs/design-fvx.md — tabla de acciones).
+.actions-bar {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  flex-wrap: nowrap !important;
+}
+
+// Mini FAB
+.mat-mdc-mini-fab {
+  width: 36px;
+  height: 36px;
+  box-shadow: v.$shadow-sm;
+  border-radius: 9999px !important;
+}
+
+// ============================================================
+// DIALOG — cabecera con contraste por tema (--fvx-dialog-header-*), cuerpo compacto
+// ============================================================
+
+// Todos los popups suben ~15% de la altura del viewport para quedar más a la
+// vista (la lectura natural de un modal es en el tercio superior, no centrado).
+// Excluimos:
+//   · ``fullscreen-dialog`` (entity-form-dialog en mobile) — cubre toda la pantalla
+//   · ``command-palette-dialog`` — tiene su propio align-self/margin-top en
+//     styles.scss (estilo Spotlight); el translateY adicional lo sacaba del
+//     viewport por arriba y cortaba el contenido del tope
+//   · ``preview-export-pane`` — neutralizado más abajo para que la hoja A4 quepa
+// En mobile el media query anula todo (no necesitamos elevación en móviles).
+.cdk-overlay-pane.mat-mdc-dialog-panel:not(.fullscreen-dialog):not(.command-palette-dialog):not(.preview-export-pane) {
+  transform: translateY(-15vh);
+}
+
+@media (max-width: 768px) {
+  .cdk-overlay-pane.mat-mdc-dialog-panel {
+    transform: none !important;
+  }
+}
+
+// Spec FVX (ver Re-estilado + Dialogs CSS):
+//  · UNA sola superficie: header + body + footer en --fvx-bg-card. Sin "header
+//    negro" — el contraste viene del ícono semántico chip, no del fondo.
+//  · Footer en --fvx-bg-surface-2 para diferenciación leve de la botonera.
+//  · Border 1px --fvx-border-strong, radius 13px (--fvx-radius-lg), shadow-pop.
+//  · Entrada con translateY(8) + scale(.98) → 1 en 180ms.
+.mat-mdc-dialog-container {
+  .mdc-dialog__surface {
+    background: var(--fvx-bg-card) !important;
+    border: 1px solid var(--fvx-border-strong, var(--fvx-border)) !important;
+    border-radius: var(--fvx-radius-lg, 13px) !important;
+    box-shadow: var(--fvx-shadow-pop, #{v.$shadow-dialog}) !important;
+    overflow: hidden;
+    animation: fvx-dlg-in 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  // Header — MISMA superficie que el body (sin fondo color). El icon-chip
+  // de confirm-dialog y el peso del título dan la jerarquía.
+  .mdc-dialog__title,
+  h2[mat-dialog-title].mat-mdc-dialog-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--fvx-text-primary) !important;
+    padding: 8px 18px 14px !important;
+    margin: 0 !important;
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+    background: var(--fvx-bg-card) !important;
+    border-bottom: 1px solid var(--fvx-border);
+
+    &::before { display: none; }
+  }
+
+  .mdc-dialog__content {
+    padding: 18px !important;
+    color: var(--fvx-text-primary);
+    font-size: v.$font-size-base;
+    line-height: v.$line-height-base;
+    background: var(--fvx-bg-card);
+
+    > p:first-child { margin-top: 0; }
+    > p:last-child { margin-bottom: 0; }
+  }
+
+  // Footer — leve tinte (surface-2) para separar la botonera del cuerpo.
+  // Orden de botones lo controla el componente: secundario izquierda,
+  // primario/destructivo derecha.
+  .mdc-dialog__actions {
+    padding: 14px 18px !important;
+    gap: 10px;
+    border-top: 1px solid var(--fvx-border);
+    background: var(--fvx-bg-surface-2, var(--fvx-bg-card));
+    min-height: auto;
+  }
+}
+
+@keyframes fvx-dlg-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+// Backdrop — tinte índigo profundo en vez de negro puro. Coherente con la
+// filosofía Índigo+Ámbar (sombras tintadas, nunca neutras).
+.cdk-overlay-dark-backdrop {
+  background: rgba(4, 7, 20, 0.55) !important;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+// Control ⋯ dentro de la cabecera existente (sin franja extra fuera del header).
+.cdk-overlay-pane.fvx-dialog-draggable .mat-mdc-dialog-title:has(.fvx-dialog-drag-grip),
+.cdk-overlay-pane.fvx-dialog-draggable h2[mat-dialog-title]:has(.fvx-dialog-drag-grip) {
+  position: relative !important;
+  /* Espacio mínimo arriba para no solapar icono/texto del título con los puntos */
+  padding-top: 22px !important;
+}
+
+.cdk-overlay-pane.fvx-dialog-draggable .content-dialog__header:has(.fvx-dialog-drag-grip) {
+  position: relative !important;
+  padding-top: 22px !important;
+}
+
+.cdk-overlay-pane.fvx-dialog-draggable .fvx-dialog-drag-grip {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  line-height: 0;
+  z-index: 2;
+  border: none;
+  background: transparent;
+  box-sizing: border-box;
+}
+
+.cdk-overlay-pane.fvx-dialog-draggable .fvx-dialog-drag-handle:active {
+  cursor: grabbing;
+}
+
+// Grip = barrita 36×4 estilo "sheet" (más reconocible como "arrastrable" que
+// 3 puntos). La marca JS sigue inyectando 3 spans __dot dentro del __track;
+// CSS los oculta y pinta el track como pill.
+.cdk-overlay-pane.fvx-dialog-draggable .fvx-dialog-drag-grip__track {
+  display: block;
+  width: 36px;
+  height: 4px;
+  border-radius: 99px;
+  background: var(--fvx-border-strong, var(--fvx-border));
+  pointer-events: none;
+  transition: background 0.15s ease;
+}
+
+.cdk-overlay-pane.fvx-dialog-draggable .fvx-dialog-drag-grip__dot {
+  display: none;                       // la barrita reemplaza los 3 puntos
+}
+
+.cdk-overlay-pane.fvx-dialog-draggable .fvx-dialog-drag-handle:hover .fvx-dialog-drag-grip__track {
+  background: var(--fvx-text-muted);
+}
+
+.cdk-overlay-pane.fvx-dialog-draggable .fvx-dialog-drag-handle button {
+  cursor: pointer;
+}
+
+// Durante el arrastre: sombra más marcada (feedback de “tomado”)
+.cdk-overlay-pane.fvx-dialog-draggable .mat-mdc-dialog-container .mdc-dialog__surface {
+  transition: box-shadow 0.28s ease;
+}
+
+// Dragging — el diálogo se "eleva" claramente al arrastrar (spec).
+.cdk-overlay-pane.fvx-dialog-dragging .mat-mdc-dialog-container .mdc-dialog__surface {
+  box-shadow: 0 24px 60px rgba(4, 7, 20, 0.7) !important;
+}
+
+// Preview-export pane: corre como variante del ContentDialog (mantiene chrome
+// header con título + X). Cancelamos el `translateY(-15vh)` global de todos los
+// dialogs para que no empuje el contenido arriba del viewport.
+.cdk-overlay-pane.preview-export-pane {
+  transform: none !important;
+}
+// Header del ContentDialog dentro de un preview-export → padding más compacto
+// para que el chrome no le coma alto a la hoja A4.
+.cdk-overlay-pane.preview-export-pane .content-dialog__header {
+  padding: 8px 14px !important;
+}
+.cdk-overlay-pane.preview-export-pane .content-dialog__title {
+  font-size: 0.875rem !important;
+}
+
+// Iconos del título del diálogo (alineados al token de cabecera del tema)
+.mat-mdc-dialog-title .dialog-title-icon,
+.mat-mdc-dialog-title .title-content > mat-icon:first-of-type,
+.mat-mdc-dialog-title .confirm-dialog-icon--accent {
+  color: var(--fvx-dialog-header-icon) !important;
+}
+
+.mat-mdc-dialog-title .confirm-dialog-icon--warn {
+  color: #dc2626 !important;
+}
+
+// Close button (X) en el header del diálogo — tono utilitario sobre superficie
+// clara, NO el contraste antiguo "header-fg" pensado para header oscuro.
+.mat-mdc-dialog-title button[mat-icon-button] {
+  color: var(--fvx-text-muted);
+  border-radius: var(--fvx-radius, 9px);
+  transition: background-color 0.12s ease, color 0.12s ease;
+
+  &:hover:not([disabled]) {
+    background: var(--fvx-hover-bg) !important;
+    color: var(--fvx-text-primary);
+  }
+
+  mat-icon {
+    color: inherit;
+  }
+}
+
+// ============================================================
+// TABLE — spec FVX (interlineado por padding, no por height fijo)
+//
+// Filosofía:
+//   · El alto de fila lo decide el PADDING vertical del td, no ``height``.
+//     Una fila con chip / avatar / 2-líneas crece sin romperse.
+//   · ``vertical-align: middle`` siempre — celdas multi-línea y avatares
+//     quedan centrados, no pegados arriba.
+//   · Densidades: estándar 12px (default), ``.dense`` 8px, ``.relaxed`` 14px.
+//   · Header: 10px uppercase, ``--text-muted``, peso 700, bg ``--bg-surface-2``.
+//   · Zebra + hover: tokens ``--fvx-table-row-alt`` y ``--fvx-table-row-hover``
+//     ya calibrados por tema (paletas).
+// ============================================================
+.mat-mdc-table {
+  background: var(--fvx-bg-card, #{v.$color-bg-card}) !important;
+  width: 100%;
+  font-size: v.$font-size-base;          // 13px base
+
+  // Material 3 — los tokens MDC imponen alturas de container "normal density"
+  // (~52px row, ~56px header). Las neutralizamos: el padding del td manda.
+  --mat-table-row-item-container-height: 0;
+  --mat-table-header-container-height: 0;
+  --mat-table-footer-container-height: 0;
+
+  // Header — texto chico, peso alto, tipográficamente subordinado al body.
+  .mat-mdc-header-row {
+    min-height: 0 !important;            // sin alto fijo: el padding manda
+    background: var(--fvx-table-header-bg, var(--fvx-bg-surface-2, #{v.$color-border-light}));
+  }
+
+  .mat-mdc-header-cell {
+    font-size: #{v.$font-size-xs};       // 11px UPPERCASE (escala FVX)
+    font-weight: 700;
+    color: var(--fvx-text-muted, #{v.$color-text-secondary});
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--fvx-table-border, #{v.$color-border});
+    line-height: 1.3;
+    vertical-align: middle;
+  }
+
+  // Body rows — sin alto fijo. El padding del td manda; una fila con
+  // chip/avatar/2-líneas crece sin contorsionarse. Zebra al 4% del texto
+  // primario (spec) — funciona en todos los temas sin depender de los
+  // tokens ``--fvx-table-row-alt`` por paleta (que en algunos temas son
+  // demasiado sutiles, hasta invisibles en tmp-beige).
+  .mat-mdc-row {
+    min-height: 0 !important;
+    height: auto !important;
+    transition: background-color 180ms ease;   // hover algo más suave
+
+    &:nth-of-type(even) {
+      // Zebra (banda par) al 2% del texto primario — la mitad del 4% anterior:
+      // interlineado más sutil.
+      background-color: color-mix(in srgb, var(--fvx-text-primary, #{v.$color-text-primary}) 2%, transparent);
+    }
+
+    // Hover: tinte de ACENTO al 12% — destaca sobre ambas bandas de la zebra
+    // (un neutro al 7% quedaba casi invisible sobre la fila par). Más fuerte que
+    // el foco de teclado (8%) y más leve que la fila seleccionada (14%).
+    &:hover {
+      background: color-mix(in srgb, var(--fvx-link, #{v.$color-primary}) 12%, transparent) !important;
+    }
+  }
+
+  // Celdas — spec: padding 12px 16px (estándar), vertical-align middle,
+  // line-height 1.35 para multi-línea. SIN border-bottom: la zebra ya
+  // separa las filas. Doble divisor (zebra + línea) hace que la tabla
+  // se vea "rayada". Regla del spec: "elige zebra O líneas, no ambas".
+  .mat-mdc-cell {
+    // -13% vs body (15→13px) para densidad de información sin sacrificar
+    // legibilidad. Si necesitas el tamaño del body, override por instancia.
+    font-size: v.$font-size-sm;          // 13px (0.8125rem)
+    line-height: 1.35;
+    color: var(--fvx-text-primary, #{v.$color-text-primary});
+    padding: 12px 16px;
+    border-bottom: none;
+    vertical-align: middle;
+    font-variant-numeric: tabular-nums;  // RUT, fechas, montos alineados
+  }
+
+  // Sort header
+  .mat-sort-header-arrow {
+    color: var(--fvx-text-muted, #{v.$color-text-muted});
+  }
+}
+
+// ── Densidades — modificadores en la tabla ──
+// Uso: ``<table mat-table class="dense">…</table>`` para listados de 500+
+// filas, ``.relaxed`` para tablas con pocas filas o avatares + 2 líneas.
+.mat-mdc-table.dense {
+  .mat-mdc-cell { padding: 8px 16px; }      // ~34px de alto
+  .mat-mdc-header-cell { padding: 8px 16px; }
+}
+.mat-mdc-table.relaxed {
+  .mat-mdc-cell { padding: 14px 16px; }     // ~46px de alto
+  .mat-mdc-header-cell { padding: 14px 16px; }
+}
+
+// ── Columna numérica — clase utilitaria por celda ──
+// Alinea a la derecha y mantiene tabular-nums (que ya hereda de .mat-mdc-cell).
+// Uso: ``<td mat-cell class="num">…</td>`` o por ``ColumnConfig.cellClass``.
+.mat-mdc-table .mat-mdc-cell.num,
+.mat-mdc-table .mat-mdc-header-cell.num {
+  text-align: right;
+}
+
+// ============================================================
+// PAGINATOR — soft, professional
+// ============================================================
+.mat-mdc-paginator {
+  font-size: v.$font-size-sm;
+  color: var(--fvx-text-secondary, #{v.$color-text-secondary});
+  background: transparent;
+  border-top: none;
+
+  .mat-mdc-paginator-container {
+    min-height: 48px;
+    padding: 4px 16px;
+    justify-content: flex-end;
+    gap: 4px;
+  }
+
+  .mat-mdc-paginator-page-size {
+    align-items: center;
+    margin-right: 12px;
+  }
+
+  .mat-mdc-paginator-page-size-label {
+    font-size: v.$font-size-xs;
+    color: var(--fvx-text-muted, #{v.$color-text-muted});
+    letter-spacing: 0.01em;
+  }
+
+  .mat-mdc-paginator-range-label {
+    font-size: v.$font-size-xs;
+    color: var(--fvx-text-muted, #{v.$color-text-muted});
+    margin: 0 12px;
+  }
+
+  // Styled page-size select
+  .mat-mdc-paginator-page-size-select {
+    width: 56px;
+
+    .mat-mdc-text-field-wrapper {
+      padding: 0 6px;
+      background: var(--fvx-bg-page, #{v.$color-bg-page});
+      border-radius: v.$radius-md;
+    }
+
+    .mat-mdc-form-field-infix {
+      min-height: 28px;
+      padding: 4px 0;
+    }
+
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__notch,
+    .mdc-notched-outline__trailing {
+      border-color: transparent !important;
+    }
+
+    .mat-mdc-select-value-text {
+      font-size: v.$font-size-xs;
+    }
+
+    .mat-mdc-select-arrow-wrapper {
+      transform: none;
+    }
+  }
+
+  // Navigation buttons — soft rounded
+  .mat-mdc-paginator-navigation-previous,
+  .mat-mdc-paginator-navigation-next,
+  .mat-mdc-paginator-navigation-first,
+  .mat-mdc-paginator-navigation-last {
+    --mat-icon-button-state-layer-size: 30px;
+    width: 30px !important;
+    height: 30px !important;
+    background: var(--fvx-hover-bg, #{v.$color-bg-page});
+    border-radius: v.$radius-md !important;
+    margin: 0 1px;
+    cursor: pointer;
+    transition: background 0.18s ease, color 0.18s ease, transform 0.12s ease;
+
+    .mat-icon {
+      font-size: 18px !important;
+      width: 18px !important;
+      height: 18px !important;
+      color: var(--fvx-text-secondary, #{v.$color-text-secondary});
+      transition: color 0.18s ease;
+    }
+
+    .mat-mdc-button-touch-target {
+      width: 30px !important;
+      height: 30px !important;
+    }
+
+    &:hover:not([disabled]) {
+      background: color-mix(in srgb, var(--fvx-link, #2563eb) 14%, transparent);
+
+      .mat-icon {
+        color: var(--fvx-link, #2563eb);
+      }
+    }
+
+    &:active:not([disabled]) {
+      transform: scale(0.96);
+    }
+
+    &[disabled] {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+  }
+}
+
+// ============================================================
+// CHIPS — small, pill-like
+// ============================================================
+.mat-mdc-chip {
+  font-size: v.$font-size-xs;
+  font-weight: v.$font-weight-medium;
+  height: v.$chip-height;
+  border-radius: v.$radius-full;
+}
+
+// ============================================================
+// TOOLBAR — slim
+// ============================================================
+.mat-toolbar {
+  height: v.$toolbar-height;
+  font-size: v.$font-size-md;
+}
+
+// ============================================================
+// SIDENAV — custom nav items
+// ============================================================
+.mat-mdc-nav-list {
+  padding: 2px 0;
+
+  .mat-mdc-list-item {
+    height: 38px;
+    border-radius: v.$radius-md;
+    margin: 1px 8px;
+    font-size: v.$font-size-base;
+    letter-spacing: 0.01em;
+
+    .mdc-list-item__primary-text {
+      font-size: v.$font-size-base;
+    }
+
+    .mat-mdc-list-item-icon,
+    .mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      margin-right: 12px;
+    }
+  }
+}
+
+// ============================================================
+// MENU — compact, rounded
+// ============================================================
+.mat-mdc-menu-panel {
+  border-radius: v.$radius-lg !important;
+  box-shadow: v.$shadow-lg !important;
+  border: 1px solid v.$color-border-light;
+  min-width: 160px;
+}
+
+.mat-mdc-menu-item {
+  font-size: v.$font-size-base;
+  min-height: 36px;
+  padding: 0 12px;
+
+  .mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
+    color: v.$color-text-muted;
+  }
+}
+
+// ============================================================
+// SNACKBAR — modern
+// ============================================================
+.mat-mdc-snack-bar-container {
+  border-radius: v.$radius-lg;
+  box-shadow: v.$shadow-md;
+
+  .mdc-snackbar__label {
+    font-size: v.$font-size-base;
+    font-weight: v.$font-weight-medium;
+  }
+
+  .mat-mdc-button {
+    font-size: v.$font-size-sm;
+    height: 28px;
+    color: rgba(255, 255, 255, 0.9);
+  }
+}
+
+// ============================================================
+// CHECKBOX & SLIDE TOGGLE — modern, rounded
+// ============================================================
+.mat-mdc-checkbox {
+  --mat-checkbox-state-layer-size: 32px;
+
+  .mdc-checkbox {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  // Rounded checkbox
+  .mdc-checkbox__background {
+    border-radius: v.$radius-sm !important;
+    border-color: v.$color-border !important;
+    border-width: 1.5px !important;
+    width: 18px !important;
+    height: 18px !important;
+    top: auto !important;
+    left: auto !important;
+  }
+
+  // Checked state — tokenizado para que siga el acento del tema.
+  &.mat-mdc-checkbox-checked .mdc-checkbox__background {
+    background-color: var(--fvx-link, #{v.$color-primary}) !important;
+    border-color: var(--fvx-link, #{v.$color-primary}) !important;
+  }
+
+  // Label
+  label {
+    font-size: v.$font-size-base !important;
+    color: v.$color-text-primary;
+    padding-left: 4px;
+    cursor: pointer;
+  }
+
+  // Reduce touch target
+  .mat-mdc-checkbox-touch-target {
+    width: 32px !important;
+    height: 32px !important;
+  }
+}
+
+.mat-mdc-slide-toggle {
+  .mdc-label {
+    font-size: v.$font-size-base;
+  }
+}
+
+// ============================================================
+// TABS — slim
+// ============================================================
+.mat-mdc-tab-group {
+  .mat-mdc-tab {
+    font-size: v.$font-size-base;
+    font-weight: v.$font-weight-medium;
+    letter-spacing: 0.01em;
+    min-width: 80px;
+    height: 40px;
+  }
+}
+
+// ============================================================
+// TOOLTIP — compact
+// ============================================================
+.mat-mdc-tooltip .mdc-tooltip__surface {
+  font-size: v.$font-size-xs;
+  font-weight: v.$font-weight-medium;
+  padding: 4px 10px;
+  border-radius: v.$radius-sm;
+  max-width: 240px;
+}
+
+// ============================================================
+// PROGRESS BAR — thinner + tokenized
+// ============================================================
+// Sin estos overrides Material usa --mat-sys-primary (azure default) que choca
+// contra `--fvx-link` en temas dark/beige/blackandwhite (se veía blanco/azure).
+//
+// IMPORTANTE: Material 21 (M3) renombró los tokens. Usa
+// ``--mat-progress-bar-active-indicator-color`` / ``--mat-progress-bar-track-color``,
+// NO los ``--mdc-linear-progress-*`` de Material 20. Dejamos ambos por compat
+// hacia atrás, pero los ``--mat-progress-bar-*`` son los que efectivamente
+// pintan en v21.
+.mat-mdc-progress-bar {
+  height: 3px;
+  border-radius: 2px;
+  // Material 21 (M3) — tokens efectivos:
+  --mat-progress-bar-active-indicator-color: var(--fvx-link);
+  --mat-progress-bar-track-color: color-mix(in srgb, var(--fvx-link) 18%, transparent);
+  // Material 20 (MDC) — compat:
+  --mdc-linear-progress-active-indicator-color: var(--fvx-link);
+  --mdc-linear-progress-track-color: color-mix(in srgb, var(--fvx-link) 18%, transparent);
+}
+
+// Spinner circular — mismo cambio de tokens en M3.
+.mat-mdc-progress-spinner {
+  --mat-progress-spinner-active-indicator-color: var(--fvx-link);
+  --mdc-circular-progress-active-indicator-color: var(--fvx-link);
+}
+
+// ============================================================
+// DATEPICKER — popup flotante (se teletransporta al CDK overlay,
+// por eso los estilos viven aquí globales y no en el componente).
+// Usa los tokens --fvx-* para respetar el tema (claro/oscuro/custom).
+// ============================================================
+// ── DATEPICKER (popup mat-datepicker + date-range) ──────────────────────────
+// CAUSA RAÍZ (diagnóstico multi-agente): Material 21 pinta el calendario con
+// reglas que viven en el `styles:[...]` del componente (ViewEncapsulation.None)
+// y se inyectan como <style> en runtime DESPUÉS de styles.css. Esas reglas leen
+// TOKENS `--mat-datepicker-*` (con fallback a --mat-sys-*). Pelear por CLASE sin
+// !important NO gana (el <style> posterior pisa). Y `panelClass` NO va al pane
+// (que es `.mat-datepicker-popup`), va al <mat-calendar> interno.
+// SOLUCIÓN: setear los TOKENS (las reglas de Material los resuelven vía var() y
+// ganan sin guerra de especificidad). Lo NO tokenizable (radio de celda, "punto"
+// de hoy, sombra/borde/radio del panel, compactación) queda por clase con
+// !important. El selector cubre el host (mat-datepicker-content) y el pane real.
+mat-datepicker-content,
+.mat-datepicker-content,
+.mat-datepicker-popup {
+  // ── TOKENS (lo que de verdad pinta el calendario en Material 21) ──
+  // Panel: transparente para no tapar el efecto glass (el fondo translúcido +
+  // blur lo da la regla por clase de abajo).
+  --mat-datepicker-calendar-container-background-color: transparent;
+  --mat-datepicker-calendar-container-text-color: var(--fvx-text-primary);
+  --mat-datepicker-calendar-container-shape: 16px;
+  // CLAVE: varios estados (selected, in-range) caen por DEFECTO a
+  // `var(--mat-sys-primary)` — el AZURE/cyan de Material M3 — si nuestro token no
+  // gana la carrera de aplicación. En mobile (modal touch) ese azure asomaba un
+  // instante al seleccionar (flash cyan). Forzamos --mat-sys-primary al acento FVX
+  // DENTRO del scope del datepicker para que NINGÚN fallback pueda mostrar azure.
+  --mat-sys-primary: var(--fvx-link, #4f5bd5);
+  // Día: texto / seleccionado / hover / focus
+  --mat-datepicker-calendar-date-text-color: var(--fvx-text-primary);
+  --mat-datepicker-calendar-date-selected-state-background-color: var(--fvx-link, #4f5bd5);
+  --mat-datepicker-calendar-date-selected-state-text-color: #fff;
+  --mat-datepicker-calendar-date-hover-state-background-color: var(--fvx-hover-bg, rgba(148, 163, 184, 0.15));
+  --mat-datepicker-calendar-date-focus-state-background-color: var(--fvx-hover-bg, rgba(148, 163, 184, 0.15));
+  // Hoy: el outline de Material lo dejamos transparente; el "punto" índigo se
+  // añade por clase abajo (no es tokenizable).
+  --mat-datepicker-calendar-date-today-outline-color: transparent;
+  --mat-datepicker-calendar-date-today-selected-state-outline-color: #fff;
+  // Día deshabilitado (futuras/fuera de rango)
+  --mat-datepicker-calendar-date-disabled-state-text-color: color-mix(in srgb, var(--fvx-text-primary) 35%, transparent);
+  // Rango (date-range)
+  --mat-datepicker-calendar-date-in-range-state-background-color: color-mix(in srgb, var(--fvx-link, #4f5bd5) 20%, transparent);
+  // Header / labels
+  --mat-datepicker-calendar-header-text-color: var(--fvx-text-muted);
+  --mat-datepicker-calendar-period-button-text-color: var(--fvx-text-primary);
+  --mat-datepicker-calendar-navigation-button-icon-color: var(--fvx-text-muted);
+
+  // ── Panel: efecto GLASS (semi-transparente + blur de fondo) ──
+  // Fondo translúcido (~80%) en el ELEMENTO mat-datepicker-content (la capa que
+  // toca el overlay); el blur va aquí (no en el pane, que suele tener transform
+  // y rompería backdrop-filter). Las capas internas quedan transparentes (token
+  // arriba) para no tapar el efecto.
+  border-radius: 16px !important;
+  box-shadow: var(--fvx-shadow-pop, 0 18px 50px rgba(4, 7, 20, 0.45)) !important;
+  border: 1px solid color-mix(in srgb, var(--fvx-text-primary) 10%, transparent);
+
+  // ── Compactación: menos espacio arriba del header y textos más chicos ──
+  .mat-calendar-header { padding-top: 2px !important; padding-bottom: 0 !important; }
+  .mat-calendar-content { padding: 0 8px 4px !important; }
+  .mat-calendar-period-button { font-size: 0.72rem !important; }           // ~11.5px
+  .mat-calendar-table-header th { font-size: 0.6rem !important; }          // ~9.5px (L M X…)
+  .mat-calendar-body-cell-content { font-size: 0.74rem !important; }       // días/meses/años ~12px
+
+  // Celdas redondeadas (Material fuerza 999px → !important para ganar).
+  .mat-calendar-body-cell-content { border-radius: 9px !important; }
+
+  // Ripple de la celda al hacer tap: por defecto usa el acento de Material
+  // (azure). Lo forzamos al acento FVX para que el flash de selección no sea cyan.
+  .mat-calendar-body-cell .mat-ripple-element,
+  .mat-calendar-body-cell-content .mat-ripple-element {
+    background-color: color-mix(in srgb, var(--fvx-link, #4f5bd5) 28%, transparent) !important;
+  }
+
+  // HOY (no seleccionado): "punto" índigo bajo el número (no tokenizable).
+  .mat-calendar-body-today:not(.mat-calendar-body-selected)
+    .mat-calendar-body-cell-content {
+    box-shadow: inset 0 -7px 0 -5px var(--fvx-link, #4f5bd5) !important;
+  }
+
+  // ── Compactación del grid (sin tocar ancho, que descuadra columnas) ──
+  .mat-calendar { height: auto !important; }
+  .mat-datepicker-content-container { justify-content: flex-start; }
+  // "JUN": fila-label aria-hidden aparte → ocultarla no descuadra los días.
+  .mat-calendar-body-label {
+    padding: 0 !important;
+    height: 0 !important;
+    color: transparent !important;
+  }
+  // Filas de días más juntas (el alto es paddingTop/Bottom inline cuadrado).
+  .mat-calendar-body-cell-container {
+    padding-top: 4% !important;
+    padding-bottom: 4% !important;
+  }
+
+  // ── Footer de acciones (Elegir año / Hoy / Cancelar / Aplicar) ──
+  .mat-datepicker-actions {
+    padding: 8px 12px;
+    border-top: 1px solid var(--fvx-border);
+    gap: 6px;
+    align-items: center;
+  }
+  .fvx-dp-spacer { flex: 1 1 auto; }
+  .fvx-dp-action.mat-mdc-button { color: var(--fvx-text-secondary); }
+  .fvx-dp-action.mat-mdc-button:hover {
+    background: var(--fvx-hover-bg, rgba(148, 163, 184, 0.15));
+    color: var(--fvx-text-primary);
+  }
+  .fvx-dp-apply.mat-mdc-unelevated-button {
+    --mdc-filled-button-container-color: var(--fvx-link, #4f5bd5);
+    --mdc-filled-button-label-text-color: #fff;
+    background: var(--fvx-link, #4f5bd5);
+    color: #fff;
+  }
+}
+
+// GLASS: fondo translúcido + blur en el ELEMENTO mat-datepicker-content (capa
+// que envuelve al calendario en el overlay). Separado del bloque de arriba para
+// asegurar que aplique al elemento correcto y no al pane (que tiene transform y
+// rompería el backdrop-filter). El token container-background ya es transparent.
+mat-datepicker-content.mat-datepicker-content {
+  background: color-mix(in srgb, var(--fvx-bg-elevated, var(--fvx-bg-card, #fff)) 68%, transparent) !important;
+  backdrop-filter: blur(22px) saturate(1.5) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(1.5) !important;
+}
+
+// ── Footer del header custom (Hoy / Elegir año) — solo en .fvx-dp-popup ──
+// El header custom (fvx-dp-header) se renderiza ARRIBA del grid (portal del
+// header). Para que su fila de botones quede como FOOTER al fondo: hacemos el
+// .mat-calendar flex-column, el host del header `display: contents` (así sus
+// hijos —barra y footer— participan del flex del calendario), y empujamos el
+// footer con order alto.
+// Layout del POPUP (flex-column + ancho 340px para que el footer del header
+// custom vaya abajo y las cajas de años respiren). Acotado a .mat-datepicker-content
+// para NO afectar al app-calendar inline (que reutiliza .fvx-dp-popup solo por
+// el LOOK, no por el layout del popup).
+.mat-datepicker-content .fvx-dp-popup.mat-calendar {
+  display: flex;
+  flex-direction: column;
+  width: 340px !important;
+  padding: 0 8px 4px !important;
+}
+.fvx-dp-popup app-dp-header {
+  display: contents;
+}
+.fvx-dp-popup .mat-calendar-content {
+  order: 1;
+}
+.fvx-dp-popup .fvx-dp-footer {
+  order: 99;
+  display: flex;
+  gap: 8px;
+  padding: 8px 8px 2px;
+  margin-top: 4px;
+  border-top: 1px solid var(--fvx-border);
+}
+.fvx-dp-popup .fvx-dp-footer .mat-mdc-button {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 0.8125rem !important;
+  font-weight: 600;
+  // Tinte índigo SUAVE (más adhoc que el gris neutro): fondo accent muy tenue,
+  // texto y borde en el acento. Funciona en claro y oscuro vía tokens.
+  color: var(--fvx-link) !important;
+  background: color-mix(in srgb, var(--fvx-link, #4f5bd5) 8%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--fvx-link, #4f5bd5) 22%, transparent) !important;
+}
+.fvx-dp-popup .fvx-dp-footer .mat-mdc-button:hover {
+  background: color-mix(in srgb, var(--fvx-link, #4f5bd5) 16%, transparent) !important;
+  border-color: color-mix(in srgb, var(--fvx-link, #4f5bd5) 35%, transparent) !important;
+}
+
+// ── Vistas de MESES (year-view) y AÑOS (multi-year-view) ────────────────────
+// Look del prototipo: cada mes/año es una CAJA GRANDE rectangular, fondo sutil
+// elevado, esquinas redondeadas, texto centrado. Material pinta estas celdas con
+// el mismo `.mat-calendar-body-cell-content` que los días (radio 999px y sin
+// fondo) vía un <style> inyectado en runtime → necesitamos !important para ganar.
+// El alto de la caja ya lo da Material (ratio 4/7 de la celda); no lo tocamos.
+.fvx-dp-popup mat-year-view .mat-calendar-body-cell-content,
+.fvx-dp-popup mat-multi-year-view .mat-calendar-body-cell-content {
+  // Material ya posiciona el cell-content al 90% de la celda (top/left 5%,
+  // width/height 90%). NO tocamos eso (px fijos rompían el layout → "pastillas").
+  // Caja que llena la celda (top/left % — NO px). Look SUTIL: fondo muy tenue
+  // (no la caja oscura pesada), redondeada, texto bold; el énfasis lo dan el
+  // hover y el estado seleccionado (índigo), no un fondo marcado en reposo.
+  top: 4% !important;
+  left: 4% !important;
+  width: 92% !important;
+  height: 92% !important;
+  border-radius: 12px !important;
+  background: color-mix(in srgb, var(--fvx-text-primary) 4%, transparent) !important;
+  border: 1px solid transparent !important;
+  color: var(--fvx-text-primary) !important;
+  font-weight: 600;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease;
+}
+
+// Hover de las cajas (meses/años): fondo un punto más marcado.
+.fvx-dp-popup mat-year-view
+  .mat-calendar-body-cell:hover
+  .mat-calendar-body-cell-content:not(.mat-calendar-body-selected),
+.fvx-dp-popup mat-multi-year-view
+  .mat-calendar-body-cell:hover
+  .mat-calendar-body-cell-content:not(.mat-calendar-body-selected) {
+  background: var(--fvx-hover-bg, rgba(148, 163, 184, 0.15)) !important;
+}
+
+// MESES — el mes actual/seleccionado: OUTLINE índigo (sin relleno sólido).
+.fvx-dp-popup mat-year-view
+  .mat-calendar-body-cell-content.mat-calendar-body-selected {
+  background: transparent !important;
+  border: 1.5px solid var(--fvx-link, #4f5bd5) !important;
+  color: var(--fvx-link, #4f5bd5) !important;
+  box-shadow: none !important;
+  font-weight: 700;
+}
+
+// AÑOS — el año seleccionado: relleno índigo SÓLIDO (texto blanco).
+.fvx-dp-popup mat-multi-year-view
+  .mat-calendar-body-cell-content.mat-calendar-body-selected {
+  background: var(--fvx-link, #4f5bd5) !important;
+  border-color: var(--fvx-link, #4f5bd5) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  font-weight: 700;
+}
+
+// MES / AÑO actual (no seleccionado): realce LEVE — fondo índigo muy tenue +
+// texto índigo, claramente más sutil que el seleccionado (relleno sólido /
+// outline). Marca "este es el actual" sin gritar.
+.fvx-dp-popup mat-year-view
+  .mat-calendar-body-today:not(.mat-calendar-body-selected)
+  .mat-calendar-body-cell-content,
+.fvx-dp-popup mat-multi-year-view
+  .mat-calendar-body-today:not(.mat-calendar-body-selected)
+  .mat-calendar-body-cell-content {
+  background: color-mix(in srgb, var(--fvx-link, #4f5bd5) 12%, transparent) !important;
+  border-color: color-mix(in srgb, var(--fvx-link, #4f5bd5) 35%, transparent) !important;
+  color: var(--fvx-link, #4f5bd5) !important;
+  box-shadow: none !important;
+}
+
+// Vista de DÍAS (month-view): celdas redondeadas como ya estaban (no cajas).
+.fvx-dp-popup mat-month-view .mat-calendar-body-cell-content {
+  border-radius: 9px !important;
+}
+
+// Encabezados de día (L M X J V S D): MAYÚSCULAS en ambos idiomas, consistente
+// (el locale es da minúsculas, en da mayúsculas → uppercase los unifica).
+.fvx-dp-popup .mat-calendar-table-header th {
+  text-transform: uppercase;
+}
+
+// ── Botón de PERÍODO del header ("1990 ▾" / "1980 – 1991 ▾") ────────────────
+// El prototipo lo muestra como una PILL sutil (no plano): fondo tenue, esquinas
+// redondeadas, padding horizontal y texto bold. La flecha (▲/▼) queda tenue.
+.fvx-dp-popup .mat-calendar-period-button {
+  padding: 4px 12px !important;
+  border-radius: 10px !important;
+  font-weight: 700 !important;
+  background: color-mix(in srgb, var(--fvx-text-primary) 8%, transparent) !important;
+  transition: background-color 0.12s ease;
+}
+.fvx-dp-popup .mat-calendar-period-button:hover {
+  background: color-mix(in srgb, var(--fvx-text-primary) 14%, transparent) !important;
+}
+.fvx-dp-popup .mat-calendar-period-button .mat-calendar-arrow {
+  opacity: 0.6;
+}
+
+// ============================================================
+// TIMEPICKER — panel de horas (Material 21). Mismo lenguaje visual que el
+// datepicker: superficie del tema (no el gris claro de --mat-sys-surface), glass
+// sutil, opciones COMPACTAS. El panel se teletransporta al overlay → global aquí.
+// ============================================================
+.mat-timepicker-panel {
+  // Token que de verdad pinta el fondo (por defecto --mat-sys-surface-container,
+  // gris claro → se veía blanco en tema oscuro).
+  --mat-timepicker-container-background-color: color-mix(in srgb, var(--fvx-bg-elevated, var(--fvx-bg-card, #fff)) 92%, transparent);
+  --mat-timepicker-container-shape: 12px;
+
+  // Glass + borde sutil coherente con el datepicker.
+  background: color-mix(in srgb, var(--fvx-bg-elevated, var(--fvx-bg-card, #fff)) 88%, transparent) !important;
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid color-mix(in srgb, var(--fvx-text-primary) 10%, transparent) !important;
+  box-shadow: var(--fvx-shadow-pop, 0 18px 50px rgba(4, 7, 20, 0.45)) !important;
+  border-radius: 12px !important;
+  // Más compacto: menos alto visible y padding mínimo.
+  max-height: 220px !important;
+  padding: 4px !important;
+
+  // Opciones (00:00, 00:30…) compactas: menos alto, fuente más chica, redondeadas.
+  .mat-mdc-option {
+    min-height: 32px !important;
+    border-radius: 8px !important;
+    margin: 1px 2px;
+    padding: 0 12px !important;
+    color: var(--fvx-text-primary) !important;
+
+    .mdc-list-item__primary-text {
+      font-size: 0.8125rem !important;
+      font-variant-numeric: tabular-nums;     // 09:00 / 14:30 alineados
+      color: var(--fvx-text-primary) !important;
+    }
+
+    // Hover / activa: tinte de acento (igual que el resto de listas FVX).
+    &:hover:not(.mdc-list-item--disabled),
+    &.mat-mdc-option-active {
+      background: color-mix(in srgb, var(--fvx-link, #4f5bd5) 12%, transparent) !important;
+    }
+
+    // Seleccionada: relleno índigo, texto blanco (como el día del calendario).
+    &.mdc-list-item--selected {
+      background: var(--fvx-link, #4f5bd5) !important;
+      .mdc-list-item__primary-text { color: #fff !important; }
+    }
+  }
+}
+
+// ============================================================
+// MOBILE RESPONSIVE OVERRIDES
+// ============================================================
+@media (max-width: 768px) {
+  // Dialogs — full height with margin on mobile
+  .cdk-overlay-pane.mat-mdc-dialog-panel {
+    max-width: calc(100vw - 16px) !important;
+    width: calc(100vw - 16px) !important;
+    max-height: calc(100vh - 16px) !important;
+    height: calc(100vh - 16px) !important;
+    margin: 8px !important;
+  }
+
+  .mat-mdc-dialog-container {
+    .mdc-dialog__surface {
+      border-radius: v.$radius-lg !important;
+      max-height: 100% !important;
+      height: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+    }
+
+    .mdc-dialog__title,
+    h2[mat-dialog-title].mat-mdc-dialog-title {
+      padding: 10px 14px !important;
+      font-size: v.$font-size-md;
+      flex-shrink: 0;
+      color: var(--fvx-text-primary) !important;
+      background: var(--fvx-bg-card) !important;
+      border-bottom: 1px solid var(--fvx-border) !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: 10px !important;
+    }
+
+    .mdc-dialog__content {
+      padding: 12px 14px;
+      flex: 1 1 auto;
+      overflow-y: auto !important;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      background: var(--fvx-bg-card);
+    }
+
+    .mdc-dialog__actions {
+      padding: 10px 14px 12px;
+      flex-shrink: 0;
+      border-top: 1px solid var(--fvx-border);
+      background: var(--fvx-bg-card);
+    }
+  }
+
+  // Paginator — larger touch targets
+  .mat-mdc-paginator {
+    .mat-mdc-paginator-navigation-previous,
+    .mat-mdc-paginator-navigation-next,
+    .mat-mdc-paginator-navigation-first,
+    .mat-mdc-paginator-navigation-last {
+      width: 36px !important;
+      height: 36px !important;
+    }
+
+    .mat-mdc-paginator-page-size-label {
+      display: none;
+    }
+  }
+
+  // Table — ensure horizontal scroll works on mobile
+  .mat-mdc-table {
+    min-width: 600px;
+  }
+
+  // ── DATEPICKER en mobile (auditoría docs/auditoria-componentes-fecha.md §📱) ──
+  // Los pickers usan `[touchUi]="isMobile()"` → Material abre el calendario como
+  // diálogo modal centrado (`.mat-datepicker-content-touch`) en vez del dropdown
+  // chico anclado. Aquí lo adaptamos al teléfono: ancho responsivo, targets
+  // táctiles ≥44px y revertir la compactación de escritorio (textos/cells más
+  // grandes para el dedo).
+  //
+  // CLAVE del descuadre: en touchUi Material hace el container `80vw` y el
+  // `.mat-calendar` `width:100%`. Nuestro ancho fijo (340px del layout desktop)
+  // impedía que el grid se estirara → columnas apretadas a la izquierda + hueco
+  // a la derecha. Solución: en touch, el calendario ocupa el 100% del modal
+  // (Material manda); el ancho fijo solo se aplica al dropdown anclado (no-touch).
+  .mat-datepicker-content-touch .fvx-dp-popup.mat-calendar {
+    width: 100% !important;
+  }
+
+  // En portrait Material fija el container touch a `height: 100vw` (enorme) con
+  // `justify-content: space-between` → como nuestro calendario+footer es más
+  // bajo, sobraba un hueco grande abajo. Lo dejamos ajustarse al contenido (el
+  // modal se encoge al alto real del calendario). max-height: 80vh sigue como
+  // tope para meses muy altos.
+  .mat-datepicker-content-touch {
+    min-height: 0 !important;
+  }
+  .mat-datepicker-content-touch .mat-datepicker-content-container {
+    height: auto !important;
+    min-height: 0 !important;
+    justify-content: flex-start !important;
+  }
+  // Dropdown anclado (sin touchUi, p. ej. tablet en landscape <768px): responsivo.
+  .mat-datepicker-content:not(.mat-datepicker-content-touch) .fvx-dp-popup.mat-calendar {
+    width: min(340px, calc(100vw - 24px)) !important;
+  }
+
+  // El blur de 22px sobre un modal a pantalla casi completa cuesta GPU en
+  // móviles gama media (jank al abrir). Lo bajamos y subimos la opacidad del
+  // fondo para compensar la legibilidad.
+  mat-datepicker-content.mat-datepicker-content {
+    background: color-mix(in srgb, var(--fvx-bg-elevated, var(--fvx-bg-card, #fff)) 86%, transparent) !important;
+    backdrop-filter: blur(10px) saturate(1.4) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(1.4) !important;
+  }
+
+  // Revertir la compactación de escritorio: en mobile el grid debe ser cómodo.
+  .fvx-dp-popup {
+    .mat-calendar-period-button { font-size: 0.9rem !important; }
+    .mat-calendar-table-header th { font-size: 0.72rem !important; }
+    .mat-calendar-body-cell-content { font-size: 0.95rem !important; }
+
+    // Celdas del grid de días con más alto (dedo, no cursor). Un poco menos que
+    // el 7% (que dejaba la celda muy alta vs ancha → el "cuadro" de hoy se veía
+    // desproporcionado); 5% mantiene la celda más cuadrada.
+    .mat-calendar-body-cell-container {
+      padding-top: 5% !important;
+      padding-bottom: 5% !important;
+    }
+
+    // HOY (no seleccionado) en mobile: en vez del "punto" inset (que con la celda
+    // más grande + el ring de foco se veía como un recuadro suelto), un OUTLINE
+    // índigo sutil que rellena la celda y combina con el redondeo del resto.
+    mat-month-view .mat-calendar-body-today:not(.mat-calendar-body-selected)
+      .mat-calendar-body-cell-content {
+      box-shadow: none !important;
+      border: 1.5px solid color-mix(in srgb, var(--fvx-link, #4f5bd5) 45%, transparent) !important;
+    }
+
+    // Botones del footer (Hoy / Elegir año) ≥44px (WCAG 2.5.5).
+    .fvx-dp-footer .mat-mdc-button {
+      min-height: 44px !important;
+      height: 44px !important;
+      font-size: 0.9375rem !important;
+    }
+  }
+
+  // Toggle del datepicker dentro del form-field: target táctil pleno.
+  .mat-datepicker-toggle .mat-mdc-icon-button,
+  .mat-timepicker-toggle .mat-mdc-icon-button {
+    width: 44px !important;
+    height: 44px !important;
+    padding: 10px !important;
+    .mat-mdc-button-touch-target { width: 44px !important; height: 44px !important; }
+  }
+
+  // Panel del mat-timepicker en mobile (auditoría #1, WCAG 2.5.5). En desktop las
+  // opciones son de 32px (compactas, ver bloque .mat-timepicker-panel arriba); en
+  // mobile deben ser ≥44px para el dedo. El panel se teletransporta al overlay
+  // GLOBAL con su clase por defecto (sin panelClass), así que la regla NO va
+  // anidada bajo .fvx-dp-popup. El !important vence al min-height:32px de desktop
+  // (misma clase/especificidad; el @media no añade especificidad).
+  .mat-timepicker-panel {
+    max-height: 50vh !important;          // más alto para elegir cómodo (era 220px)
+    .mat-mdc-option {
+      min-height: 44px !important;
+      .mdc-list-item__primary-text { font-size: 0.95rem !important; }  // como celdas mobile
+    }
+  }
+}
+
+// ============================================================
+// FULLSCREEN DIALOG (mobile) — used by EntityCreatorService
+// ============================================================
+.fullscreen-dialog {
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  width: 100vw !important;
+  height: 100vh !important;
+
+  .mat-mdc-dialog-container {
+    border-radius: 0;
+
+    .mat-mdc-dialog-surface {
+      border-radius: 0;
+    }
+  }
+
+  // Force single-column layout inside fullscreen dialogs (mobile)
+  .dialog-form {
+    grid-template-columns: 1fr !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+
+  .mat-mdc-dialog-title {
+    padding: 10px 16px !important;
+    margin: 0 !important;
+    color: var(--fvx-text-primary) !important;
+    background: var(--fvx-bg-card) !important;
+    border-bottom: 1px solid var(--fvx-border) !important;
+  }
+
+  .mat-mdc-dialog-title:has(.fvx-dialog-drag-grip) {
+    padding-top: 20px !important;
+  }
+
+  .mat-mdc-dialog-content {
+    padding: 12px 16px !important;
+    max-height: none !important;
+    flex: 1;
+    overflow-y: auto;
+    background: var(--fvx-bg-card);
+  }
+
+  .mat-mdc-dialog-actions {
+    padding: 10px 16px 12px !important;
+    border-top: 1px solid var(--fvx-border);
+    background: var(--fvx-bg-card);
+    flex-direction: column;
+    gap: 8px;
+
+    button {
+      width: 100%;
+      margin: 0 !important;
+    }
+  }
+
+  // ``app-content-dialog`` (sin ``mat-dialog-title``): mismo ritmo que modales a pantalla completa.
+  .content-dialog {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .content-dialog__header {
+    padding: 10px 16px;
+    flex-shrink: 0;
+  }
+
+  .content-dialog__body {
+    flex: 1;
+    overflow: auto;
+    padding: 12px 16px;
+    max-height: none !important;
+  }
+}
+
+// ============================================================
+// tmp-dark / tmp-blackandwhite — colores / bordes (Material sigue en tema ``light``)
+// ============================================================
+html.theme-tmp-dark,
+html.theme-tmp-blackandwhite {
+  // Paginator (M3): el tema Material sigue siendo ``light``; sin esto ``--mat-sys-surface`` deja la barra blanca.
+  --mat-paginator-container-background-color: var(--fvx-bg-card);
+  --mat-paginator-container-text-color: var(--fvx-text-secondary);
+  --mat-paginator-enabled-icon-color: var(--fvx-text-muted);
+  --mat-paginator-disabled-icon-color: var(--fvx-paginator-disabled-icon);
+
+  .mat-mdc-table {
+    background: var(--fvx-bg-card) !important;
+
+    .mat-mdc-header-row {
+      background: var(--fvx-table-header-bg);
+    }
+
+    .mat-mdc-header-cell {
+      color: var(--fvx-text-muted);
+      border-bottom: 1px solid var(--fvx-table-border);
+    }
+
+    // Nota: zebra y hover ya los define el bloque global con color-mix
+    // sobre --fvx-text-primary / --fvx-link, que produce el contraste
+    // adecuado en TODOS los temas (claro/oscuro/byn/beige). No duplicar
+    // overrides con tokens --fvx-table-row-* aquí — eran más sutiles y
+    // ya no hacen falta.
+
+    .mat-mdc-cell {
+      color: var(--fvx-text-primary);
+    }
+
+    .mat-sort-header-arrow {
+      color: var(--fvx-text-muted);
+    }
+  }
+
+  .mat-mdc-paginator {
+    color: var(--fvx-text-secondary);
+    background-color: var(--fvx-bg-card) !important;
+    border-top: 1px solid var(--fvx-table-border);
+
+    .mat-mdc-paginator-page-size-label,
+    .mat-mdc-paginator-range-label {
+      color: var(--fvx-text-muted);
+    }
+
+    .mat-mdc-paginator-page-size-select {
+      .mat-mdc-text-field-wrapper {
+        background: var(--fvx-bg-page);
+      }
+
+      .mat-mdc-select-value-text {
+        color: var(--fvx-text-primary);
+      }
+    }
+
+    .mat-mdc-paginator-navigation-previous,
+    .mat-mdc-paginator-navigation-next,
+    .mat-mdc-paginator-navigation-first,
+    .mat-mdc-paginator-navigation-last {
+      background: var(--fvx-bg-page);
+
+      .mat-icon {
+        color: var(--fvx-text-secondary);
+      }
+
+      &:hover:not([disabled]) {
+        background: var(--fvx-table-row-alt);
+      }
+    }
+  }
+
+  .mat-mdc-outlined-button {
+    --mat-button-outlined-outline-color: var(--fvx-border);
+    border-color: var(--fvx-border) !important;
+    color: var(--fvx-text-primary) !important;
+    background: var(--fvx-bg-card) !important;
+
+    &:hover {
+      background: var(--fvx-table-row-hover) !important;
+      border-color: var(--fvx-text-muted) !important;
+    }
+
+    &.mat-primary {
+      --mat-button-outlined-outline-color: var(--fvx-link);
+      border-color: var(--fvx-link) !important;
+      color: var(--fvx-link) !important;
+
+      &:hover {
+        background: color-mix(in srgb, var(--fvx-link) 14%, transparent) !important;
+        border-color: var(--fvx-link) !important;
+      }
+    }
+  }
+
+  .mat-mdc-button {
+    color: var(--fvx-text-secondary) !important;
+
+    &:hover {
+      background: var(--fvx-table-row-alt) !important;
+    }
+  }
+
+  .mat-mdc-form-field.mat-form-field-appearance-outline {
+    .mat-mdc-text-field-wrapper {
+      background: var(--fvx-bg-card) !important;
+    }
+
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__notch,
+    .mdc-notched-outline__trailing {
+      border-color: var(--fvx-border) !important;
+    }
+
+    &:hover:not(.mat-focused):not(.mat-form-field-invalid) .mdc-notched-outline {
+      .mdc-notched-outline__leading,
+      .mdc-notched-outline__notch,
+      .mdc-notched-outline__trailing {
+        border-color: var(--fvx-text-muted) !important;
+      }
+    }
+
+    &.mat-focused .mdc-notched-outline {
+      .mdc-notched-outline__leading,
+      .mdc-notched-outline__notch,
+      .mdc-notched-outline__trailing {
+        border-color: var(--fvx-link) !important;
+      }
+    }
+
+    .mat-mdc-floating-label {
+      color: var(--fvx-text-muted) !important;
+    }
+
+    .mat-mdc-input-element {
+      color: var(--fvx-text-primary);
+
+      &::placeholder {
+        color: var(--fvx-text-muted) !important;
+      }
+    }
+
+    .mat-mdc-form-field-icon-prefix,
+    .mat-mdc-form-field-icon-suffix {
+      .mat-icon {
+        color: var(--fvx-text-muted);
+      }
+    }
+
+    .mat-mdc-form-field-hint {
+      color: var(--fvx-text-muted);
+    }
+  }
+
+  .mat-mdc-select {
+    color: var(--fvx-text-primary) !important;
+  }
+
+  .mat-mdc-select-panel {
+    background: var(--fvx-bg-card);
+    border-color: var(--fvx-border);
+  }
+
+  .mat-mdc-option {
+    color: var(--fvx-text-primary);
+
+    &:hover:not(.mdc-list-item--disabled),
+    &.mat-mdc-option-active {
+      background: var(--fvx-table-row-hover) !important;
+    }
+
+    &.mdc-list-item--selected:not(.mdc-list-item--disabled) {
+      background: var(--fvx-table-row-alt) !important;
+    }
+  }
+
+  .mat-mdc-menu-panel {
+    background: var(--fvx-bg-card);
+    border-color: var(--fvx-border);
+  }
+
+  .mat-mdc-menu-item {
+    color: var(--fvx-text-primary);
+
+    .mat-icon {
+      color: var(--fvx-text-muted);
+    }
+
+    &:hover:not([disabled]) {
+      background: var(--fvx-table-row-hover);
+    }
+  }
+
+  // Dialog: una sola superficie en tmp-dark / tmp-blackandwhite también (spec).
+  // El header pisa los tokens --fvx-dialog-header-* que antes lo pintaban
+  // oscuro/azul/etc. Solo confirm-dialog destaca con su icon-chip semántico.
+  .mat-mdc-dialog-container {
+    .mdc-dialog__surface {
+      background: var(--fvx-bg-card);
+    }
+
+    .mdc-dialog__title,
+    h2[mat-dialog-title].mat-mdc-dialog-title {
+      color: var(--fvx-text-primary) !important;
+      background: var(--fvx-bg-card) !important;
+      border-bottom-color: var(--fvx-border) !important;
+    }
+
+    .mdc-dialog__content {
+      color: var(--fvx-text-primary);
+      background: var(--fvx-bg-card);
+    }
+
+    .mdc-dialog__actions {
+      border-top-color: var(--fvx-border);
+      background: var(--fvx-bg-surface-2, var(--fvx-bg-card));
+    }
+  }
+
+  .mat-mdc-checkbox label {
+    color: var(--fvx-text-primary);
+  }
+
+  .mat-mdc-checkbox .mdc-checkbox__background {
+    border-color: var(--fvx-border) !important;
+  }
+
+  .mat-mdc-chip {
+    --mat-chip-outline-color: var(--fvx-border);
+    color: var(--fvx-text-primary);
+  }
+}
+
+// tmp-dark — primario relleno = acento índigo (``--fvx-link`` = #6d7cf6); peligro = rojo;
+// outlined primary disabled legible. El bloque global de ``[disabled]`` en primary usa
+// tokens SCSS claros; se mantiene el override siguiente.
+html.theme-tmp-dark {
+  .mat-mdc-unelevated-button.mat-primary,
+  .mat-mdc-raised-button.mat-primary {
+    background: var(--fvx-link) !important;
+    color: var(--fvx-accent-text) !important;
+    --mat-button-filled-container-color: var(--fvx-link);
+    --mat-button-filled-label-text-color: var(--fvx-accent-text);
+
+    &:hover:not([disabled]):not(.mat-mdc-button-disabled) {
+      background: var(--fvx-accent-hover) !important;
+      box-shadow: var(--fvx-shadow-primary) !important;
+      --mat-button-filled-container-color: var(--fvx-accent-hover);
+    }
+
+    &[disabled],
+    &.mat-mdc-button-disabled {
+      background: color-mix(in srgb, var(--fvx-text-primary) 10%, var(--fvx-bg-card)) !important;
+      color: var(--fvx-text-muted) !important;
+      --mat-button-filled-container-color: color-mix(in srgb, var(--fvx-text-primary) 10%, var(--fvx-bg-card));
+      --mat-button-filled-label-text-color: var(--fvx-text-muted);
+      box-shadow: none !important;
+
+      .mat-icon {
+        color: inherit !important;
+      }
+
+      mat-progress-spinner,
+      .mat-mdc-progress-spinner {
+        --mat-progress-spinner-active-indicator-color: currentColor;
+      }
+    }
+  }
+
+  .mat-mdc-unelevated-button.mat-warn,
+  .mat-mdc-raised-button.mat-warn {
+    background: #{v.$color-warn} !important;
+    color: #ffffff !important;
+    --mat-button-filled-container-color: #{v.$color-warn};
+    --mat-button-filled-label-text-color: #ffffff;
+
+    &:hover:not([disabled]):not(.mat-mdc-button-disabled) {
+      background: color-mix(in srgb, #{v.$color-warn} 88%, #000) !important;
+    }
+
+    &[disabled],
+    &.mat-mdc-button-disabled {
+      background: color-mix(in srgb, var(--fvx-text-primary) 8%, var(--fvx-bg-card)) !important;
+      color: var(--fvx-text-muted) !important;
+      box-shadow: none !important;
+
+      .mat-icon {
+        color: inherit !important;
+      }
+    }
+  }
+
+  .mat-mdc-mini-fab.mat-primary {
+    background-color: var(--fvx-link) !important;
+    color: var(--fvx-accent-text) !important;
+
+    &:hover:not([disabled]) {
+      background-color: var(--fvx-accent-hover) !important;
+    }
+  }
+
+  .mat-mdc-icon-button.mat-primary {
+    color: var(--fvx-link) !important;
+    --mat-icon-button-icon-color: var(--fvx-link);
+
+    .mat-icon {
+      color: inherit !important;
+    }
+  }
+
+  .mat-mdc-outlined-button.mat-primary {
+    &[disabled],
+    &.mat-mdc-button-disabled {
+      border-color: var(--fvx-border) !important;
+      color: var(--fvx-text-muted) !important;
+      background: transparent !important;
+      opacity: 0.55;
+      pointer-events: none;
+
+      .mat-icon {
+        color: var(--fvx-text-muted) !important;
+        opacity: 0.85;
+      }
+    }
+  }
+
+  .mat-mdc-button {
+    &[disabled],
+    &.mat-mdc-button-disabled {
+      color: var(--fvx-text-muted) !important;
+      opacity: 0.55;
+    }
+  }
+}
+
+// Botón plantilla: advertencia / revisión (ámbar). No usar ``color="warn"`` (eso es **peligro** / eliminar).
+.mat-mdc-unelevated-button.fvx-btn-caution,
+.mat-mdc-raised-button.fvx-btn-caution {
+  background: var(--fvx-button-caution-bg) !important;
+  color: var(--fvx-button-caution-fg) !important;
+  --mat-button-filled-container-color: var(--fvx-button-caution-bg);
+  --mat-button-filled-label-text-color: var(--fvx-button-caution-fg);
+  box-shadow: none !important;
+
+  &:hover:not([disabled]):not(.mat-mdc-button-disabled) {
+    background: var(--fvx-button-caution-bg-hover) !important;
+    --mat-button-filled-container-color: var(--fvx-button-caution-bg-hover);
+  }
+
+  &[disabled],
+  &.mat-mdc-button-disabled {
+    background: color-mix(in srgb, var(--fvx-button-caution-bg, #ca8a04) 35%, var(--fvx-bg-card, #fff)) !important;
+    color: var(--fvx-text-muted, #737373) !important;
+    opacity: 0.75;
+    box-shadow: none !important;
+  }
+
+  .mat-icon {
+    color: inherit !important;
+  }
+}
+
+// tmp-beige — primario = verde bosque (referencia ERP contable); texto blanco en CTAs rellenos.
+html.theme-tmp-beige {
+  .mat-mdc-unelevated-button.mat-primary,
+  .mat-mdc-raised-button.mat-primary {
+    background: var(--fvx-link) !important;
+    color: #ffffff !important;
+    --mat-button-filled-container-color: var(--fvx-link);
+    --mat-button-filled-label-text-color: #ffffff;
+
+    &:hover:not([disabled]):not(.mat-mdc-button-disabled) {
+      background: color-mix(in srgb, var(--fvx-link) 88%, #000) !important;
+      --mat-button-filled-container-color: color-mix(in srgb, var(--fvx-link) 88%, #000);
+    }
+
+    &[disabled],
+    &.mat-mdc-button-disabled {
+      background: color-mix(in srgb, var(--fvx-text-primary) 8%, var(--fvx-bg-card)) !important;
+      color: var(--fvx-text-muted) !important;
+      --mat-button-filled-container-color: color-mix(in srgb, var(--fvx-text-primary) 8%, var(--fvx-bg-card));
+      --mat-button-filled-label-text-color: var(--fvx-text-muted);
+      box-shadow: none !important;
+      opacity: 0.72;
+
+      .mat-icon {
+        color: inherit !important;
+      }
+
+      mat-progress-spinner,
+      .mat-mdc-progress-spinner {
+        --mat-progress-spinner-active-indicator-color: currentColor;
+      }
+    }
+  }
+
+  .mat-mdc-mini-fab.mat-primary {
+    background-color: var(--fvx-link) !important;
+    color: #ffffff !important;
+
+    &:hover:not([disabled]) {
+      background-color: color-mix(in srgb, var(--fvx-link) 88%, #000) !important;
+    }
+  }
+
+  .mat-mdc-icon-button.mat-primary {
+    color: var(--fvx-link) !important;
+    --mat-icon-button-icon-color: var(--fvx-link);
+
+    .mat-icon {
+      color: inherit !important;
+    }
+  }
+
+  .mat-mdc-outlined-button.mat-primary {
+    --mat-button-outlined-outline-color: var(--fvx-link);
+    border-color: var(--fvx-link) !important;
+    color: var(--fvx-link) !important;
+    background: var(--fvx-bg-card) !important;
+
+    &:hover:not([disabled]):not(.mat-mdc-button-disabled) {
+      background: color-mix(in srgb, var(--fvx-link) 8%, var(--fvx-bg-card)) !important;
+      border-color: var(--fvx-link) !important;
+    }
+
+    &[disabled],
+    &.mat-mdc-button-disabled {
+      border-color: var(--fvx-border) !important;
+      color: var(--fvx-text-muted) !important;
+      background: transparent !important;
+      opacity: 0.55;
+
+      .mat-icon {
+        color: var(--fvx-text-muted) !important;
+      }
+    }
+  }
+
+  /* Secundarios: borde de card (gris claro en beige) + fondo blanco. */
+  .mat-mdc-outlined-button:not(.mat-primary):not(.mat-warn):not(.mat-accent) {
+    --mat-button-outlined-outline-color: var(--fvx-card-border);
+    border-color: var(--fvx-card-border) !important;
+    color: var(--fvx-text-primary) !important;
+    background: var(--fvx-bg-card) !important;
+
+    &:hover:not([disabled]):not(.mat-mdc-button-disabled) {
+      background: var(--fvx-hover-bg) !important;
+      border-color: var(--fvx-card-border) !important;
+    }
+  }
+
+  .mat-mdc-button:not(.mat-primary):not(.mat-warn):not(.mat-accent) {
+    color: var(--fvx-text-secondary) !important;
+
+    &:hover:not([disabled]):not(.mat-mdc-button-disabled) {
+      background: var(--fvx-hover-bg) !important;
+    }
+  }
+
+  .table-toolbar .toolbar-icon-btn.mat-mdc-icon-button {
+    color: var(--fvx-text-secondary) !important;
+    --mat-icon-button-icon-color: var(--fvx-text-secondary);
+    background: transparent !important;
+
+    .mat-icon {
+      color: var(--fvx-text-secondary) !important;
+    }
+
+    &:hover:not([disabled]) {
+      background: var(--fvx-hover-bg) !important;
+      color: var(--fvx-text-primary) !important;
+      --mat-icon-button-icon-color: var(--fvx-text-primary);
+
+      .mat-icon {
+        color: var(--fvx-text-primary) !important;
+      }
+    }
+  }
+}
+
+// tmp-blackandwhite — botones ``primary`` en negro (Material sigue inyectando azul del tema base).
+html.theme-tmp-blackandwhite {
+  button[mat-flat-button].mat-primary,
+  button[mat-raised-button].mat-primary,
+  a[mat-flat-button].mat-primary,
+  a[mat-raised-button].mat-primary,
+  .mat-mdc-unelevated-button.mat-primary,
+  .mat-mdc-raised-button.mat-primary {
+    background: #000000 !important;
+    color: #ffffff !important;
+    --mat-button-filled-container-color: #000000;
+    --mat-button-filled-label-text-color: #ffffff;
+
+    &:hover:not([disabled]) {
+      background: #1a1a1a !important;
+      --mat-button-filled-container-color: #1a1a1a;
+    }
+
+    &[disabled],
+    &.mat-mdc-button-disabled {
+      background: #d4d4d4 !important;
+      color: #737373 !important;
+      opacity: 1;
+    }
+  }
+
+  .mat-mdc-outlined-button.mat-primary {
+    border-width: 2px !important;
+    font-weight: 600;
+    --mat-button-outlined-outline-color: #000000;
+
+    &:hover:not([disabled]) {
+      background: #000000 !important;
+      color: #ffffff !important;
+      border-color: #000000 !important;
+    }
+  }
+
+  .mat-mdc-icon-button.mat-primary {
+    color: #000000 !important;
+    --mat-icon-button-icon-color: #000000;
+
+    .mat-icon {
+      color: inherit !important;
+    }
+
+    &:hover:not([disabled]) {
+      background: rgba(0, 0, 0, 0.08) !important;
+    }
+  }
+
+  .mat-mdc-mini-fab.mat-primary {
+    background: #000000 !important;
+    color: #ffffff !important;
+  }
+
+  .mat-mdc-checkbox.mat-mdc-checkbox-checked .mdc-checkbox__background {
+    background-color: #000000 !important;
+    border-color: #000000 !important;
+  }
+
+  // Paginador: mismos botones de contraste (negro / icono blanco) que el resto de acciones primarias.
+  .mat-mdc-paginator {
+    .mat-mdc-paginator-navigation-previous,
+    .mat-mdc-paginator-navigation-next,
+    .mat-mdc-paginator-navigation-first,
+    .mat-mdc-paginator-navigation-last {
+      background: #000000 !important;
+
+      .mat-mdc-paginator-icon {
+        fill: #ffffff !important;
+      }
+
+      &:hover:not([disabled]) {
+        background: #262626 !important;
+      }
+
+      &[disabled],
+      &[aria-disabled='true'] {
+        background: #e5e5e5 !important;
+        opacity: 1 !important;
+
+        .mat-mdc-paginator-icon {
+          fill: #a3a3a3 !important;
+        }
+      }
+    }
+  }
+
+  // Refresh / export en la barra superior de la tabla (no usan ``color="primary"``).
+  .table-toolbar .toolbar-icon-btn.mat-mdc-icon-button {
+    color: #ffffff !important;
+    --mat-icon-button-icon-color: #ffffff;
+    background: #000000 !important;
+    border-radius: v.$radius-md !important;
+
+    .mat-icon {
+      color: #ffffff !important;
+    }
+
+    &:hover:not([disabled]) {
+      background: #262626 !important;
+    }
+  }
+}
+
+// ============================================================
+// INTERACTIVE ELEMENTS — cursor pointer + hover suavizado global
+//
+// Cualquier cosa que sea clickeable tiene:
+//   · cursor: pointer
+//   · transiciones suaves de bg / color / transform
+//   · feedback táctil al :active (escala leve)
+// Estados disabled recuperan cursor por defecto.
+// ============================================================
+button:not(:disabled):not([disabled]),
+[role='button']:not([aria-disabled='true']),
+.mat-mdc-button-base:not(:disabled):not([disabled]),
+.mat-mdc-icon-button:not(:disabled):not([disabled]),
+.mat-mdc-menu-item:not([disabled]),
+.mat-mdc-list-item.mdc-list-item--with-leading-icon:not([disabled]),
+.mat-mdc-tab:not(.mdc-tab--disabled),
+.mat-mdc-option:not(.mdc-list-item--disabled),
+.mat-mdc-chip.mat-mdc-chip-with-trailing-icon:not([disabled]),
+.mat-mdc-chip-remove {
+  cursor: pointer;
+}
+
+// Disabled cursor
+button:disabled,
+button[disabled],
+[role='button'][aria-disabled='true'],
+.mat-mdc-button-base:disabled,
+.mat-mdc-button-base[disabled],
+.mat-mdc-icon-button:disabled,
+.mat-mdc-icon-button[disabled] {
+  cursor: not-allowed;
+}
+
+// Hover suavizado global — sólo para buttons de Material que no lo hayan
+// definido ya con sus propios overrides más específicos. Respetamos la
+// paleta del tema usando `--fvx-*`.
+.mat-mdc-button-base:not(:disabled):not([disabled]),
+.mat-mdc-icon-button:not(:disabled):not([disabled]) {
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.12s ease;
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+// Filas de tabla clickeables (clase ya usada en data-table)
+.clickable-row:not(tr.mat-mdc-row) {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:hover:not(.mat-mdc-row--disabled) {
+    background-color: var(--fvx-hover-bg, rgba(148, 163, 184, 0.08));
+  }
+}
+
+tr.mat-mdc-row.clickable-row {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:hover:not(.mat-mdc-row--disabled) {
+    /* Misma lectura que ``--fvx-table-row-hover`` en zebra/hover de tabla (tmp-beige = hover neutro suave). */
+    background-color: var(--fvx-table-row-hover, var(--fvx-hover-bg, rgba(148, 163, 184, 0.08))) !important;
+  }
+}
+
+// mat-menu items: asegúra cursor + transición (Material a veces pierde uno
+// u otro según la versión).
+.mat-mdc-menu-item {
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+// Links explícitos
+a[href]:not([disabled]) {
+  cursor: pointer;
+  transition: color 0.15s ease, opacity 0.15s ease;
+}

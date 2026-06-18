@@ -1,0 +1,88 @@
+<main class="maria-page">
+  <!-- Banner de video con textos -->
+  <section class="hero-section">
+    <div class="video-background">
+      <div class="fallback-bg" [class.hidden]="videoReady">
+        <img src="assets/bg-site.png" alt="María Magdalena" />
+      </div>
+      <video
+        #videoPlayer
+        autoplay
+        muted
+        playsinline
+        preload="auto">
+      </video>
+      <div class="video-overlay"></div>
+    </div>
+
+    <div class="hero-content">
+      <h1 class="hero-title">MARÍA MAGDALENA DOCUSERIE</h1>
+      <p class="hero-subtitle">Una experiencia audiovisual en 4 capítulos para descubrir, sentir y encarnar su verdadero legado.</p>
+      <p class="hero-author">Creada por Lita Donoso - Psicóloga Transpersonal, investigadora y escritora</p>
+      <p class="hero-director">Dirigida por :<br>Pedro Larredonda</p>
+      <button class="hero-cta" (click)="openTrailer()">Ver Intro</button>
+    </div>
+  </section>
+
+  <!-- Title -->
+  <section class="title-section">
+    <h1 class="main-title">MARÍA MAGDALENA</h1>
+    <h2 class="subtitle">DOCUSERIE</h2>
+    <div class="docuserie-description">
+      <p class="intro-quote">Hay verdades que el tiempo intentó enterrar. Verdades que sobrevivieron en susurros, en símbolos, en líneas de sangre y en el coraje de quienes se negaron a olvidar. Esta es una de ellas.</p>
+      <p>La docuserie de Magdalena es un viaje íntimo, histórico y espiritual que nos lleva a las profundidades de una de las figuras más enigmáticas y poderosas de la historia: María Magdalena. A través de cuatro capítulos, Lita Donoso nos conduce por un recorrido que cruza el silencio impuesto, el exilio sagrado, los símbolos distorsionados y el legado vivo que llega hasta nuestros días.</p>
+      <p class="closing">Una historia que no solo se cuenta, sino que se siente.</p>
+    </div>
+  </section>
+
+  <!-- Capítulos -->
+  <section class="chapters-section">
+    <div class="section-header">
+      <h2 class="section-title">Los Capítulos</h2>
+      <p class="section-subtitle">Descubre la historia oculta de María Magdalena</p>
+    </div>
+    <div class="chapters-grid">
+      <app-chapter-card
+        *ngFor="let card of chapterCards"
+        [image]="card.image"
+        [title]="card.title"
+        [body]="card.body"
+        [chapterNumber]="card.chapterNumber"
+        buttonText="Ver más">
+      </app-chapter-card>
+    </div>
+  </section>
+
+  <!-- Parallax Quote -->
+  <section class="parallax-quote-section">
+    <div class="parallax-bg"></div>
+    <div class="parallax-content">
+      <p class="parallax-quote">"Hay verdades que el tiempo intentó enterrar. Verdades que sobrevivieron en susurros, en símbolos, en líneas de sangre y en el coraje de quienes se negaron a olvidar. Esta es una de ellas."</p>
+    </div>
+  </section>
+
+  <!-- Testimonios -->
+  <section class="testimonials-section">
+    <div class="testimonials-grid">
+      <div class="testimonial-card" *ngFor="let testimonial of testimonials">
+        <div class="quote-icon">❝</div>
+        <h4>{{ testimonial.name }}</h4>
+        <span class="role">{{ testimonial.role }}</span>
+        <p>"{{ testimonial.quote }}"</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Gallery -->
+  <section class="gallery-section">
+    <div class="gallery-header">
+      <h3>Estreno de Docuserie<br>realizada el 25 de marzo 2026</h3>
+      <p>El 25 de marzo estrenamos el primer capítulo de la serie con grandes amigos a la cual asistieron entre otros: Kenita Larraín, el actor y comunicador Francisco Pérez-Bannen, la diseñadora Daniela Bozza.</p>
+    </div>
+    <div class="gallery-grid">
+      <div class="gallery-item" *ngFor="let photo of galleryPhotos; let i = index" (click)="openPhotoPopup(photo, i)">
+        <img [src]="photo" [alt]="'Foto ' + (i + 1)" />
+      </div>
+    </div>
+  </section>
+</main>

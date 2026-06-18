@@ -1,0 +1,51 @@
+# Requiere red externa: docker network create fvx_suscription_shared
+# Levantar backend antes (o junto): el contenedor Django debe llamarse fvx_suscription_backend_web.
+#
+# Desarrollo (ng serve en :4201; el navegador usa apiUrl localhost:8080 del environment.ts):
+#   docker compose up --build
+#
+# Volumen nombrado `node_modules_cache` (en Docker: «COMPOSE_PROJECT_NAME_node_modules_cache»).
+# Al cambiar package-lock, docker-entrypoint-dev.sh ejecuta `npm ci` si el lock difiere (evita TS2307).
+# Reset: `docker compose down`, `docker volume rm <nombre_del_volumen>`, `up --build`.
+#
+# Producción estática + proxy a API (mismo host; usa environment.prod con rutas /api/...):
+#   docker compose --profile prod up --build -d
+#
+# Nombre del proyecto Compose (Docker Desktop / `docker compose ls`). Opcional: archivo `.env`
+# en este directorio con `COMPOSE_PROJECT_NAME=<slug>_frontend`.
+name: ${COMPOSE_PROJECT_NAME:-fvx_suscription_frontend}
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    container_name: fvx_suscription_frontend_web
+    ports:
+      - "4201:4201"
+    volumes:
+      - .:/app
+      - node_modules_cache:/app/node_modules
+    networks:
+      - fvx_suscription_shared
+
+  nginx:
+    profiles: [prod]
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: prod
+    container_name: fvx_suscription_frontend_nginx
+    ports:
+      - "8081:80"
+    networks:
+      - fvx_suscription_shared
+
+networks:
+  fvx_suscription_shared:
+    external: true
+    name: fvx_suscription_shared
+
+volumes:
+  node_modules_cache:

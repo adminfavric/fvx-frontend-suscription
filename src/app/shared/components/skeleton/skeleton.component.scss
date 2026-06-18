@@ -1,0 +1,55 @@
+// Color base: usa `--fvx-skeleton-bg` si la paleta lo define; si no, color-mix
+// sobre el texto primario al 10% para que respete tema claro/oscuro.
+.skel {
+  display: inline-block;
+  vertical-align: middle;
+  background: var(
+    --fvx-skeleton-bg,
+    color-mix(in srgb, var(--fvx-text-primary) 10%, transparent)
+  );
+  border-radius: 6px; // default 'md'
+  overflow: hidden;
+  position: relative;
+}
+
+.skel--circle      { border-radius: 50%; }
+.skel--rounded-none{ border-radius: 0; }
+.skel--rounded-sm  { border-radius: 3px; }
+.skel--rounded-lg  { border-radius: 10px; }
+.skel--rounded-pill{ border-radius: 9999px; }
+
+// ── Animación: pulse (opacidad) ──────────────────────────────────────────────
+.skel--pulse {
+  animation: fvx-skel-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes fvx-skel-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+
+// ── Animación: wave (brillo deslizante) ─────────────────────────────────────
+.skel--wave::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--fvx-text-primary) 14%, transparent),
+    transparent
+  );
+  transform: translateX(-100%);
+  animation: fvx-skel-wave 1.6s ease-in-out infinite;
+}
+
+@keyframes fvx-skel-wave {
+  to { transform: translateX(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skel--pulse,
+  .skel--wave::after {
+    animation: none;
+  }
+}

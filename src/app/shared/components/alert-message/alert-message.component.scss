@@ -1,0 +1,84 @@
+@use 'variables' as v;
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.fvx-alert {
+  display: flex;
+  // Centrado vertical del icono respecto al bloque de texto completo.
+  // Antes (``flex-start``) el ícono se pegaba al tope, lo que en alertas
+  // de 2+ líneas (ej. warning de validación) lo dejaba descalzado del
+  // contenido visual.
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: v.$radius-md;
+  font-size: v.$font-size-sm;
+  line-height: 1.45;
+  border: 1px solid transparent;
+}
+
+.fvx-alert__icon {
+  flex-shrink: 0;
+  font-size: 22px;
+  width: 22px;
+  height: 22px;
+  // Sin margin-top: con align-items center ya queda en el medio vertical.
+}
+
+.fvx-alert__body {
+  min-width: 0;
+}
+
+.fvx-alert__title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.fvx-alert__message {
+  white-space: pre-wrap;
+}
+
+/* Tokens alineados con app-status-chip (--fvx-chip-*); permite overrides por tema */
+.fvx-alert--info {
+  background: var(--fvx-chip-info-bg, #dbeafe);
+  color: var(--fvx-chip-info-fg, #1e40af);
+  border-color: var(--fvx-chip-info-border, #bfdbfe);
+
+  .fvx-alert__icon {
+    color: var(--fvx-chip-info-fg, #1e40af);
+  }
+}
+
+.fvx-alert--success {
+  background: var(--fvx-chip-success-bg, #dcfce7);
+  color: var(--fvx-chip-success-fg, #166534);
+  border-color: var(--fvx-chip-success-border, #bbf7d0);
+
+  .fvx-alert__icon {
+    color: var(--fvx-chip-success-fg, #166534);
+  }
+}
+
+.fvx-alert--warning {
+  background: var(--fvx-chip-warn-bg, #fef3c7);
+  color: var(--fvx-chip-warn-fg, #92400e);
+  border-color: var(--fvx-chip-warn-border, #fde68a);
+
+  .fvx-alert__icon {
+    color: var(--fvx-chip-warn-fg, #92400e);
+  }
+}
+
+.fvx-alert--error {
+  background: var(--fvx-chip-danger-bg, #fee2e2);
+  color: var(--fvx-chip-danger-fg, #991b1b);
+  border-color: var(--fvx-chip-danger-border, #fecaca);
+
+  .fvx-alert__icon {
+    color: var(--fvx-chip-danger-fg, #991b1b);
+  }
+}

@@ -1,0 +1,16 @@
+<article class="chapter-card">
+  <div class="card-image">
+    <img [src]="image" [alt]="title" />
+    <div class="chapter-overlay" *ngIf="chapterNumber">
+      <span class="chapter-badge">Capítulo {{ chapterNumber }}</span>
+    </div>
+  </div>
+  
+  <div class="card-content">
+    <h3 class="card-title">{{ title }}</h3>
+    <p class="card-body">{{ truncatedBody }}</p>
+    <button class="card-button" (click)="openDetails()">
+      {{ buttonText }}
+    </button>
+  </div>
+</article>

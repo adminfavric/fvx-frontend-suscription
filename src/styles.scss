@@ -1,0 +1,1122 @@
+// ============================================================
+// FVX Template — global styles
+// ============================================================
+@use '@angular/material' as mat;
+@use 'styles/variables' as v;
+@use 'styles/theme-css-vars';
+@use 'styles/themes/tmp-light';
+@use 'styles/themes/tmp-dark';
+@use 'styles/themes/tmp-blackandwhite';
+@use 'styles/themes/tmp-beige';
+@use 'styles/material-overrides';
+
+// Mapbox GL CSS — necesario para que los controles (zoom, geolocate, scale),
+// popups y attribution se rendericen correctamente. El JS se importa lazy
+// desde ``MapboxService`` pero el CSS se sirve siempre (~12 kB minified)
+// porque debe estar en el bundle inicial antes de que el primer mapa monte.
+@import 'mapbox-gl/dist/mapbox-gl.css';
+
+// --- 1. Angular Material Theme (compact density -2) ---
+html {
+  @include mat.theme((
+    color: (
+      primary: mat.$azure-palette,
+      tertiary: mat.$cyan-palette,
+      theme-type: light,
+    ),
+    // Tipografía Geist + pesos alineados con la escala de DISENO-FVX:
+    //   regular 400 (body) · medium 600 (labels/títulos sección) · bold 700 (H1, KPI).
+    typography: (
+      plain-family: 'Geist',
+      brand-family: 'Geist',
+      regular-weight: 400,
+      medium-weight: 600,
+      bold-weight: 700,
+    ),
+    density: -2,
+  ));
+
+  // El tema M3 arriba usa primary=azure / tertiary=cyan: cualquier elemento de
+  // Material que caiga a `--mat-sys-primary` (ripples, progress-bar indeterminate,
+  // focus rings, pseudo-checkbox) muestra ese AZURE/CYAN — visible como un flash
+  // cyan un frame antes de que apliquen nuestros tokens por-componente. Repuntamos
+  // los tokens del SISTEMA al acento FVX globalmente para que NADA muestre azure.
+  // (--fvx-link lo define cada paleta de tema en _theme-palettes.scss.)
+  --mat-sys-primary: var(--fvx-link, #4f5bd5);
+  --mat-sys-tertiary: var(--fvx-link, #4f5bd5);
+  --mat-sys-on-primary: #fff;
+}
+
+// --- 1b. Escala tipográfica de la app (CSS vars runtime) ---------------------
+// Espejo de los tokens SCSS en _variables.scss para que componentes con CSS
+// scoped o vistas con sass-isolation puedan consumir sin @use. Mismo orden +
+// mismos valores; cambiar SIEMPRE en _variables.scss primero, propagar aquí.
+html {
+  // Escala tipográfica ÚNICA (rec Convivo / Claude Design). Root = 16px ⇒ rem = px/16.
+  // Los $font-size-* SCSS aliasan estos tokens (ver _variables.scss), así que el
+  // media query mobile de abajo reescala TODA la app de una sola vez.
+  --fvx-text-2xs:     0.625rem;   // 10px — micro-labels UPPERCASE (TH · badge · stat-label · soon-tag)
+  --fvx-text-xs:      0.6875rem;  // 11px — chips · hints · captions · env badge
+  --fvx-text-sm:      0.8125rem;  // 13px — celdas de tabla · field labels · secundario
+  --fvx-text-compact: 0.8125rem;  // 13px — botones · breadcrumb
+  --fvx-text-base:    0.875rem;   // 14px — BODY · ítem de menú · contenido de lectura
+  --fvx-text-md:      1rem;       // 16px — título de card / sección / modal
+  --fvx-text-lg:      1rem;       // 16px — énfasis (merge del antiguo 18px)
+  --fvx-text-xl:      1.25rem;    // 20px — sub-página · h2 empty state
+  --fvx-text-2xl:     1.5rem;     // 24px — h1 página · título de entidad
+  --fvx-text-kpi:     1.75rem;    // 28px — KPI / valor de stat
+
+  // Mobile (≤768px): sube un escalón para lectura cómoda; headings bajan un poco
+  // para no romper el layout angosto. Reescala todo el sitio vía estos tokens.
+  @media (max-width: 768px) {
+    --fvx-text-2xs:     0.6875rem;  // 11
+    --fvx-text-xs:      0.75rem;    // 12
+    --fvx-text-sm:      0.9375rem;  // 15  (celdas suben)
+    --fvx-text-compact: 0.875rem;   // 14
+    --fvx-text-base:    0.9375rem;  // 15  (body sube)
+    --fvx-text-md:      1.0625rem;  // 17
+    --fvx-text-lg:      1.0625rem;  // 17
+    --fvx-text-xl:      1.25rem;    // 20
+    --fvx-text-2xl:     1.375rem;   // 22
+    --fvx-text-kpi:     1.5rem;     // 24
+  }
+}
+
+// --- 3. Reset & Base ---
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+// Tap highlight de WebKit/Chrome móvil: por defecto pinta un rectángulo
+// semi-transparente (toma el accent del sistema → se veía CYAN) sobre CUALQUIER
+// elemento tocado (selectores, avatar, paginador, botones, celdas…). Lo apagamos
+// globalmente: Material ya da feedback táctil con sus ripples/state-layers, así
+// que no perdemos affordance. Antes solo estaba en nav-item y layout (puntual).
+* { -webkit-tap-highlight-color: transparent; }
+
+// Motion tokens — 3 duraciones canónicas. Antes convivían 0.1s / 0.12s / 0.15s /
+// 0.18s / 0.2s / 0.25s en componentes distintos. Tokenizamos a 3 valores y
+// agregamos una easing curve consistente. Los componentes nuevos deben usar
+// estas vars; los existentes se irán migrando.
+html {
+  --fvx-motion-fast: 120ms;
+  --fvx-motion-base: 180ms;
+  --fvx-motion-slow: 240ms;
+  --fvx-motion-easing: cubic-bezier(0.4, 0, 0.2, 1); // Material standard easing
+
+
+  // Subir radios da sensación cálida vs corporativa rígida. Estos son tokens
+  // CSS de runtime — coexisten con las SCSS $radius-* (compiladas) y se usan
+  // en componentes nuevos / overrides que prefieren `--fvx-radius-*`.
+  --fvx-radius-sm: 6px;     // chips, badges pequeños, inputs compactos
+  --fvx-radius: 9px;         // botones, inputs, items de nav
+  --fvx-radius-lg: 13px;     // cards, paneles, modales
+  --fvx-radius-pill: 999px;  // chips de estado, badges redondeados, avatares
+}
+
+// `rem` se ancla al ROOT. El root va en 100% (= default del navegador, 16px) y
+// NO en un rem: si el root fuera 0.9375rem, los tokens --fvx-text-* (también en
+// rem) se escalarían DOS veces y todo saldría ~6% más chico que el px de su
+// comentario. Con el root en 16px, --fvx-text-base (0.9375rem) = 15px, etc.
+html { font-size: 100%; }
+
+// Body por defecto = --fvx-text-base (14px). El texto sin token hereda esto;
+// los componentes deben usar los tokens --fvx-text-*, no hardcodear px.
+body { font-size: v.$font-size-base; }
+
+// Mobile (≤768px): inputs/selects/textarea a 16px SÍ O SÍ — iOS hace auto-zoom
+// al enfocar un campo con font-size < 16px. Cubre nativo + Material.
+@media (max-width: 768px) {
+  input,
+  select,
+  textarea,
+  .mat-mdc-input-element,
+  .mat-mdc-form-field input,
+  .mat-mdc-form-field textarea,
+  .mat-mdc-select-value {
+    font-size: 16px;
+  }
+}
+
+html, body {
+  height: 100%;
+  font-family: v.$font-family;
+  line-height: 1.45;            // spec DISENO-FVX
+  background-color: var(--fvx-bg-page);
+  color: var(--fvx-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Smooth scroll para anchor links (TOC del showcase, jumps de breadcrumbs).
+// Sin esto los saltos eran instantáneos.
+html { scroll-behavior: smooth; }
+
+// View Transitions API (router de Angular con `withViewTransitions()` —
+// ver app.config.ts). Cross-fade nativo del browser entre rutas en
+// Chrome/Edge; Safari hace fallback sin transición. La pseudoclase
+// ::view-transition-* aparece en la raíz durante la animación.
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--fvx-motion-base);
+  animation-timing-function: var(--fvx-motion-easing);
+}
+::view-transition-old(root) { animation-name: fvx-view-fade-out; }
+::view-transition-new(root) { animation-name: fvx-view-fade-in; }
+@keyframes fvx-view-fade-out { to { opacity: 0; } }
+@keyframes fvx-view-fade-in  { from { opacity: 0; } }
+
+// Accesibilidad: respetar `prefers-reduced-motion: reduce` (sistema OS).
+// Acelera todas las animaciones/transiciones a casi instantáneo sin desactivar
+// el feedback visual completamente (usuarios con sensibilidad vestibular).
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+// Lock body scroll when mobile sidebar is open
+body.sidebar-open-no-scroll {
+  overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
+  touch-action: none;
+}
+
+a { color: var(--fvx-link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+// --- 4. Scrollbar ---
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: v.$color-text-disabled; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: v.$color-text-muted; }
+
+html.theme-tmp-dark {
+  ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.18); }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.28); }
+}
+
+html.theme-tmp-blackandwhite {
+  ::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.32); }
+}
+
+// --- 5. Utility classes — solo las que están en uso real (verificado por grep).
+//      Las variantes de margin/padding/text-* nunca se usaron: los templates
+//      prefirieron `style="..."` inline o tokens via mat-*. Si se quieren
+//      utilities tipo Tailwind, considerar agregar la lib en su momento.
+.spacer { flex: 1 1 auto; }
+.gap-1 { gap: v.$spacing-sm; }
+.d-flex { display: flex; }
+.align-center { align-items: center; }
+
+// --- 6. Page layout ---
+// Ancho del contenido: ``PageContentWidthService`` (``html.fvx-page-width-extended`` → ``--fvx-page-container-max-width``).
+// Estilo card del lienzo en ``.page-container`` (compacto / extendido comparten este bloque).
+html {
+  --fvx-page-container-max-width: 1440px;
+}
+
+html.fvx-page-width-extended {
+  --fvx-page-container-max-width: 100%;
+}
+
+.page-container {
+  padding: v.$spacing-xl;
+  max-width: var(--fvx-page-container-max-width);
+  margin: 0 auto;
+  box-sizing: border-box;
+  /* Lienzo TRANSPARENTE: el título y los breadcrumbs viven sobre el fondo de
+     página, las cards internas (``.content-card`` / ``app-section-card``) son
+     las que aportan el chrome. Antes el contenedor era una "card" semi-
+     transparente con borde + sombra y el título quedaba dentro; ahora el
+     título "flota" sobre el fondo, alineado con el patrón de la imagen. */
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: v.$spacing-xl;
+  flex-wrap: wrap;
+  gap: v.$spacing-lg;
+
+  h1 {
+    // Spec FVX: H1 de página 24px peso 700 (was xl=18 / 600).
+    font-size: v.$font-size-2xl;        // 24px (escala FVX)
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--fvx-text-primary);
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+}
+
+@media (max-width: 768px) {
+  .page-container {
+    padding: v.$spacing-md v.$spacing-sm;
+  }
+
+  .page-header {
+    margin-bottom: v.$spacing-md;
+    gap: v.$spacing-sm;
+
+    h1 {
+      // Mobile: bajamos a H1 ficha (22px). El 24px desktop puede competir con
+      // el viewport estrecho.
+      font-size: v.$font-size-xl;     // 22px
+    }
+  }
+}
+
+// --- 7. Content card ---
+// Spec FVX: en admin denso la sombra en todo es ruido — el **borde define la
+// card**, sin sombra en reposo. La sombra solo aparece en hover de cards
+// interactivas (``--shadow-2``) o en flotantes (modales/popovers via
+// ``--shadow-pop``). Radio 13px (``--fvx-radius-lg``) = contenedor grande.
+.content-card {
+  background: var(--fvx-bg-card);
+  border: 1px solid var(--fvx-card-border, var(--fvx-border));
+  border-radius: var(--fvx-radius-lg, #{v.$radius-xl});
+  overflow: clip;
+  // Sin sombra en reposo (spec). El token ``--fvx-card-shadow`` que algunas
+  // paletas definían queda disponible para opt-in puntual (ej. dashboards
+  // que quieran "elevar" una card), pero no se aplica por defecto.
+  box-shadow: none;
+}
+
+// Card interactiva (clickable, ej. tiles del dashboard). El hover sí sube con
+// sombra tintada por tema (``--fvx-shadow-2`` viene de la paleta).
+.content-card--interactive {
+  cursor: pointer;
+  transition:
+    border-color var(--fvx-motion-fast, 120ms) var(--fvx-motion-easing, ease),
+    transform var(--fvx-motion-fast, 120ms) var(--fvx-motion-easing, ease),
+    box-shadow var(--fvx-motion-base, 180ms) var(--fvx-motion-easing, ease);
+}
+.content-card--interactive:hover {
+  border-color: var(--fvx-link, var(--fvx-accent));
+  transform: translateY(-2px);
+  box-shadow: var(--fvx-shadow-2, #{v.$shadow-md});
+}
+
+// Callouts — fondo tintado del estado SIN borde (no compiten con cards de datos).
+.content-card--info {
+  background: var(--fvx-chip-info-bg);
+  border-color: transparent;
+}
+.content-card--warning {
+  background: var(--fvx-chip-warn-bg);
+  border-color: transparent;
+}
+.content-card--danger {
+  background: var(--fvx-chip-danger-bg);
+  border-color: transparent;
+}
+.content-card--success {
+  background: var(--fvx-chip-success-bg);
+  border-color: transparent;
+}
+
+// Destacada (ej. ítem con atención pendiente) — borde ámbar sutil al 40%.
+.content-card--flagged {
+  border-color: color-mix(in srgb, var(--fvx-secondary, #f5b647) 40%, transparent);
+}
+
+// Tablas en páginas CRUD: la card ocupa el ancho disponible y no queda en columna estrecha.
+.page-table app-data-table {
+  display: block;
+  width: 100%;
+}
+
+.page-table .content-card {
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 58%;
+}
+
+@media (max-width: 768px) {
+  .page-table .content-card {
+    min-width: 100%;
+  }
+}
+
+// --- 8. Table container ---
+.table-container {
+  overflow-x: auto;
+
+  // Table cell truncation with ellipsis
+  table.mat-mdc-table {
+    td.mat-mdc-cell,
+    th.mat-mdc-header-cell {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+      
+      &.actions-column {
+        max-width: none;
+        white-space: nowrap;
+      }
+    }
+    
+    // Specific column widths
+    td.mat-mdc-cell,
+    th.mat-mdc-header-cell {
+      &:first-child {
+        max-width: 80px; // ID column
+      }
+    }
+  }
+}
+
+// --- 9. Status chips (custom, not mat-chip) ---
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 10px;
+  border-radius: v.$radius-full;
+  font-size: v.$font-size-xs;
+  font-weight: v.$font-weight-medium;
+  line-height: 1.7;
+  white-space: nowrap;
+
+  &.active, &.verified, &.completed, &.admitted {
+    background: #dcfce7; color: #15803d;
+  }
+  &.inactive, &.cancelled, &.deceased {
+    background: #fee2e2; color: #b91c1c;
+  }
+  &.pending, &.in-progress {
+    background: #fef3c7; color: #a16207;
+  }
+  &.draft, &.unknown {
+    background: #e0e7ff; color: #4338ca;
+  }
+}
+
+html.theme-tmp-dark .status-chip {
+  &.active, &.verified, &.completed, &.admitted {
+    background: rgba(34, 197, 94, 0.18);
+    color: #4ade80;
+  }
+  &.inactive, &.cancelled, &.deceased {
+    background: rgba(248, 113, 113, 0.18);
+    color: #fca5a5;
+  }
+  &.pending, &.in-progress {
+    background: rgba(251, 191, 36, 0.14);
+    color: #fbbf24;
+  }
+  &.draft, &.unknown {
+    background: rgba(96, 165, 250, 0.16);
+    color: #93c5fd;
+  }
+}
+
+html.theme-tmp-blackandwhite .status-chip {
+  border: 1px solid rgba(0, 0, 0, 0.18);
+
+  &.active, &.verified, &.completed, &.admitted {
+    background: #000000;
+    color: #ffffff;
+    border-color: #000000;
+  }
+  &.inactive, &.cancelled, &.deceased {
+    background: #f5f5f5;
+    color: #404040;
+    border-color: #a3a3a3;
+  }
+  &.pending, &.in-progress {
+    background: #ffffff;
+    color: #000000;
+    border-color: #737373;
+  }
+  &.draft, &.unknown {
+    background: #fafafa;
+    color: #525252;
+    border-style: dashed;
+    border-color: #a3a3a3;
+  }
+}
+
+html.theme-tmp-beige .status-chip {
+  &.active, &.verified, &.completed, &.admitted {
+    background: var(--fvx-chip-success-bg);
+    color: var(--fvx-chip-success-fg);
+    border-color: var(--fvx-chip-success-border);
+  }
+  &.inactive, &.cancelled, &.deceased {
+    background: #f7e9e8;
+    color: #9b3d38;
+  }
+  &.pending, &.in-progress {
+    background: #faf3e8;
+    color: #9a6b2e;
+  }
+  &.draft, &.unknown {
+    background: #efedf5;
+    color: #5c5480;
+  }
+}
+
+/* tmp-beige: scroll, tabla/paginador, pie sidebar */
+html.theme-tmp-beige {
+  ::-webkit-scrollbar-thumb { background: rgba(13, 74, 66, 0.2); }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(13, 74, 66, 0.32); }
+
+  .content-card > mat-paginator.mat-mdc-paginator {
+    background: var(--fvx-bg-page) !important;
+    border-top: 1px solid var(--fvx-table-border);
+  }
+
+  .fvx-segmented-toggle--sidebar.mat-button-toggle-group {
+    background: var(--fvx-segmented-toggle-group-bg) !important;
+    border-color: var(--fvx-sidebar-footer-border) !important;
+  }
+}
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  gap: v.$spacing-md;
+  padding: v.$spacing-md v.$spacing-lg;
+  flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--fvx-bg-card);
+  border-radius: v.$radius-xl v.$radius-xl 0 0;
+
+  .search-field {
+    flex: 0 0 40%;
+    min-width: 200px;
+    max-width: 500px;
+
+    /* Misma apariencia que en showcase: sin variantes de pill / bg-page; los estilos
+       vienen de `search-input` + ``_material-overrides.scss`` (borde 1px, ``radius-lg``, sin sombra de campo). */
+    app-search-input {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+    }
+  }
+}
+
+// --- 11. Dialog form layout ---
+.dialog-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 14px;
+  min-width: 480px;
+  max-width: 640px;
+  padding-top: 4px;
+
+  .checkbox-field {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 6px;
+    padding: 6px 0 2px;
+  }
+}
+
+// Patrón de campo estándar (docs/design-fvx.md — formularios, alineado a app-entity-form-dialog)
+.field-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  width: 100%;
+}
+
+.field-wrapper .mat-mdc-form-field,
+.field-wrapper mat-form-field {
+  width: 100%;
+}
+
+.field-label {
+  font-size: v.$font-size-xs;
+  font-weight: v.$font-weight-medium;
+  color: var(--fvx-text-secondary);
+  padding-left: 2px;
+
+  .required {
+    color: v.$color-warn;
+    margin-left: 1px;
+  }
+}
+
+.field-hint {
+  font-size: v.$font-size-xs;
+  color: var(--fvx-text-muted);
+  padding-left: 2px;
+  margin-top: -2px;
+}
+
+// Grid en paneles estrechos (drawer, login): sin min-width fijo del diálogo CRUD
+.dialog-form.dialog-form--embed {
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .dialog-form {
+    grid-template-columns: 1fr;
+    min-width: unset;
+    max-width: unset;
+  }
+
+  .table-toolbar {
+    padding: v.$spacing-sm;
+    top: 52px; // topbar height on mobile (fixed)
+    border-radius: 0;
+
+    .search-field {
+      flex: 0 0 100%;
+      min-width: 0;
+      max-width: none;
+    }
+  }
+
+  .content-card {
+    border-radius: v.$radius-lg;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .table-toolbar {
+    .search-field {
+      flex: 0 0 50%;
+      max-width: 50%;
+    }
+  }
+}
+
+// --- 12. Snackbar color overrides ---
+// Info usa el acento del tema (índigo en default/light/dark) para mantener identidad.
+.success-snackbar .mdc-snackbar__surface {
+  background: #15803d !important;
+}
+.error-snackbar .mdc-snackbar__surface {
+  background: #b91c1c !important;
+}
+.info-snackbar .mdc-snackbar__surface {
+  background: var(--fvx-accent-hover, var(--fvx-link, #{v.$color-primary-dark})) !important;
+}
+.warning-snackbar .mdc-snackbar__surface {
+  background: #b45309 !important;
+}
+
+// Texto + acción + ícono de cierre en BLANCO sobre estos fondos saturados. Sin
+// esto el label toma el gris por defecto del tema de Material y no contrasta.
+.success-snackbar,
+.error-snackbar,
+.info-snackbar,
+.warning-snackbar {
+  --mdc-snackbar-supporting-text-color: #fff;
+  .mdc-snackbar__label,
+  .mat-mdc-snack-bar-action,
+  .mat-mdc-button { color: #fff !important; }
+}
+
+// --- 13. Empty state ---
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px v.$spacing-xl;
+  color: var(--fvx-text-muted);
+
+  .mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: v.$spacing-sm;
+    opacity: 0.5;
+  }
+
+  p {
+    font-size: v.$font-size-base;
+    font-weight: v.$font-weight-medium;
+  }
+}
+
+// --- 14. Focus visible outlines (accessibility) ---
+// Drawer styles - prevent body scroll when drawer is open
+body.drawer-open-no-scroll {
+  overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
+  touch-action: none;
+}
+
+// Focus ring unificado (ver docs/Re-estilado _ Indigo _ Ambar.md §5.2):
+//   box-shadow: 0 0 0 3px var(--accent-soft); border-color: var(--border-focus);
+// Material anula outline en :focus pero no en :focus-visible, así que limitamos
+// a no-inputs (en inputs el outline interactúa mal con overflow:hidden de cards
+// y se ve como una franja gruesa; el feedback ya lo da el outlined notch del MDC).
+*:not(input):not(textarea):not(select):focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--fvx-accent-soft, color-mix(in srgb, var(--fvx-link) 24%, transparent));
+  border-radius: v.$radius-sm;
+  // Color del borde sólo aplica si el elemento ya tiene borde (controles).
+  // Para elementos sin borde, el ring del box-shadow es suficiente.
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none !important;
+}
+
+.mat-mdc-form-field .mat-mdc-input-element:focus,
+.mat-mdc-form-field .mat-mdc-input-element:focus-visible,
+.mat-mdc-form-field select.mat-mdc-form-field-input-control:focus-visible {
+  outline: none !important;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Command palette (Cmd/Ctrl+K). Reset del contenedor MatDialog para que el
+// componente controle padding/borde/altura sin pelear con el default Material.
+// ─────────────────────────────────────────────────────────────────────────────
+.cdk-overlay-pane.command-palette-dialog {
+  // Casi pegado al tope del viewport (estilo "quick action bar"). Antes 8vh
+  // → demasiado bajo; el patrón típico de palette (Spotlight/Raycast) lo
+  // posiciona muy arriba para no tapar contenido al que se va a navegar.
+  margin-top: 2vh;
+  align-self: flex-start;
+
+  .mat-mdc-dialog-container {
+    padding: 0;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--fvx-bg-card);
+    border: 1px solid var(--fvx-border);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+
+    .mat-mdc-dialog-surface {
+      padding: 0;
+      background: transparent;
+      box-shadow: none;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+  }
+}
+
+.cdk-overlay-backdrop.command-palette-backdrop {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Centrado FIABLE de los diálogos CRUD (form / confirmación / relación).
+// La clase `fvx-crud-dialog` va directamente en el `.cdk-overlay-pane` (vía
+// `panelClass` en crudDialogSizing). `margin: auto` en un flex-item absorbe el
+// espacio libre del wrapper del overlay y lo CENTRA en ambos ejes — sin depender
+// del `align-items` del wrapper (que no se aplicaba en este entorno). `top:auto`
+// neutraliza cualquier offset inline que setee la estrategia de posición.
+// El command palette usa otra panelClass, así que no se ve afectado.
+.cdk-overlay-pane.fvx-crud-dialog {
+  // Centrado RESPECTO A LA PANTALLA: no depende de que el wrapper del overlay
+  // sea flex (en este entorno no lo es, por eso `align-items`/`margin:auto` solo
+  // centraban en horizontal y el diálogo quedaba pegado arriba). `position:fixed`
+  // + translate lo centra en ambos ejes de forma fiable.
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+  max-height: 92vh !important;
+}
+
+// Barra "grip" (indicador de arrastrable) para los diálogos CRUD, DECLARATIVA:
+// el handle "real" lo agrega `MatDialogDragService` vía la clase
+// `.fvx-dialog-draggable`, pero ese servicio puede no inicializar en el build de
+// producción (tree-shaking del init). Para que el aspecto sea idéntico a dev sin
+// depender del JS, pintamos la barrita con CSS sobre `.fvx-crud-dialog` (panelClass
+// declarativa, siempre presente). Si el JS sí corre (agrega `.fvx-dialog-draggable`),
+// el `:not()` oculta esta para no duplicar el indicador.
+.cdk-overlay-pane.fvx-crud-dialog:not(.fvx-dialog-draggable) .mat-mdc-dialog-title {
+  position: relative !important;
+  padding-top: 22px !important;
+
+  &::before {
+    content: '' !important;
+    display: block !important;
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 4px;
+    border-radius: 99px;
+    background: var(--fvx-border-strong, var(--fvx-border));
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Kebab menu (acciones secundarias por fila en `app-data-table`).
+// El mat-menu se teletransporta al body vía cdk-overlay; por eso aquí, global.
+// ─────────────────────────────────────────────────────────────────────────────
+// ── Dropdown de filtros del CRUD (cuando filterMode='dropdown') ──
+// El mat-menu se teletransporta al body vía cdk-overlay; estilo aquí (global).
+.mat-mdc-menu-panel.crud-filters-menu {
+  max-width: none;
+  min-width: 280px;
+  background: var(--fvx-bg-card);
+  color: var(--fvx-text-primary);
+  border: 1px solid var(--fvx-border);
+
+  .mat-mdc-menu-content {
+    padding: 0 !important;
+  }
+
+  .crud-filters-menu__inner {
+    padding: 4px 0;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+}
+
+.mat-mdc-menu-panel.fvx-kebab-menu {
+  min-width: 200px;
+  background: var(--fvx-bg-card);
+  color: var(--fvx-text-primary);
+  border: 1px solid var(--fvx-border);
+
+  .mat-mdc-menu-item {
+    font-size: var(--fvx-text-compact);
+    min-height: 36px;
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      margin-right: 8px;
+      color: var(--fvx-text-muted);
+    }
+  }
+
+  .mat-mdc-menu-item.danger {
+    color: var(--fvx-chip-danger-fg, #ef4444);
+
+    mat-icon {
+      color: var(--fvx-chip-danger-fg, #ef4444);
+    }
+  }
+  .mat-mdc-menu-item.danger:hover {
+    background: color-mix(in srgb, var(--fvx-chip-danger-fg, #ef4444) 10%, transparent);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// User menu (avatar del topbar → dropdown con Perfil/Tema/Idioma/Cerrar sesión).
+// Diseño consistente con docs/inbox: ancho cómodo, items con padding tighter,
+// caret apuntando hacia el trigger (estilo "popover").
+// ─────────────────────────────────────────────────────────────────────────────
+.mat-mdc-menu-panel.fvx-user-menu {
+  min-width: 260px;
+  max-width: 320px;
+  margin-top: 10px;             // gap respiratorio vs el avatar
+  background: var(--fvx-bg-card);
+  color: var(--fvx-text-primary);
+  border: 1px solid var(--fvx-border);
+  overflow: visible;            // necesario para que el caret sobresalga
+  padding: 4px 0;
+
+  // Caret (flechita) apuntando hacia arriba al avatar. El menú abre con
+  // xPosition="before" (right edge alineado al right edge del trigger),
+  // así que el caret va a la derecha. 18px = centro del icon-button (40px / 2 - 2).
+  &::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 18px;
+    width: 12px;
+    height: 12px;
+    background: var(--fvx-bg-card);
+    border-top: 1px solid var(--fvx-border);
+    border-left: 1px solid var(--fvx-border);
+    transform: rotate(45deg);
+    z-index: 1;
+  }
+
+  .mat-mdc-menu-content {
+    padding: 0 !important;        // controlamos el padding outer
+  }
+
+  // Header: nombre + email — más compacto y con mejor jerarquía.
+  // flex-column: <strong>/<small> son inline por defecto → sin esto salen en la
+  // misma línea (nombre y email pegados).
+  .user-menu-header {
+    display: flex;
+    flex-direction: column;
+    padding: 12px 16px 10px;
+    strong { font-size: var(--fvx-text-compact); line-height: 1.3; color: var(--fvx-text-primary); }
+    small  { font-size: var(--fvx-text-sm); line-height: 1.4; color: var(--fvx-text-muted); margin-top: 2px; }
+  }
+
+  .mat-mdc-menu-item {
+    min-height: 38px;             // default 48px era demasiado generoso
+    font-size: var(--fvx-text-compact);
+    padding: 0 16px;
+
+    .mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      margin-right: 12px;         // gap consistente icono ↔ label
+      color: var(--fvx-text-muted);
+    }
+
+    &:hover .mat-icon {
+      color: var(--fvx-text-primary);
+    }
+
+    // Indicador de submenu (flechita derecha) — Material lo pone con un
+    // padding raro; lo realineamos al margin del item.
+    .mat-mdc-menu-submenu-icon {
+      margin-left: 8px;
+    }
+  }
+
+  // Footer: versión — más sutil
+  .user-menu-footer {
+    padding: 8px 16px 10px;
+    border-top: 1px solid var(--fvx-border);
+    font-size: var(--fvx-text-xs);   // 11px (escala FVX)
+    color: var(--fvx-text-muted);
+    text-align: right;
+    letter-spacing: 0.02em;
+  }
+}
+
+// Submenús (Tema, Idioma) — heredan ancho y estilos similares al menu padre
+// para que no se sientan como otro componente.
+.mat-mdc-menu-panel.fvx-user-submenu {
+  min-width: 220px;
+  background: var(--fvx-bg-card);
+  color: var(--fvx-text-primary);
+  border: 1px solid var(--fvx-border);
+  padding: 4px 0;
+
+  .mat-mdc-menu-item {
+    min-height: 36px;
+    font-size: var(--fvx-text-compact);
+    padding: 0 14px;
+
+    .mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      margin-right: 10px;
+      color: var(--fvx-text-muted);
+    }
+
+    &.active {
+      background: color-mix(in srgb, var(--fvx-link) 8%, transparent);
+      .mat-icon { color: var(--fvx-link); }
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Inbox menu (campana de notificaciones del topbar).
+// mat-menu se teletransporta al <body> vía cdk-overlay, por eso este bloque
+// vive aquí en global y no en `layout.component.scss`.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Mobile: CENTRAR el panel. mat-menu ancla el overlay a la campana (borde
+// derecho), así que aunque el panel sea full-width queda pegado al borde.
+// Forzamos el bounding-box del overlay a todo el ancho y centramos el pane
+// (cross-axis del flex). `:has` apunta solo al overlay que contiene el inbox.
+@media (max-width: 768px) {
+  .cdk-overlay-connected-position-bounding-box:has(.inbox-menu) {
+    left: 0 !important;
+    right: auto !important;
+    width: 100vw !important;
+    align-items: center !important;
+  }
+}
+
+.mat-mdc-menu-panel.inbox-menu {
+  min-width: 360px;
+  max-width: 420px;
+  max-height: 480px;
+  background: var(--fvx-bg-card);
+  color: var(--fvx-text-primary);
+  border: 1px solid var(--fvx-border);
+  overflow: hidden;
+
+  // Mobile: el ancho fijo (360–420px) no cabe junto a la campana (borde derecho),
+  // el overlay lo clampa y queda "corrido". Casi full-width dentro del viewport.
+  @media (max-width: 768px) {
+    min-width: 0;
+    width: calc(100vw - 16px);
+    max-width: calc(100vw - 16px);
+  }
+
+  .inbox-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+
+    strong {
+      font-size: var(--fvx-text-compact);
+      color: var(--fvx-text-primary);
+    }
+
+    .inbox-mark-all {
+      font-size: var(--fvx-text-sm);
+      min-width: 0;
+      padding: 0 8px;
+      color: var(--fvx-link);
+    }
+  }
+
+  .inbox-empty {
+    padding: 28px 16px;
+    text-align: center;
+    color: var(--fvx-text-muted);
+    font-size: var(--fvx-text-compact);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+
+    mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: var(--fvx-text-muted);
+      opacity: 0.6;
+    }
+  }
+
+  .inbox-list {
+    max-height: 380px;
+    overflow-y: auto;
+  }
+
+  .inbox-item {
+    display: flex !important;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+    height: auto;
+    line-height: 1.35;
+    white-space: normal;
+    border-bottom: 1px solid var(--fvx-border);
+
+    &:last-child { border-bottom: none; }
+  }
+
+  .inbox-item--unread {
+    background: color-mix(in srgb, var(--fvx-link) 6%, transparent);
+  }
+
+  .inbox-icon {
+    flex-shrink: 0;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+  }
+  .inbox-icon--system      { color: var(--fvx-chip-info-fg, var(--fvx-link)); }
+  .inbox-icon--operational { color: var(--fvx-chip-warn-fg, #c08400); }
+  .inbox-icon--critical    { color: var(--fvx-chip-danger-fg, #c62828); }
+
+  .inbox-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    text-align: left;
+  }
+
+  .inbox-title {
+    font-size: var(--fvx-text-compact);
+    font-weight: 500;
+    color: var(--fvx-text-primary);
+  }
+  .inbox-body {
+    font-size: var(--fvx-text-sm);
+    color: var(--fvx-text-secondary);
+    overflow-wrap: anywhere;
+  }
+  .inbox-time {
+    margin-top: 2px;
+    font-size: var(--fvx-text-xs);
+    color: var(--fvx-text-muted);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   SITIO PÚBLICO — Experiencias Lita Donoso (diseño portado desde exp-litadonoso)
+   Paleta, animaciones y panel-classes de los MatDialog del sitio. Aditivo: no
+   altera el theme Material del admin (fvx). Las panel-classes deben ser globales
+   porque los diálogos se montan en el <body>.
+   ════════════════════════════════════════════════════════════════════════ */
+:root {
+  --color-gold: #C9A227;
+  --color-gold-light: #E8D5A3;
+  --color-gold-dark: #9A7B1A;
+  --color-purple: #6B4C8C;
+  --color-purple-light: #9B7BB8;
+  --color-purple-dark: #4A3563;
+  --color-slate: #2C3E50;
+  --color-slate-light: #5D6D7E;
+  --color-bg: #F8F9FA;
+  --color-bg-dark: #1A1A2E;
+  --color-text: #2C3E50;
+  --color-text-light: #5D6D7E;
+  --color-white: #FFFFFF;
+  --color-overlay: rgba(26, 26, 46, 0.6);
+  --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --shadow-medium: 0 16px 48px rgba(0, 0, 0, 0.15);
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-medium: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.animate-on-scroll.visible { opacity: 1; transform: translateY(0); }
+.animate-delay-1 { transition-delay: 0.1s; }
+.animate-delay-2 { transition-delay: 0.2s; }
+.animate-delay-3 { transition-delay: 0.3s; }
+.animate-delay-4 { transition-delay: 0.4s; }
+
+/* Panel-classes de los MatDialog del sitio público */
+.popup-dialog-panel .mat-mdc-dialog-container { border-radius: var(--radius-lg); overflow: hidden; }
+.popup-dialog-panel .mdc-dialog__surface { border-radius: var(--radius-lg) !important; }
+.chapter-dialog-panel .mat-mdc-dialog-container { padding: 0; border-radius: var(--radius-md); overflow: hidden; }
+.chapter-dialog-panel .mdc-dialog__surface { border-radius: var(--radius-md) !important; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important; }
+.photo-viewer-panel .mat-mdc-dialog-container { padding: 0; background: transparent; box-shadow: none; }
+.photo-viewer-panel .mdc-dialog__surface { background: transparent !important; box-shadow: none !important; }
+.trailer-dialog-panel .mat-mdc-dialog-container { padding: 0; border-radius: 12px; overflow: hidden; }
+.trailer-dialog-panel .mdc-dialog__surface { border-radius: 12px !important; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5) !important; }
+.maraton-dialog-panel .mat-mdc-dialog-container { padding: 0; border-radius: 16px; overflow: hidden; }
+.maraton-dialog-panel .mdc-dialog__surface { border-radius: 16px !important; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4) !important; }

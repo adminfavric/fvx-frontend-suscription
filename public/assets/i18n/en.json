@@ -1,0 +1,480 @@
+{
+  "layout": {
+    "brandName": "FVX Suscription",
+    "goHome": "Go to home",
+    "configuration": "Settings",
+    "appearance": "Appearance",
+    "configurationSectionExpand": "Show settings",
+    "configurationSectionCollapse": "Hide settings",
+    "contentWidth": "Page width",
+    "contentWidthAria": "Maximum width of page content",
+    "contentWidthCompactTip": "Compact (max 1440px)",
+    "contentWidthExtendedTip": "Extended (100% of viewport)",
+    "themeAria": "Visual theme",
+    "theme": {
+      "tmpDefault": "Default",
+      "tmpLight": "Light",
+      "tmpDark": "Dark",
+      "tmpBlackandwhite": "Black and white",
+      "tmpBeige": "Beige"
+    },
+    "userMenuAria": "User menu",
+    "userTooltip": "User",
+    "profile": "Profile",
+    "signOut": "Sign out",
+    "profileDrawerTitle": "My profile",
+    "lang": {
+      "label": "Language",
+      "aria": "Interface language",
+      "enTip": "English",
+      "esTip": "Spanish",
+      "en": "English",
+      "es": "Spanish"
+    },
+    "themeSubmenu": "Theme",
+    "helpTooltip": "Help & shortcuts",
+    "version": "Version {{version}}",
+    "env": {
+      "stagingLong": "staging",
+      "devLong": "developer mode"
+    },
+    "notifications": {
+      "tooltip": "Notifications",
+      "title": "Notifications",
+      "markAllRead": "Mark all read",
+      "empty": "No new notifications"
+    },
+    "commandPalette": {
+      "tooltip": "Search & commands",
+      "searchPlaceholder": "Search",
+      "placeholder": "Type a command or search…",
+      "empty": "No matches",
+      "group": {
+        "actions": "Actions",
+        "navigation": "Navigation",
+        "entities": "Entities"
+      },
+      "actions": {
+        "nextTheme": "Next theme",
+        "toggleLang": "Toggle language (EN/ES)"
+      },
+      "nav": {
+        "dashboard": "Go to dashboard"
+      },
+      "footer": {
+        "navigate": "navigate",
+        "select": "open",
+        "close": "close"
+      }
+    },
+    "help": {
+      "title": "Help & shortcuts",
+      "intro": "Available keyboard shortcuts in the admin shell.",
+      "action": "Action",
+      "shortcut": "Shortcut",
+      "upcoming": "soon",
+      "version": "Version {{version}}",
+      "shortcuts": {
+        "closeDialog": "Close dialog / drawer",
+        "submitForm": "Submit form",
+        "commandPalette": "Command palette"
+      }
+    },
+    "nav": {
+      "fallback": {
+        "groupAdministration": "Administration",
+        "dashboard": "Dashboard",
+        "users": "Users",
+        "groups": "Groups",
+        "plans": "Plans",
+        "customers": "Customers",
+        "subscriptions": "Subscriptions",
+        "content": "Content",
+        "programacion": "Schedule",
+        "events": "Events",
+        "messages": "Messages",
+        "groupDev": "Dev",
+        "components": "Components"
+      },
+      "favorites": {
+        "title": "Favorites",
+        "addTooltip": "Add to favorites",
+        "removeTooltip": "Remove from favorites",
+        "maxReached": "Up to 5 favorites",
+        "rowLabel": "{{name}}, favorite {{index}} of {{total}}. Use Alt+Arrow Up or Alt+Arrow Down to reorder.",
+        "moved": "{{name}} moved to position {{index}} of {{total}}"
+      },
+      "group": {
+        "collapse": "Collapse",
+        "expand": "Expand"
+      }
+    }
+  },
+  "pageHeader": {
+    "ariaBreadcrumb": "Breadcrumb"
+  },
+  "filterPanel": {
+    "title": "Filters",
+    "showFilters": "Show filters",
+    "hideFilters": "Hide filters",
+    "clearAll": "Clear all",
+    "optionAll": "All",
+    "textPlaceholder": "Filter…"
+  },
+  "crud": {
+    "addItem": "Add {{name}}",
+    "searchPlaceholder": "Search {{entity}}...",
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete",
+      "toggleActive": "Toggle active state"
+    },
+    "dialog": {
+      "createTitle": "Create {{entity}}",
+      "editTitle": "Edit {{entity}}"
+    },
+    "error": {
+      "forbiddenAction": "You do not have permission to perform this action."
+    },
+    "confirm": {
+      "title": "Confirm delete",
+      "message": "Are you sure you want to delete {{entity}}?",
+      "deleteAction": "Delete",
+      "confirm": "Confirm"
+    },
+    "notify": {
+      "updated": "{{entity}} updated successfully.",
+      "created": "{{entity}} created successfully.",
+      "deleted": "{{entity}} deleted successfully.",
+      "activated": "{{entity}} activated.",
+      "deactivated": "{{entity}} deactivated."
+    },
+    "export": {
+      "noColumns": "No export columns configured",
+      "noData": "No data to export",
+      "success": "Data exported successfully"
+    },
+    "drawerTitle": "{{entity}} #{{id}}",
+    "field": {
+      "id": "ID",
+      "name": "Name",
+      "username": "Username",
+      "email": "Email",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "password": "Password",
+      "active": "Active",
+      "staff": "Staff",
+      "joined": "Joined",
+      "lastLogin": "Last login"
+    }
+  },
+  "users": {
+    "title": "Users",
+    "subtitle": "Directory accounts, roles and access from the API.",
+    "entitySingular": "User",
+    "breadcrumb": "Users",
+    "errors": {
+      "cannotDeactivateSelf": "You cannot deactivate your own account from here."
+    },
+    "toggle": {
+      "deactivate": "Deactivate user",
+      "activate": "Activate user"
+    },
+    "form": {
+      "staffRestrictedHint": "Only staff users can grant or remove staff status.",
+      "profileRole": "Role",
+      "roleRestrictedHint": "Only staff can change directory role; the current value is kept on save."
+    },
+    "role": {
+      "admin": "Admin",
+      "editor": "Editor",
+      "viewer": "Viewer"
+    },
+    "export": {
+      "is_superuser": "Superuser",
+      "role": "Role",
+      "phone": "Phone",
+      "verified": "Verified",
+      "photoUrl": "Photo URL"
+    }
+  },
+  "groups": {
+    "title": "Groups",
+    "subtitle": "Permission groups for organizing users.",
+    "entitySingular": "Group",
+    "breadcrumb": "Groups"
+  },
+  "plans": {
+    "title": "Plans",
+    "subtitle": "Memberships and subscription plans (synced with Flow).",
+    "entitySingular": "Plan",
+    "breadcrumb": "Plans",
+    "importFromFlow": "Import from Flow",
+    "importing": "Importing…",
+    "importDone": "Imported {{created}}, updated {{updated}} from Flow.",
+    "field": {
+      "amount": "Price",
+      "currency": "Currency",
+      "interval": "Frequency",
+      "intervalCount": "Every N",
+      "trialDays": "Trial days",
+      "daysUntilDue": "Days until due",
+      "periodsNumber": "Periods",
+      "chargesRetries": "Charge retries",
+      "tagline": "Tagline",
+      "description": "Description",
+      "cadence": "Cadence",
+      "icon": "Icon",
+      "imageUrl": "Image (URL)",
+      "order": "Order",
+      "recorded": "Recorded",
+      "featured": "Featured",
+      "isPublic": "Public",
+      "active": "Active",
+      "flowSynced": "Flow"
+    }
+  },
+  "profileEditor": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "staff": "Staff",
+    "avatar": {
+      "title": "Avatar",
+      "subtitle": "Upload an image; the resulting URL will be saved to your profile.",
+      "chooseImage": "Choose image",
+      "fileHint": "JPG, PNG or WebP · max 5 MB · one image",
+      "removePhoto": "Remove current photo"
+    },
+    "personal": {
+      "title": "Personal information",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "phone": "Phone",
+      "phonePlaceholder": "+1 …",
+      "nameLockedHint": "Your name is already on record. To correct it, contact an administrator."
+    },
+    "account": {
+      "title": "Account data",
+      "subtitle": "These fields identify your account and cannot be changed from here.",
+      "username": "Username",
+      "email": "Email",
+      "role": "Role",
+      "fieldLocked": "Read-only field",
+      "roleLockedHint": "Assigned by an administrator",
+      "footerHint": "To change your email or username, contact an administrator."
+    },
+    "notify": {
+      "saved": "Profile updated.",
+      "saveError": "Could not save your profile."
+    }
+  },
+  "entityDialog": {
+    "close": "Close",
+    "selectPlaceholder": "Select…",
+    "datePlaceholder": "dd-mm-yyyy",
+    "cancel": "Cancel",
+    "create": "Create",
+    "saveChanges": "Save changes",
+    "saving": "Saving…"
+  },
+  "relationshipDialog": {
+    "loading": "Loading…",
+    "emptyLinked": "No {{label}} linked yet",
+    "remove": "Remove",
+    "addTitle": "Add {{label}}",
+    "searchLabel": "Search {{label}}",
+    "searchPlaceholder": "Type to search…",
+    "linkAction": "Link {{label}}",
+    "linkedSuccess": "{{label}} linked successfully",
+    "removedSuccess": "Relationship removed"
+  },
+  "previewExport": {
+    "print": "Print",
+    "downloadPdf": "Download PDF",
+    "downloadPng": "Download image (PNG)"
+  },
+  "infoHelp": {
+    "assistant": "Assistant",
+    "ariaTrigger": "Help:",
+    "close": "Close",
+    "example": "Example",
+    "useful": "Was this helpful?",
+    "yes": "Yes",
+    "no": "No",
+    "thanks": "Thanks for your feedback!"
+  },
+  "help": {
+    "role": {
+      "title": "User role",
+      "body": "The **role** decides what a user can see and do: which menu items appear and which actions (create, edit, delete) are allowed. It is independent of *staff*.",
+      "example": "A VIEWER role can open the users list but won't see the edit or delete buttons; an ADMIN role sees them all."
+    },
+    "staff": {
+      "title": "Staff access",
+      "body": "**Staff** users can reach the Django admin and always see every menu item, regardless of their role. Reserve it for trusted operators.",
+      "example": "An accountant might be a regular EDITOR; only the platform operator who manages the backend needs the staff flag."
+    }
+  },
+  "fileUploader": {
+    "dropHint": "Drop files here or click to upload",
+    "selectFiles": "Select files",
+    "noFiles": "No files selected",
+    "fileCount": "{{count}} file(s) · {{bytes}} B",
+    "viewFile": "View file",
+    "uploadFailed": "Upload failed",
+    "cancel": "Cancel",
+    "remove": "Remove",
+    "accepted": "Accepted: {{types}}",
+    "maxSize": "Max {{mb}} MB per file",
+    "noProvider": "No upload provider configured",
+    "noProviderDetail": "No upload provider is configured. Provide FILE_UPLOAD_PROVIDER.",
+    "errorTooLarge": "File exceeds {{mb}} MB",
+    "errorType": "File type not accepted"
+  },
+  "dataTable": {
+    "keyboardNavLabel": "Data table. Use the arrow keys to move between rows; Enter or Space to mark/unmark.",
+    "refresh": "Refresh",
+    "exportExcel": "Export to Excel",
+    "actions": "Actions",
+    "moreActions": "More actions",
+    "clearSearch": "Clear search",
+    "emptyTitle": "No records found",
+    "emptyFilteredTitle": "No results match your filter",
+    "pinColumns": "Pin columns",
+    "rowN": "row {{n}}",
+    "rowMarked": "{{row}} marked",
+    "rowUnmarked": "{{row}} unmarked",
+    "rowActive": "{{row}}, row {{index}} of {{total}}, {{state}}",
+    "stateMarked": "marked",
+    "stateUnmarked": "not marked",
+    "selectRowsOn": "Enable row selection",
+    "selectRowsOff": "Disable row selection",
+    "keyboardNavOn": "Enable keyboard navigation",
+    "keyboardNavOff": "Disable keyboard navigation",
+    "densityCompact": "Compact rows",
+    "densityNormal": "Normal rows"
+  },
+  "placeSearch": {
+    "notConfigured": "Address search not configured (Mapbox token missing).",
+    "empty": "No matches",
+    "clear": "Clear search"
+  },
+  "map": {
+    "notConfigured": "Map not configured (Mapbox token missing).",
+    "scrollHint": "Click to activate zoom"
+  },
+  "datePicker": {
+    "today": "Today",
+    "chooseYear": "Choose year…",
+    "apply": "Apply",
+    "cancel": "Cancel",
+    "time": "Time"
+  },
+  "common": {
+    "yes": "Yes",
+    "no": "No",
+    "dash": "—",
+    "none": "— None —",
+    "close": "Close",
+    "never": "Never",
+    "breadcrumbHome": "Home"
+  },
+  "errors": {
+    "network": "Could not connect to server. Check your connection and try again.",
+    "server": "Server error. Please try again later.",
+    "unexpected": "An unexpected error occurred.",
+    "backToHome": "Back to dashboard",
+    "refPrefix": "Ref:",
+    "notFound": {
+      "title": "Not found",
+      "subtitle": "The page you requested does not exist.",
+      "heading": "Page not found",
+      "body": "Check the URL or go back to the dashboard."
+    },
+    "forbidden": {
+      "title": "Forbidden",
+      "subtitle": "You do not have access to this section.",
+      "heading": "Access denied",
+      "body": "If you think this is a mistake, contact an administrator."
+    },
+    "serverError": {
+      "title": "Something went wrong",
+      "subtitle": "An error occurred on our end.",
+      "heading": "Server error",
+      "body": "Try reloading this page. If the problem persists, send a report so we can look into it.",
+      "report": "Report",
+      "retry": "Retry",
+      "reportSent": "Report sent. Thanks for helping us improve."
+    }
+  },
+  "unsavedChanges": {
+    "title": "Unsaved changes",
+    "message": "You have unsaved changes. If you leave now, they will be lost.",
+    "stay": "Stay",
+    "leave": "Leave anyway"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Key metrics from the platform (see API `GET /api/v1/stats/`).",
+    "breadcrumb": "Dashboard",
+    "statsLoadError": "Could not load dashboard metrics. Check your connection and try again.",
+    "noStats": "No metrics to display yet.",
+    "loadingKpi": "Loading…",
+    "stats": {
+      "usersActive": "Active users",
+      "roleAdmin": "Directory role: Admin",
+      "roleEditor": "Directory role: Editor",
+      "roleViewer": "Directory role: Viewer"
+    }
+  },
+  "login": {
+    "brandTitle": "FVX Suscription",
+    "tagline": "Operations and administration in one place.",
+    "signInTitle": "Sign in",
+    "signInSubtitle": "Enter your credentials to continue",
+    "username": "Username",
+    "password": "Password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "signingIn": "Signing in…",
+    "signIn": "Sign in",
+    "footerHint": "Protected area — use credentials issued by your organization.",
+    "errorInvalidCredentials": "Invalid username or password",
+    "errorNetwork": "Could not connect to server",
+    "errorGeneric": "Sign-in failed. Try again or contact an administrator.",
+    "orContinue": "Or continue with",
+    "continueWithApple": "Sign in with Apple",
+    "brandKicker": "Administration platform",
+    "brandHeadline": "Everything under control.",
+    "stat1Value": "12",
+    "stat1Label": "active workspaces",
+    "stat2Value": "3,480",
+    "stat2Label": "records managed",
+    "footEncrypted": "Encrypted session",
+    "footSso": "Corporate SSO",
+    "continueWithMicrosoft": "Sign in with Microsoft"
+  },
+  "entityDrawer": {
+    "defaultTitle": "Detail",
+    "loading": "Loading…",
+    "retry": "Retry",
+    "loadError": "Failed to load",
+    "close": "Close"
+  },
+  "userDetail": {
+    "personalInfo": "Personal information",
+    "systemInfo": "System information",
+    "email": "Email",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "phone": "Phone",
+    "registeredAt": "Registered",
+    "lastAccess": "Last access",
+    "never": "Never",
+    "active": "Active",
+    "inactive": "Inactive",
+    "staff": "Staff",
+    "verified": "Verified"
+  }
+}

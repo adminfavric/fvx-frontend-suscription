@@ -1,0 +1,480 @@
+{
+  "layout": {
+    "brandName": "FVX Suscription",
+    "goHome": "Ir al inicio",
+    "configuration": "Configuración",
+    "appearance": "Apariencia",
+    "configurationSectionExpand": "Mostrar configuración",
+    "configurationSectionCollapse": "Ocultar configuración",
+    "contentWidth": "Ancho de página",
+    "contentWidthAria": "Ancho máximo del contenido",
+    "contentWidthCompactTip": "Compacto (máx. 1440px)",
+    "contentWidthExtendedTip": "Extendido (100% de la pantalla)",
+    "themeAria": "Tema visual",
+    "theme": {
+      "tmpDefault": "Predeterminado",
+      "tmpLight": "Claro",
+      "tmpDark": "Oscuro",
+      "tmpBlackandwhite": "Blanco y negro",
+      "tmpBeige": "Beige"
+    },
+    "userMenuAria": "Menú de usuario",
+    "userTooltip": "Usuario",
+    "profile": "Perfil",
+    "signOut": "Cerrar sesión",
+    "profileDrawerTitle": "Mi perfil",
+    "themeSubmenu": "Tema",
+    "helpTooltip": "Ayuda y atajos",
+    "version": "Versión {{version}}",
+    "env": {
+      "stagingLong": "staging",
+      "devLong": "modo desarrollo"
+    },
+    "notifications": {
+      "tooltip": "Notificaciones",
+      "title": "Notificaciones",
+      "markAllRead": "Marcar todas leídas",
+      "empty": "No hay notificaciones nuevas"
+    },
+    "commandPalette": {
+      "tooltip": "Búsqueda y comandos",
+      "searchPlaceholder": "Buscar",
+      "placeholder": "Escribe un comando o busca…",
+      "empty": "Sin resultados",
+      "group": {
+        "actions": "Acciones",
+        "navigation": "Navegación",
+        "entities": "Entidades"
+      },
+      "actions": {
+        "nextTheme": "Siguiente tema",
+        "toggleLang": "Cambiar idioma (EN/ES)"
+      },
+      "nav": {
+        "dashboard": "Ir al panel"
+      },
+      "footer": {
+        "navigate": "navegar",
+        "select": "abrir",
+        "close": "cerrar"
+      }
+    },
+    "help": {
+      "title": "Ayuda y atajos",
+      "intro": "Atajos de teclado disponibles en el panel.",
+      "action": "Acción",
+      "shortcut": "Atajo",
+      "upcoming": "próximamente",
+      "version": "Versión {{version}}",
+      "shortcuts": {
+        "closeDialog": "Cerrar diálogo / drawer",
+        "submitForm": "Enviar formulario",
+        "commandPalette": "Paleta de comandos"
+      }
+    },
+    "lang": {
+      "label": "Idioma",
+      "aria": "Idioma de la interfaz",
+      "enTip": "Inglés",
+      "esTip": "Español",
+      "en": "Inglés",
+      "es": "Español"
+    },
+    "nav": {
+      "fallback": {
+        "groupAdministration": "Administración",
+        "dashboard": "Panel",
+        "users": "Usuarios",
+        "groups": "Grupos",
+        "plans": "Planes",
+        "customers": "Clientes",
+        "subscriptions": "Suscripciones",
+        "content": "Contenido",
+        "programacion": "Programación",
+        "events": "Eventos",
+        "messages": "Mensajes",
+        "groupDev": "Desarrollo",
+        "components": "Componentes"
+      },
+      "favorites": {
+        "title": "Favoritos",
+        "addTooltip": "Añadir a favoritos",
+        "removeTooltip": "Quitar de favoritos",
+        "maxReached": "Máximo 5 favoritos",
+        "rowLabel": "{{name}}, favorito {{index}} de {{total}}. Usa Alt+Flecha arriba o Alt+Flecha abajo para reordenar.",
+        "moved": "{{name}} movido a la posición {{index}} de {{total}}"
+      },
+      "group": {
+        "collapse": "Contraer",
+        "expand": "Expandir"
+      }
+    }
+  },
+  "pageHeader": {
+    "ariaBreadcrumb": "Migas de pan"
+  },
+  "filterPanel": {
+    "title": "Filtros",
+    "showFilters": "Mostrar filtros",
+    "hideFilters": "Ocultar filtros",
+    "clearAll": "Borrar todo",
+    "optionAll": "Todos",
+    "textPlaceholder": "Filtrar…"
+  },
+  "crud": {
+    "addItem": "Añadir {{name}}",
+    "searchPlaceholder": "Buscar {{entity}}...",
+    "actions": {
+      "edit": "Editar",
+      "delete": "Eliminar",
+      "toggleActive": "Cambiar estado activo"
+    },
+    "dialog": {
+      "createTitle": "Crear {{entity}}",
+      "editTitle": "Editar {{entity}}"
+    },
+    "error": {
+      "forbiddenAction": "No tiene permiso para realizar esta acción."
+    },
+    "confirm": {
+      "title": "Confirmar eliminación",
+      "message": "¿Confirma que desea eliminar {{entity}}?",
+      "deleteAction": "Eliminar",
+      "confirm": "Confirmar"
+    },
+    "notify": {
+      "updated": "{{entity}} actualizado correctamente.",
+      "created": "{{entity}} creado correctamente.",
+      "deleted": "{{entity}} eliminado correctamente.",
+      "activated": "{{entity}} activado.",
+      "deactivated": "{{entity}} desactivado."
+    },
+    "export": {
+      "noColumns": "No hay columnas de exportación configuradas",
+      "noData": "No hay datos para exportar",
+      "success": "Datos exportados correctamente"
+    },
+    "drawerTitle": "{{entity}} n.º {{id}}",
+    "field": {
+      "id": "ID",
+      "name": "Nombre",
+      "username": "Usuario",
+      "email": "Correo",
+      "firstName": "Nombre",
+      "lastName": "Apellidos",
+      "password": "Contraseña",
+      "active": "Activo",
+      "staff": "Staff",
+      "joined": "Alta",
+      "lastLogin": "Último acceso"
+    }
+  },
+  "users": {
+    "title": "Usuarios",
+    "subtitle": "Cuentas del directorio, roles y accesos desde la API.",
+    "entitySingular": "Usuario",
+    "breadcrumb": "Usuarios",
+    "errors": {
+      "cannotDeactivateSelf": "No puede desactivar su propia cuenta desde aquí."
+    },
+    "toggle": {
+      "deactivate": "Desactivar usuario",
+      "activate": "Activar usuario"
+    },
+    "form": {
+      "staffRestrictedHint": "Solo los usuarios staff pueden marcar o quitar el estado de staff.",
+      "profileRole": "Rol",
+      "roleRestrictedHint": "Solo staff puede cambiar el rol del directorio; al guardar se mantiene el valor actual."
+    },
+    "role": {
+      "admin": "Admin",
+      "editor": "Editor",
+      "viewer": "Viewer"
+    },
+    "export": {
+      "is_superuser": "Superusuario",
+      "role": "Rol",
+      "phone": "Teléfono",
+      "verified": "Verificado",
+      "photoUrl": "URL de foto"
+    }
+  },
+  "groups": {
+    "title": "Grupos",
+    "subtitle": "Grupos de permisos para organizar usuarios.",
+    "entitySingular": "Grupo",
+    "breadcrumb": "Grupos"
+  },
+  "plans": {
+    "title": "Planes",
+    "subtitle": "Membresías y planes de suscripción (sincronizados con Flow).",
+    "entitySingular": "Plan",
+    "breadcrumb": "Planes",
+    "importFromFlow": "Importar de Flow",
+    "importing": "Importando…",
+    "importDone": "Importados {{created}}, actualizados {{updated}} desde Flow.",
+    "field": {
+      "amount": "Precio",
+      "currency": "Moneda",
+      "interval": "Frecuencia",
+      "intervalCount": "Cada N",
+      "trialDays": "Días de prueba",
+      "daysUntilDue": "Días para vencer",
+      "periodsNumber": "N° de períodos",
+      "chargesRetries": "Reintentos de cobro",
+      "tagline": "Subtítulo",
+      "description": "Descripción",
+      "cadence": "Cadencia",
+      "icon": "Icono",
+      "imageUrl": "Imagen (URL)",
+      "order": "Orden",
+      "recorded": "Grabado",
+      "featured": "Destacado",
+      "isPublic": "Público",
+      "active": "Activo",
+      "flowSynced": "Flow"
+    }
+  },
+  "profileEditor": {
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "staff": "Staff",
+    "avatar": {
+      "title": "Avatar",
+      "subtitle": "Sube una imagen; se guardará la URL resultante en tu perfil.",
+      "chooseImage": "Elegir imagen",
+      "fileHint": "JPG, PNG o WebP · máx. 5 MB · una sola imagen",
+      "removePhoto": "Quitar foto actual"
+    },
+    "personal": {
+      "title": "Información personal",
+      "firstName": "Nombre",
+      "lastName": "Apellido",
+      "phone": "Teléfono",
+      "phonePlaceholder": "+56 9 …",
+      "nameLockedHint": "Tu nombre ya está registrado. Para corregirlo contacta a un administrador."
+    },
+    "account": {
+      "title": "Datos de la cuenta",
+      "subtitle": "Estos campos identifican tu cuenta y no pueden modificarse desde aquí.",
+      "username": "Usuario",
+      "email": "Email",
+      "role": "Rol",
+      "fieldLocked": "Campo inmutable",
+      "roleLockedHint": "Lo asigna un administrador",
+      "footerHint": "Para cambiar tu email o usuario contacta a un administrador."
+    },
+    "notify": {
+      "saved": "Perfil actualizado.",
+      "saveError": "No se pudo guardar el perfil."
+    }
+  },
+  "entityDialog": {
+    "close": "Cerrar",
+    "selectPlaceholder": "Seleccionar…",
+    "datePlaceholder": "dd-mm-aaaa",
+    "cancel": "Cancelar",
+    "create": "Crear",
+    "saveChanges": "Guardar cambios",
+    "saving": "Guardando…"
+  },
+  "relationshipDialog": {
+    "loading": "Cargando…",
+    "emptyLinked": "Aún no hay {{label}} vinculados",
+    "remove": "Quitar",
+    "addTitle": "Agregar {{label}}",
+    "searchLabel": "Buscar {{label}}",
+    "searchPlaceholder": "Escribe para buscar…",
+    "linkAction": "Vincular {{label}}",
+    "linkedSuccess": "{{label}} vinculado correctamente",
+    "removedSuccess": "Relación eliminada"
+  },
+  "previewExport": {
+    "print": "Imprimir",
+    "downloadPdf": "Descargar PDF",
+    "downloadPng": "Descargar imagen (PNG)"
+  },
+  "infoHelp": {
+    "assistant": "Asistente",
+    "ariaTrigger": "Ayuda:",
+    "close": "Cerrar",
+    "example": "Ejemplo",
+    "useful": "¿Te sirvió?",
+    "yes": "Sí",
+    "no": "No",
+    "thanks": "¡Gracias por tu respuesta!"
+  },
+  "help": {
+    "role": {
+      "title": "Rol del usuario",
+      "body": "El **rol** decide qué puede ver y hacer un usuario: qué ítems de menú aparecen y qué acciones (crear, editar, eliminar) están permitidas. Es independiente de *staff*.",
+      "example": "Un rol VIEWER puede abrir la lista de usuarios pero no verá los botones de editar o eliminar; un rol ADMIN los ve todos."
+    },
+    "staff": {
+      "title": "Acceso staff",
+      "body": "Los usuarios **staff** pueden entrar al admin de Django y siempre ven todos los ítems de menú, sin importar su rol. Resérvalo para operadores de confianza.",
+      "example": "Un contador puede ser un EDITOR normal; solo el operador de la plataforma que gestiona el backend necesita el flag staff."
+    }
+  },
+  "fileUploader": {
+    "dropHint": "Arrastra archivos aquí o haz clic para subir",
+    "selectFiles": "Seleccionar archivos",
+    "noFiles": "Ningún archivo seleccionado",
+    "fileCount": "{{count}} archivo(s) · {{bytes}} B",
+    "viewFile": "Ver archivo",
+    "uploadFailed": "Error al subir",
+    "cancel": "Cancelar",
+    "remove": "Quitar",
+    "accepted": "Aceptados: {{types}}",
+    "maxSize": "Máx {{mb}} MB por archivo",
+    "noProvider": "No hay proveedor de subida configurado",
+    "noProviderDetail": "No hay proveedor de subida configurado. Provee FILE_UPLOAD_PROVIDER.",
+    "errorTooLarge": "El archivo supera {{mb}} MB",
+    "errorType": "Tipo de archivo no aceptado"
+  },
+  "dataTable": {
+    "keyboardNavLabel": "Tabla de datos. Usa las flechas para moverte entre filas; Enter o Espacio para marcar/desmarcar.",
+    "refresh": "Actualizar",
+    "exportExcel": "Exportar a Excel",
+    "actions": "Acciones",
+    "moreActions": "Más acciones",
+    "clearSearch": "Limpiar búsqueda",
+    "emptyTitle": "No hay registros",
+    "emptyFilteredTitle": "Ningún resultado coincide con el filtro",
+    "pinColumns": "Fijar columnas",
+    "rowN": "fila {{n}}",
+    "rowMarked": "{{row}} marcada",
+    "rowUnmarked": "{{row}} desmarcada",
+    "rowActive": "{{row}}, fila {{index}} de {{total}}, {{state}}",
+    "stateMarked": "marcada",
+    "stateUnmarked": "sin marcar",
+    "selectRowsOn": "Activar selección de filas",
+    "selectRowsOff": "Desactivar selección de filas",
+    "keyboardNavOn": "Activar navegación por teclado",
+    "keyboardNavOff": "Desactivar navegación por teclado",
+    "densityCompact": "Filas compactas",
+    "densityNormal": "Filas normales"
+  },
+  "placeSearch": {
+    "notConfigured": "Búsqueda de direcciones no configurada (falta token de Mapbox).",
+    "empty": "Sin coincidencias",
+    "clear": "Limpiar búsqueda"
+  },
+  "map": {
+    "notConfigured": "Mapa no configurado (falta token de Mapbox).",
+    "scrollHint": "Haz click para activar el zoom"
+  },
+  "datePicker": {
+    "today": "Hoy",
+    "chooseYear": "Elegir año…",
+    "apply": "Aplicar",
+    "cancel": "Cancelar",
+    "time": "Hora"
+  },
+  "common": {
+    "yes": "Sí",
+    "no": "No",
+    "dash": "—",
+    "none": "— Ninguno —",
+    "close": "Cerrar",
+    "never": "Nunca",
+    "breadcrumbHome": "Inicio"
+  },
+  "errors": {
+    "network": "No se pudo conectar con el servidor. Compruebe la conexión e inténtelo de nuevo.",
+    "server": "Error del servidor. Vuelva a intentarlo más tarde.",
+    "unexpected": "Ocurrió un error inesperado.",
+    "backToHome": "Volver al panel",
+    "refPrefix": "Ref.:",
+    "notFound": {
+      "title": "No encontrado",
+      "subtitle": "La página solicitada no existe.",
+      "heading": "Página no encontrada",
+      "body": "Revise la URL o vuelva al panel."
+    },
+    "forbidden": {
+      "title": "Sin acceso",
+      "subtitle": "No tiene acceso a esta sección.",
+      "heading": "Acceso denegado",
+      "body": "Si cree que es un error, contacte con un administrador."
+    },
+    "serverError": {
+      "title": "Algo salió mal",
+      "subtitle": "Ocurrió un error en nuestro lado.",
+      "heading": "Error del servidor",
+      "body": "Pruebe a recargar esta página. Si el problema persiste, envíe un reporte para que podamos revisarlo.",
+      "report": "Reportar",
+      "retry": "Reintentar",
+      "reportSent": "Reporte enviado. Gracias por ayudarnos a mejorar."
+    }
+  },
+  "unsavedChanges": {
+    "title": "Cambios sin guardar",
+    "message": "Tienes cambios sin guardar. Si sales ahora, se perderán.",
+    "stay": "Quedarme",
+    "leave": "Salir igualmente"
+  },
+  "dashboard": {
+    "title": "Panel",
+    "subtitle": "Métricas clave de la plataforma (API `GET /api/v1/stats/`).",
+    "breadcrumb": "Panel",
+    "statsLoadError": "No se pudieron cargar las métricas. Compruebe la conexión e inténtelo de nuevo.",
+    "noStats": "Aún no hay métricas para mostrar.",
+    "loadingKpi": "Cargando…",
+    "stats": {
+      "usersActive": "Usuarios activos",
+      "roleAdmin": "Rol en directorio: Admin",
+      "roleEditor": "Rol en directorio: Editor",
+      "roleViewer": "Rol en directorio: Viewer"
+    }
+  },
+  "login": {
+    "brandTitle": "FVX Suscription",
+    "tagline": "Operaciones y administración en un solo lugar.",
+    "signInTitle": "Iniciar sesión",
+    "signInSubtitle": "Introduce tus credenciales para continuar",
+    "username": "Usuario",
+    "password": "Contraseña",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
+    "signingIn": "Iniciando sesión…",
+    "signIn": "Iniciar sesión",
+    "footerHint": "Zona protegida — usa las credenciales que te haya dado tu organización.",
+    "errorInvalidCredentials": "Usuario o contraseña incorrectos",
+    "errorNetwork": "No se pudo conectar con el servidor",
+    "errorGeneric": "Error al iniciar sesión. Inténtalo de nuevo o contacta con un administrador.",
+    "orContinue": "O continúa con",
+    "continueWithApple": "Iniciar sesión con Apple",
+    "brandKicker": "Plataforma de administración",
+    "brandHeadline": "Todo bajo control.",
+    "stat1Value": "12",
+    "stat1Label": "espacios activos",
+    "stat2Value": "3.480",
+    "stat2Label": "registros gestionados",
+    "footEncrypted": "Sesión cifrada",
+    "footSso": "SSO corporativo",
+    "continueWithMicrosoft": "Iniciar sesión con Microsoft"
+  },
+  "entityDrawer": {
+    "defaultTitle": "Detalle",
+    "loading": "Cargando…",
+    "retry": "Reintentar",
+    "loadError": "Error al cargar",
+    "close": "Cerrar"
+  },
+  "userDetail": {
+    "personalInfo": "Información personal",
+    "systemInfo": "Información del sistema",
+    "email": "Correo",
+    "firstName": "Nombre",
+    "lastName": "Apellido",
+    "phone": "Teléfono",
+    "registeredAt": "Fecha de registro",
+    "lastAccess": "Último acceso",
+    "never": "Nunca",
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "staff": "Staff",
+    "verified": "Verificado"
+  }
+}

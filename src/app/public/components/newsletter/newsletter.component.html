@@ -1,0 +1,33 @@
+<section class="newsletter">
+  <div class="newsletter-bg"></div>
+  <div class="newsletter-container">
+    <div class="newsletter-form-wrapper newsletter-animate">
+      <h2>Súmate a nuestros newsletter</h2>
+      <form class="newsletter-form" (ngSubmit)="onSubmit()">
+        <div class="form-group">
+          <input type="text" [(ngModel)]="name" name="name" placeholder="Nombre" required />
+        </div>
+        <div class="form-group">
+          <input type="email" [(ngModel)]="email" name="email" placeholder="Email" required />
+        </div>
+        <div class="form-group">
+          <select [(ngModel)]="country" name="country">
+            <option value="" disabled selected>País</option>
+            <option value="CL">Chile</option>
+            <option value="AR">Argentina</option>
+            <option value="MX">México</option>
+            <option value="CO">Colombia</option>
+            <option value="PE">Perú</option>
+            <option value="ES">España</option>
+            <option value="US">Estados Unidos</option>
+            <option value="OTHER">Otro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <input type="tel" [(ngModel)]="phone" name="phone" placeholder="Teléfono" />
+        </div>
+        <button type="submit" class="submit-btn">Unirme</button>
+      </form>
+    </div>
+  </div>
+</section>

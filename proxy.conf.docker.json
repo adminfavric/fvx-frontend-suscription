@@ -1,0 +1,12 @@
+{
+  "/api": {
+    "target": "http://fvx_suscription_backend_web:8080",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/media": {
+    "target": "http://fvx_suscription_backend_web:8080",
+    "secure": false,
+    "changeOrigin": true
+  }
+}

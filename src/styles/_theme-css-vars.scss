@@ -1,0 +1,6 @@
+// Variables CSS globales en `html`. Sin clase `theme-tmp-*` = tmp-default (solo SCSS base + estas vars).
+@use 'theme-palettes' as palettes;
+
+html {
+  @include palettes.fvx-palette-default;
+}

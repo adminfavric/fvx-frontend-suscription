@@ -1,0 +1,613 @@
+// Paletas reutilizables para CSS variables (--fvx-*).
+// tmp-default = solo `html` con @include fvx-palette-default (sin clase theme-tmp-*).
+//
+// Identidad cromática: **Índigo + Ámbar** (ver docs/Re-estilado _ Indigo _ Ambar.md).
+//   · Índigo (acento primario, acciones) → light: #4f5bd5 / dark: #6d7cf6.
+//   · Ámbar (advertencias/caution, NUNCA acción primaria) → light: #dd9512 / dark: #f5b647.
+//   · Sombras tintadas con el color del fondo (índigo a baja opacidad), nunca negro puro.
+//   · Neutrales con micro-tinte índigo, no gris frío plano.
+
+@use 'variables' as v;
+
+// --- Gráficos ``app-chart`` (ECharts): paleta categórica + contenedor + tipografía de ejes.
+// Valores por plantilla en cada ``@mixin fvx-palette-*``; lectura en ``chart.component.ts``.
+@mixin _fvx-chart-tokens-shell-light {
+  --fvx-chart-surface: transparent;
+  --fvx-chart-container-border: transparent;
+  --fvx-chart-container-radius: #{v.$radius-lg};
+  --fvx-chart-title-font-size: 14px;
+  --fvx-chart-axis-label-size: 11px;
+  --fvx-chart-area-fill-opacity: 0.2;
+}
+
+/// Paleta categórica para shells claros (default / tmp-light / tmp-blackandwhite).
+/// Gira en torno al índigo + apoyo ámbar + neutrales para datos con poca croma.
+@mixin _fvx-chart-tokens-palette-default-ui {
+  --fvx-chart-color-1: #4f5bd5; // índigo primario (alineado con --fvx-link)
+  --fvx-chart-color-2: #dd9512; // ámbar secundario
+  --fvx-chart-color-3: #6d7cf6; // índigo claro (segundo plano)
+  --fvx-chart-color-4: #3d4aa3; // índigo profundo (apoyo)
+  --fvx-chart-color-5: #565d72; // text-2 (neutro)
+  --fvx-chart-color-6: #828aa0; // text-3 (neutro suave)
+}
+
+/// **tmp-default** — Shell claro con sidebar oscuro (identidad histórica del template).
+/// Paleta: Índigo `#4f5bd5` + Ámbar `#dd9512` sobre off-white tintado índigo.
+@mixin fvx-palette-default {
+  // ─── Superficies (off-white con micro-tinte índigo) ───
+  --fvx-bg-page: #f5f6fb;
+  --fvx-bg-card: #ffffff;
+  --fvx-bg-topbar: #f5f6fb;          // matchea bg-page → sidebar (blanco) se diferencia con border-right
+  --fvx-bg-main: #f5f6fb;
+  --fvx-bg-surface-2: #eef0f7;       // hover de filas, headers de tabla, panels sutiles
+  --fvx-bg-elevated: #ffffff;        // popovers / menús (apoyados en sombra, no color)
+  --fvx-bg-input: #ffffff;
+  --fvx-hover-bg: rgba(40, 50, 120, 0.045); // tintado índigo, NO gris
+
+  // ─── Texto ───
+  --fvx-text-primary: #171a26;
+  --fvx-text-secondary: #565d72;
+  --fvx-text-muted: #828aa0;
+  --fvx-text-disabled: #aab0c2;
+
+  // ─── Bordes ───
+  --fvx-border: #e4e6f0;
+  --fvx-border-strong: #d3d7e6;
+  --fvx-border-focus: #4f5bd5;
+
+  // ─── Acento primario (Índigo — acción) ───
+  --fvx-link: #4f5bd5;
+  --fvx-accent: #4f5bd5;
+  --fvx-accent-hover: #4450c4;
+  --fvx-accent-soft: #e7e9fb;
+  --fvx-accent-text: #ffffff;
+  --fvx-accent-glow: rgba(79, 91, 213, 0.22);
+
+  // ─── Secundario (Ámbar — atención / warnings, NO acción) ───
+  --fvx-secondary: #dd9512;
+  --fvx-secondary-soft: #fbf0d8;
+
+  // ─── Sombras tintadas (color de fondo a baja opacidad) ───
+  --fvx-shadow-1: 0 1px 2px rgba(40, 50, 120, 0.06);
+  --fvx-shadow-2: 0 4px 14px rgba(40, 50, 120, 0.08);
+  --fvx-shadow-pop: 0 16px 40px rgba(40, 50, 120, 0.14);
+  --fvx-shadow-primary: 0 3px 12px var(--fvx-accent-glow);
+  --fvx-card-shadow: var(--fvx-shadow-1);
+
+  --fvx-stat-card-radius: #{v.$radius-sm};
+
+  // ─── Status chips (light variants) ───
+  --fvx-chip-success-bg: #def1e9;
+  --fvx-chip-success-fg: #12996b;
+  --fvx-chip-success-border: #b9e0d0;
+  --fvx-chip-warn-bg: #fbf0d8;
+  --fvx-chip-warn-fg: #dd9512;
+  --fvx-chip-warn-border: #f0dba4;
+  --fvx-chip-danger-bg: #fbe3e3;
+  --fvx-chip-danger-fg: #d64545;
+  --fvx-chip-danger-border: #f0c2c2;
+  --fvx-chip-info-bg: #e7e9fb;
+  --fvx-chip-info-fg: #4f5bd5;
+  --fvx-chip-info-border: #cdd2f3;
+  --fvx-chip-muted-bg: #eef0f7;
+  --fvx-chip-muted-fg: #565d72;
+  --fvx-chip-muted-border: #d3d7e6;
+  --fvx-chip-neutral-bg: #eef0f7;
+  --fvx-chip-neutral-fg: #565d72;
+  --fvx-chip-neutral-border: #d3d7e6;
+
+  // ─── Sidebar (oscuro — identidad del default) ───
+  // El default mantiene la dualidad: contenido claro + sidebar oscuro.
+  // Pero alineamos el acento a índigo + neutrales con micro-tinte índigo.
+  --fvx-sidebar-bg: #161a26;
+  --fvx-sidebar-brand-icon: #6d7cf6;       // índigo iluminado para fondo oscuro
+  --fvx-sidebar-brand-text: #e9ecf5;
+  --fvx-sidebar-close-bg: rgba(255, 255, 255, 0.08);
+  --fvx-sidebar-close-icon: #9aa1b8;
+  --fvx-sidebar-close-bg-hover: rgba(255, 255, 255, 0.14);
+  --fvx-nav-group-title: #646c83;
+  --fvx-nav-divider: rgba(255, 255, 255, 0.06);
+  --fvx-nav-item-text: #9aa1b8;
+  --fvx-nav-item-hover-text: #e9ecf5;
+  --fvx-nav-item-hover-bg: rgba(255, 255, 255, 0.05);
+  --fvx-nav-item-active-text: #6d7cf6;
+  --fvx-nav-item-active-bg: rgba(109, 124, 246, 0.17);
+  --fvx-nav-item-active-bar: #6d7cf6;     // barra de acento (pseudo ::before)
+  --fvx-nav-icon: #646c83;
+  --fvx-nav-icon-hover: #828ff8;
+  --fvx-nav-icon-active: #6d7cf6;
+  --fvx-sidebar-footer-border: rgba(255, 255, 255, 0.06);
+  --fvx-sidebar-user-avatar-bg: rgba(255, 255, 255, 0.08);
+  --fvx-sidebar-user-icon: #9aa1b8;
+  --fvx-sidebar-user-name: #e9ecf5;
+  --fvx-sidebar-user-meta: #646c83;
+
+  // ─── Diálogos ───
+  --fvx-dialog-header-bg: #161a26;
+  --fvx-dialog-header-fg: #f5f6fb;
+  --fvx-dialog-header-icon: #6d7cf6;
+  --fvx-dialog-header-border: rgba(255, 255, 255, 0.1);
+
+  // ─── Botones plantilla — caution (ámbar) ───
+  // Antes: ámbar Tailwind (#ca8a04) muy verdoso; ahora ámbar cálido del spec.
+  --fvx-button-caution-bg: #dd9512;
+  --fvx-button-caution-fg: #1a1206;
+  --fvx-button-caution-bg-hover: #b87a0e;
+
+  @include _fvx-chart-tokens-shell-light;
+  @include _fvx-chart-tokens-palette-default-ui;
+}
+
+/// **tmp-light** — Shell totalmente claro (sidebar también claro). Misma paleta que `tmp-default`
+/// pero el sidebar es blanco con el menú activo en relleno índigo suave.
+@mixin fvx-palette-tmp-light {
+  // ─── Superficies ───
+  --fvx-bg-page: #f5f6fb;
+  --fvx-bg-card: #ffffff;
+  --fvx-bg-topbar: #f5f6fb;          // matchea bg-page → sidebar blanca se diferencia con border-right
+  --fvx-bg-main: #f5f6fb;
+  --fvx-bg-surface-2: #eef0f7;
+  --fvx-bg-elevated: #ffffff;
+  --fvx-bg-input: #ffffff;
+  --fvx-hover-bg: rgba(40, 50, 120, 0.045);
+
+  // ─── Texto ───
+  --fvx-text-primary: #171a26;
+  --fvx-text-secondary: #565d72;
+  --fvx-text-muted: #828aa0;
+  --fvx-text-disabled: #aab0c2;
+
+  // ─── Bordes ───
+  --fvx-border: #e4e6f0;
+  --fvx-border-strong: #d3d7e6;
+  --fvx-border-focus: #4f5bd5;
+
+  // ─── Acento primario (Índigo) ───
+  --fvx-link: #4f5bd5;
+  --fvx-accent: #4f5bd5;
+  --fvx-accent-hover: #4450c4;
+  --fvx-accent-soft: #e7e9fb;
+  --fvx-accent-text: #ffffff;
+  --fvx-accent-glow: rgba(79, 91, 213, 0.22);
+
+  // ─── Secundario (Ámbar) ───
+  --fvx-secondary: #dd9512;
+  --fvx-secondary-soft: #fbf0d8;
+
+  // ─── Sombras tintadas ───
+  --fvx-shadow-1: 0 1px 2px rgba(40, 50, 120, 0.06);
+  --fvx-shadow-2: 0 4px 14px rgba(40, 50, 120, 0.08);
+  --fvx-shadow-pop: 0 16px 40px rgba(40, 50, 120, 0.14);
+  --fvx-shadow-primary: 0 3px 12px var(--fvx-accent-glow);
+  --fvx-card-shadow: var(--fvx-shadow-1);
+
+  --fvx-stat-card-radius: #{v.$radius-sm};
+
+  // ─── Status chips ───
+  --fvx-chip-success-bg: #def1e9;
+  --fvx-chip-success-fg: #12996b;
+  --fvx-chip-success-border: #b9e0d0;
+  --fvx-chip-warn-bg: #fbf0d8;
+  --fvx-chip-warn-fg: #dd9512;
+  --fvx-chip-warn-border: #f0dba4;
+  --fvx-chip-danger-bg: #fbe3e3;
+  --fvx-chip-danger-fg: #d64545;
+  --fvx-chip-danger-border: #f0c2c2;
+  --fvx-chip-info-bg: #e7e9fb;
+  --fvx-chip-info-fg: #4f5bd5;
+  --fvx-chip-info-border: #cdd2f3;
+  --fvx-chip-muted-bg: #eef0f7;
+  --fvx-chip-muted-fg: #565d72;
+  --fvx-chip-muted-border: #d3d7e6;
+  --fvx-chip-neutral-bg: #eef0f7;
+  --fvx-chip-neutral-fg: #565d72;
+  --fvx-chip-neutral-border: #d3d7e6;
+
+  // ─── Sidebar claro ───
+  --fvx-sidebar-bg: #ffffff;
+  --fvx-sidebar-brand-icon: #4f5bd5;
+  --fvx-sidebar-brand-text: #171a26;
+  --fvx-sidebar-close-bg: rgba(23, 26, 38, 0.06);
+  --fvx-sidebar-close-icon: #828aa0;
+  --fvx-sidebar-close-bg-hover: rgba(23, 26, 38, 0.1);
+  --fvx-nav-group-title: #828aa0;
+  --fvx-nav-divider: #eef0f7;
+  --fvx-nav-item-text: #565d72;
+  --fvx-nav-item-hover-text: #171a26;
+  --fvx-nav-item-hover-bg: rgba(40, 50, 120, 0.045);
+  --fvx-nav-item-active-text: #4f5bd5;
+  --fvx-nav-item-active-bg: #e7e9fb;
+  --fvx-nav-item-active-bar: #4f5bd5;
+  --fvx-nav-icon: #828aa0;
+  --fvx-nav-icon-hover: #4f5bd5;
+  --fvx-nav-icon-active: #4f5bd5;
+  --fvx-sidebar-footer-border: #e4e6f0;
+  --fvx-sidebar-user-avatar-bg: #eef0f7;
+  --fvx-sidebar-user-icon: #565d72;
+  --fvx-sidebar-user-name: #171a26;
+  --fvx-sidebar-user-meta: #828aa0;
+
+  // ─── Diálogos ───
+  --fvx-dialog-header-bg: #171a26;
+  --fvx-dialog-header-fg: #f5f6fb;
+  --fvx-dialog-header-icon: #6d7cf6;
+  --fvx-dialog-header-border: rgba(255, 255, 255, 0.12);
+
+  // ─── Botones caution (ámbar) ───
+  --fvx-button-caution-bg: #dd9512;
+  --fvx-button-caution-fg: #1a1206;
+  --fvx-button-caution-bg-hover: #b87a0e;
+
+  @include _fvx-chart-tokens-shell-light;
+  @include _fvx-chart-tokens-palette-default-ui;
+}
+
+/// **tmp-dark** — UI oscura completa. Índigo `#6d7cf6` como acento, Ámbar `#f5b647` para warnings.
+/// Sombras tintadas índigo profundo `rgba(4,7,20,…)`, neutrales con micro-tinte índigo.
+@mixin fvx-palette-tmp-dark {
+  // ─── Superficies ───
+  --fvx-bg-page: #0e1018;
+  --fvx-bg-card: #161a26;
+  --fvx-bg-topbar: #0e1018;          // topbar matchea bg-page en oscuro
+  --fvx-bg-main: #0e1018;
+  --fvx-bg-surface-2: #1e2333;       // headers de tabla, hover de filas
+  --fvx-bg-elevated: #232a3c;        // menús / popovers
+  --fvx-bg-input: #0f131d;
+  --fvx-hover-bg: rgba(255, 255, 255, 0.05);
+
+  // ─── Texto ───
+  --fvx-text-primary: #e9ecf5;
+  --fvx-text-secondary: #9aa1b8;
+  --fvx-text-muted: #646c83;
+  --fvx-text-disabled: #454c61;
+
+  // ─── Bordes ───
+  --fvx-border: rgba(255, 255, 255, 0.08);
+  --fvx-border-strong: rgba(255, 255, 255, 0.16);
+  --fvx-border-focus: #6d7cf6;
+
+  // ─── Acento primario (Índigo iluminado para fondo oscuro) ───
+  --fvx-link: #6d7cf6;
+  --fvx-accent: #6d7cf6;
+  --fvx-accent-hover: #828ff8;
+  --fvx-accent-soft: rgba(109, 124, 246, 0.17);
+  --fvx-accent-text: #0a0c13;
+  --fvx-accent-glow: rgba(109, 124, 246, 0.34);
+
+  // ─── Secundario (Ámbar cálido) ───
+  --fvx-secondary: #f5b647;
+  --fvx-secondary-soft: rgba(245, 182, 71, 0.16);
+
+  // ─── Sombras tintadas índigo profundo ───
+  --fvx-shadow-1: 0 1px 2px rgba(4, 7, 20, 0.4);
+  --fvx-shadow-2: 0 4px 12px rgba(4, 7, 20, 0.5);
+  --fvx-shadow-pop: 0 14px 40px rgba(4, 7, 20, 0.6);
+  --fvx-shadow-primary: 0 3px 12px var(--fvx-accent-glow);
+  --fvx-card-shadow: var(--fvx-shadow-1);
+
+  --fvx-stat-card-radius: #{v.$radius-sm};
+
+  // Hover / píldoras de código (``.code-chip``): sin esto, el fallback claro anula
+  // el texto claro de ``--fvx-text-secondary`` y se pierde contraste en tablas.
+  --fvx-code-pill-fg: #e9ecf5;
+
+  // ─── Status chips (dark variants) ───
+  --fvx-chip-success-bg: rgba(52, 211, 153, 0.16);
+  --fvx-chip-success-fg: #34d399;
+  --fvx-chip-success-border: rgba(52, 211, 153, 0.38);
+  --fvx-chip-warn-bg: rgba(245, 182, 71, 0.16);
+  --fvx-chip-warn-fg: #f5b647;
+  --fvx-chip-warn-border: rgba(245, 182, 71, 0.38);
+  --fvx-chip-danger-bg: rgba(240, 105, 105, 0.18);
+  --fvx-chip-danger-fg: #f06969;
+  --fvx-chip-danger-border: rgba(240, 105, 105, 0.38);
+  --fvx-chip-info-bg: rgba(109, 124, 246, 0.18);
+  --fvx-chip-info-fg: #828ff8;
+  --fvx-chip-info-border: rgba(109, 124, 246, 0.38);
+  --fvx-chip-muted-bg: rgba(154, 161, 184, 0.18);
+  --fvx-chip-muted-fg: #c2c8d6;
+  --fvx-chip-muted-border: rgba(154, 161, 184, 0.32);
+  --fvx-chip-neutral-bg: rgba(154, 161, 184, 0.18);
+  --fvx-chip-neutral-fg: #e9ecf5;
+  --fvx-chip-neutral-border: rgba(200, 208, 224, 0.28);
+
+  // ─── Sidebar (más oscuro que el app) ───
+  --fvx-sidebar-bg: #090b12;
+  --fvx-sidebar-brand-icon: #6d7cf6;
+  --fvx-sidebar-brand-text: #e9ecf5;
+  --fvx-sidebar-close-bg: rgba(255, 255, 255, 0.08);
+  --fvx-sidebar-close-icon: #9aa1b8;
+  --fvx-sidebar-close-bg-hover: rgba(255, 255, 255, 0.14);
+  --fvx-nav-group-title: #646c83;
+  --fvx-nav-divider: rgba(255, 255, 255, 0.07);
+  --fvx-nav-item-text: #9aa1b8;
+  --fvx-nav-item-hover-text: #e9ecf5;
+  --fvx-nav-item-hover-bg: rgba(255, 255, 255, 0.05);
+  --fvx-nav-item-active-text: #6d7cf6;
+  --fvx-nav-item-active-bg: rgba(109, 124, 246, 0.17);
+  --fvx-nav-item-active-bar: #6d7cf6;
+  --fvx-nav-icon: #646c83;
+  --fvx-nav-icon-hover: #828ff8;
+  --fvx-nav-icon-active: #6d7cf6;
+  --fvx-sidebar-footer-border: rgba(255, 255, 255, 0.08);
+  --fvx-sidebar-user-avatar-bg: rgba(255, 255, 255, 0.08);
+  --fvx-sidebar-user-icon: #9aa1b8;
+  --fvx-sidebar-user-name: #e9ecf5;
+  --fvx-sidebar-user-meta: #646c83;
+
+  // ─── Tablas / listados Material ───
+  --fvx-table-header-bg: #1e2333;
+  --fvx-table-row-alt: rgba(255, 255, 255, 0.022);
+  --fvx-table-row-hover: rgba(109, 124, 246, 0.09);
+  --fvx-table-border: rgba(255, 255, 255, 0.07);
+  --fvx-paginator-disabled-icon: rgba(233, 236, 245, 0.28);
+
+  // ─── Diálogos ───
+  --fvx-dialog-header-bg: #1e2333;
+  --fvx-dialog-header-fg: #e9ecf5;
+  --fvx-dialog-header-icon: #6d7cf6;
+  --fvx-dialog-header-border: rgba(255, 255, 255, 0.12);
+
+  // ─── Caution (ámbar) ───
+  --fvx-button-caution-bg: #f5b647;
+  --fvx-button-caution-fg: #1a1206;
+  --fvx-button-caution-bg-hover: #dd9c2a;
+
+  // ─── Charts (mismas tonalidades índigo + ámbar; encajan con cards) ───
+  --fvx-chart-surface: rgba(255, 255, 255, 0.02);
+  --fvx-chart-container-border: rgba(255, 255, 255, 0.08);
+  --fvx-chart-container-radius: #{v.$radius-lg};
+  --fvx-chart-title-font-size: 14px;
+  --fvx-chart-axis-label-size: 11px;
+  --fvx-chart-area-fill-opacity: 0.24;
+  --fvx-chart-color-1: #6d7cf6;   // índigo primario
+  --fvx-chart-color-2: #f5b647;   // ámbar
+  --fvx-chart-color-3: #828ff8;   // índigo iluminado
+  --fvx-chart-color-4: #4f5bd5;   // índigo profundo (apoyo)
+  --fvx-chart-color-5: #9aa1b8;   // text-2 (neutro)
+  --fvx-chart-color-6: #a78bfa;   // violeta polvo (acento de variedad)
+}
+
+/// **tmp-blackandwhite** — Alto contraste B&W. Mantiene su identidad (no índigo);
+/// solo se le aplican: radios homogeneizados, sombras tintadas (gris profundo,
+/// no negro puro), ámbar para warnings/caution.
+@mixin fvx-palette-tmp-blackandwhite {
+  --fvx-bg-page: #f5f5f5;
+  --fvx-bg-card: #ffffff;
+  --fvx-bg-topbar: #f5f5f5;          // matchea bg-page → sidebar negra ya tiene alto contraste
+  --fvx-bg-main: #f5f5f5;
+  --fvx-bg-surface-2: #f0f0f0;
+  --fvx-bg-elevated: #ffffff;
+  --fvx-bg-input: #ffffff;
+  --fvx-hover-bg: rgba(0, 0, 0, 0.05);
+
+  --fvx-text-primary: #000000;
+  --fvx-text-secondary: #262626;
+  --fvx-text-muted: #737373;
+  --fvx-text-disabled: #a3a3a3;
+
+  --fvx-border: rgba(0, 0, 0, 0.12);
+  --fvx-border-strong: rgba(0, 0, 0, 0.22);
+  --fvx-border-focus: #000000;
+
+  // Acento = negro (identidad), pero soft = gris claro para chips activos.
+  --fvx-link: #000000;
+  --fvx-accent: #000000;
+  --fvx-accent-hover: #1a1a1a;
+  --fvx-accent-soft: #e5e5e5;
+  --fvx-accent-text: #ffffff;
+  --fvx-accent-glow: rgba(0, 0, 0, 0.18);
+
+  // Caution: ámbar del spec light (legible sobre blanco).
+  --fvx-secondary: #dd9512;
+  --fvx-secondary-soft: #fbf0d8;
+
+  // Sombras tintadas (gris muy oscuro, no negro puro).
+  --fvx-shadow-1: 0 1px 2px rgba(20, 20, 20, 0.06);
+  --fvx-shadow-2: 0 4px 14px rgba(20, 20, 20, 0.08);
+  --fvx-shadow-pop: 0 16px 40px rgba(20, 20, 20, 0.16);
+  --fvx-shadow-primary: 0 3px 12px var(--fvx-accent-glow);
+  --fvx-card-shadow: var(--fvx-shadow-1);
+
+  --fvx-stat-card-radius: #{v.$radius-sm};
+
+  // Status chips (manteniendo identidad B&W con ámbar para warnings).
+  --fvx-chip-success-bg: #f0f0f0;
+  --fvx-chip-success-fg: #000000;
+  --fvx-chip-success-border: #a3a3a3;
+  --fvx-chip-warn-bg: #fbf0d8;
+  --fvx-chip-warn-fg: #8b5a0a;
+  --fvx-chip-warn-border: #f0dba4;
+  --fvx-chip-danger-bg: #fafafa;
+  --fvx-chip-danger-fg: #525252;
+  --fvx-chip-danger-border: #a3a3a3;
+  --fvx-chip-info-bg: #e5e5e5;
+  --fvx-chip-info-fg: #000000;
+  --fvx-chip-info-border: #a3a3a3;
+  --fvx-chip-muted-bg: #f0f0f0;
+  --fvx-chip-muted-fg: #525252;
+  --fvx-chip-muted-border: #d4d4d4;
+  --fvx-chip-neutral-bg: #f0f0f0;
+  --fvx-chip-neutral-fg: #262626;
+  --fvx-chip-neutral-border: #d4d4d4;
+
+  // Sidebar negro (identidad)
+  --fvx-sidebar-bg: #000000;
+  --fvx-sidebar-brand-icon: #ffffff;
+  --fvx-sidebar-brand-text: #ffffff;
+  --fvx-sidebar-close-bg: rgba(255, 255, 255, 0.1);
+  --fvx-sidebar-close-icon: #e5e5e5;
+  --fvx-sidebar-close-bg-hover: rgba(255, 255, 255, 0.18);
+  --fvx-nav-group-title: #9ca3af;
+  --fvx-nav-divider: rgba(255, 255, 255, 0.14);
+  --fvx-nav-item-text: #d4d4d4;
+  --fvx-nav-item-hover-text: #ffffff;
+  --fvx-nav-item-hover-bg: rgba(255, 255, 255, 0.1);
+  --fvx-nav-item-active-text: #000000;
+  --fvx-nav-item-active-bg: #ffffff;
+  --fvx-nav-item-active-bar: #ffffff;  // barra blanca sobre fondo negro
+  --fvx-nav-icon: #a3a3a3;
+  --fvx-nav-icon-hover: #ffffff;
+  --fvx-nav-icon-active: #ffffff;  // blanco (era #000000: invisible sobre el sidebar negro)
+  --fvx-sidebar-footer-border: rgba(255, 255, 255, 0.14);
+  --fvx-sidebar-user-avatar-bg: rgba(255, 255, 255, 0.12);
+  --fvx-sidebar-user-icon: #e5e5e5;
+  --fvx-sidebar-user-name: #ffffff;
+  --fvx-sidebar-user-meta: #a3a3a3;
+
+  --fvx-table-header-bg: #f0f0f0;
+  --fvx-table-row-alt: rgba(0, 0, 0, 0.03);
+  --fvx-table-row-hover: rgba(0, 0, 0, 0.07);
+  --fvx-table-border: rgba(0, 0, 0, 0.1);
+  --fvx-paginator-disabled-icon: rgba(0, 0, 0, 0.28);
+
+  --fvx-dialog-header-bg: #000000;
+  --fvx-dialog-header-fg: #ffffff;
+  --fvx-dialog-header-icon: #ffffff;
+  --fvx-dialog-header-border: rgba(255, 255, 255, 0.18);
+
+  --fvx-button-caution-bg: #dd9512;
+  --fvx-button-caution-fg: #1a1206;
+  --fvx-button-caution-bg-hover: #b87a0e;
+
+  --fvx-chart-surface: #ffffff;
+  --fvx-chart-container-border: rgba(0, 0, 0, 0.1);
+  --fvx-chart-container-radius: #{v.$radius-lg};
+  --fvx-chart-title-font-size: 14px;
+  --fvx-chart-axis-label-size: 11px;
+  --fvx-chart-area-fill-opacity: 0.2;
+  // Charts: escala de grises + ámbar para warnings/destacados.
+  --fvx-chart-color-1: #000000;
+  --fvx-chart-color-2: #525252;
+  --fvx-chart-color-3: #737373;
+  --fvx-chart-color-4: #a3a3a3;
+  --fvx-chart-color-5: #d4d4d4;
+  --fvx-chart-color-6: #dd9512;  // único acento cromático: ámbar
+}
+
+/// Cromática gráficos ERP contable (tonos apagados: verde bosque, azul suave, terracota).
+@mixin _fvx-chart-tokens-palette-beige-ui {
+  --fvx-chart-color-1: #0d4a42;
+  --fvx-chart-color-2: #5b8ab8;
+  --fvx-chart-color-3: #c06056;
+  --fvx-chart-color-4: #7b74a8;
+  --fvx-chart-color-5: #8b8680;
+  --fvx-chart-color-6: #5a9d6e;
+}
+
+/// **tmp-beige** — ERP contable. Mantiene verde bosque + ámbar (identidad);
+/// solo se le aplican: radios homogeneizados, sombras tintadas en color, focus
+/// con accent-soft del verde, no del índigo.
+@mixin fvx-palette-tmp-beige {
+  --fvx-bg-page: #fbfaf6;
+  --fvx-bg-card: #ffffff;
+  --fvx-bg-topbar: #fbfaf6;          // matchea bg-page → sidebar beige se diferencia con border-right
+  --fvx-bg-main: #fbfaf6;
+  --fvx-bg-surface-2: #f4f3f0;
+  --fvx-bg-elevated: #ffffff;
+  --fvx-bg-input: #ffffff;
+  --fvx-hover-bg: rgba(0, 0, 0, 0.06);
+
+  --fvx-text-primary: #000000;
+  --fvx-text-secondary: #404040;
+  --fvx-text-muted: #6e6e6e;
+  --fvx-text-disabled: #9a9a9a;
+
+  --fvx-border: #cccccc;
+  --fvx-border-strong: #b0b0b0;
+  --fvx-border-focus: #0d4a42;
+  --fvx-card-border: #d8d8d8;
+  --fvx-panel-border: var(--fvx-card-border);
+
+  // Acento = verde bosque (identidad ERP).
+  --fvx-link: #0d4a42;
+  --fvx-accent: #0d4a42;
+  --fvx-accent-hover: #0a3b34;
+  --fvx-accent-soft: #d8e8e3;
+  --fvx-accent-text: #ffffff;
+  --fvx-accent-glow: rgba(13, 74, 66, 0.18);
+
+  // Caution = ámbar suave del template (identidad ERP, no cambia).
+  --fvx-secondary: #dd9512;
+  --fvx-secondary-soft: #faf3e3;
+
+  // Sombras tintadas verde bosque a baja opacidad.
+  --fvx-shadow-1: 0 1px 2px rgba(13, 74, 66, 0.05);
+  --fvx-shadow-2: 0 4px 14px rgba(13, 74, 66, 0.07);
+  --fvx-shadow-pop: 0 16px 40px rgba(13, 74, 66, 0.12);
+  --fvx-shadow-primary: 0 3px 12px var(--fvx-accent-glow);
+  --fvx-card-shadow: none;
+
+  --fvx-stat-card-radius: #{v.$radius-sm};
+
+  --fvx-sidebar-bg: #f4f3f0;
+  --fvx-sidebar-brand-icon: #0d4a42;
+  --fvx-sidebar-brand-text: #000000;
+  --fvx-sidebar-close-bg: rgba(0, 0, 0, 0.05);
+  --fvx-sidebar-close-icon: #6e6e6e;
+  --fvx-sidebar-close-bg-hover: rgba(0, 0, 0, 0.08);
+  --fvx-nav-group-title: #8a8a8a;
+  --fvx-nav-divider: #dcdcd8;
+  --fvx-nav-item-text: #5c5c5c;
+  --fvx-nav-item-hover-text: #000000;
+  --fvx-nav-item-hover-bg: rgba(0, 0, 0, 0.05);
+  --fvx-nav-item-active-text: #000000;
+  --fvx-nav-item-active-bg: #ffffff;
+  --fvx-nav-item-active-bar: #0d4a42;
+  --fvx-nav-item-active-border-color: var(--fvx-card-border);
+  --fvx-nav-item-active-shadow: none;
+  --fvx-nav-icon: #6e6e6e;
+  --fvx-nav-icon-hover: #0d4a42;
+  --fvx-nav-icon-active: #000000;
+  --fvx-sidebar-footer-border: #dcdcd8;
+  --fvx-sidebar-user-avatar-bg: #e4e3df;
+  --fvx-sidebar-user-icon: #6e6e6e;
+  --fvx-sidebar-user-name: #000000;
+  --fvx-sidebar-user-meta: #6e6e6e;
+
+  --fvx-dialog-header-bg: #0d4a42;
+  --fvx-dialog-header-fg: #ffffff;
+  --fvx-dialog-header-icon: #c5ebe0;
+  --fvx-dialog-header-border: rgba(255, 255, 255, 0.12);
+
+  --fvx-table-header-bg: #ffffff;
+  --fvx-table-row-alt: #ffffff;
+  --fvx-table-row-hover: rgba(0, 0, 0, 0.04);
+  --fvx-table-border: #d8d8d8;
+  --fvx-paginator-disabled-icon: rgba(0, 0, 0, 0.35);
+
+  --fvx-chip-success-bg: #e8f2ea;
+  --fvx-chip-success-fg: #2d6a45;
+  --fvx-chip-success-border: #c5dcc9;
+  --fvx-chip-warn-bg: #faf3e3;
+  --fvx-chip-warn-fg: #8b6914;
+  --fvx-chip-warn-border: #e6dcc1;
+  --fvx-chip-danger-bg: #f7e9e8;
+  --fvx-chip-danger-fg: #9b3d38;
+  --fvx-chip-danger-border: #e2c6c4;
+  --fvx-chip-muted-bg: #e8ecf0;
+  --fvx-chip-muted-fg: #4a5565;
+  --fvx-chip-muted-border: #d4dae1;
+  --fvx-chip-neutral-bg: #ebeae6;
+  --fvx-chip-neutral-fg: #4a4a47;
+  --fvx-chip-neutral-border: #d6d5d0;
+  --fvx-chip-info-bg: #e8eef6;
+  --fvx-chip-info-fg: #3d5a80;
+  --fvx-chip-info-border: #c5d4e8;
+
+  --fvx-filter-option-active-bg: #e8e8e5;
+  --fvx-filter-option-active-fg: #000000;
+
+  --fvx-segmented-toggle-group-bg: #e8e8e5;
+  --fvx-segmented-toggle-checked-bg: #ffffff;
+  --fvx-segmented-toggle-checked-fg: #000000;
+  --fvx-segmented-toggle-checked-icon: #000000;
+  --fvx-segmented-toggle-checked-shadow: 0 0 0 1px var(--fvx-card-border);
+
+  --fvx-button-caution-bg: #faf3e3;
+  --fvx-button-caution-fg: #8b6914;
+  --fvx-button-caution-bg-hover: #f3ead4;
+
+  @include _fvx-chart-tokens-shell-light;
+  @include _fvx-chart-tokens-palette-beige-ui;
+}

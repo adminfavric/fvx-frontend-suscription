@@ -1,0 +1,37 @@
+<header class="header" [class.scrolled]="isScrolled || !isHome" [class.menu-open]="mobileMenuOpen">
+  <div class="header-container">
+    <a class="logo" (click)="goHome()">
+      <img src="assets/logo-transparent.png" alt="Experiencias Lita Donoso" />
+      <span class="logo-text">
+        <span class="logo-experiencias">Experiencias</span>
+        <span class="logo-lita">Lita Donoso</span>
+      </span>
+    </a>
+
+    <nav class="nav-desktop">
+      <a class="nav-link" (click)="goHome()">Home</a>
+      <a class="nav-link" routerLink="/membresias" (click)="closeMobileMenu()">Membresías</a>
+      <a class="nav-link" routerLink="/eventos" (click)="closeMobileMenu()">Eventos</a>
+      <a class="nav-link" (click)="openPopup('about')">Sobre Lita Donoso</a>
+      <a class="nav-link" (click)="openPopup('contacto')">Contacto</a>
+      <a class="nav-link" routerLink="/mi-contenido" (click)="closeMobileMenu()">Mi contenido</a>
+      <a class="nav-link nav-cta" routerLink="/membresias" (click)="closeMobileMenu()">Suscríbete</a>
+    </nav>
+
+    <button class="hamburger" (click)="toggleMobileMenu()" [class.active]="mobileMenuOpen" aria-label="Menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+
+  <nav class="nav-mobile" [class.open]="mobileMenuOpen">
+    <a class="nav-link" (click)="goHome(); toggleMobileMenu()">Home</a>
+    <a class="nav-link" routerLink="/membresias" (click)="toggleMobileMenu()">Membresías</a>
+    <a class="nav-link" routerLink="/eventos" (click)="toggleMobileMenu()">Eventos</a>
+    <a class="nav-link" (click)="openPopup('about'); toggleMobileMenu()">Sobre Lita Donoso</a>
+    <a class="nav-link" (click)="openPopup('contacto'); toggleMobileMenu()">Contacto</a>
+    <a class="nav-link" routerLink="/mi-contenido" (click)="toggleMobileMenu()">Mi contenido</a>
+    <a class="nav-link nav-cta" routerLink="/membresias" (click)="toggleMobileMenu()">Suscríbete</a>
+  </nav>
+</header>

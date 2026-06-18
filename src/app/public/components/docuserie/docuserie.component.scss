@@ -1,0 +1,267 @@
+.docuserie {
+  position: relative;
+  padding: 6rem 2rem;
+  overflow: hidden;
+}
+
+.docuserie-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(248, 249, 250, 0.95) 0%, rgba(248, 249, 250, 0.9) 100%),
+    url('/assets/bg-site.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  z-index: 0;
+}
+
+.docuserie-container {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.docuserie-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.docuserie-title {
+  font-family: 'Playfair Display', serif;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+
+  .title-gold {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-style: italic;
+    color: var(--color-gold);
+  }
+
+  .title-main {
+    font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+    color: var(--color-slate-light);
+    font-weight: 400;
+  }
+}
+
+.docuserie-desc {
+  font-size: 1.1rem;
+  color: var(--color-text-light);
+  max-width: 700px;
+  margin: 0 auto;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.docuserie-card {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 0;
+  background: white;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-medium);
+  transition: transform var(--transition-medium), box-shadow var(--transition-medium);
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.12);
+  }
+}
+
+.card-image {
+  position: relative;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--transition-slow);
+  }
+
+  &:hover img {
+    transform: scale(1.05);
+  }
+}
+
+.card-body {
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.25rem;
+  color: var(--color-slate);
+  margin-bottom: 0.5rem;
+}
+
+.card-price {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-purple);
+  margin-bottom: 0.75rem;
+}
+
+.card-subtitle {
+  font-size: 0.8rem;
+  color: var(--color-text-light);
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.chapters-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.chapter-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+
+  &:hover {
+    background: rgba(107, 76, 140, 0.04);
+  }
+}
+
+.chapter-check {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-purple-light), var(--color-purple));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+
+  svg {
+    color: white;
+  }
+}
+
+.chapter-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: baseline;
+  font-size: 0.9rem;
+}
+
+.chapter-label {
+  color: var(--color-slate);
+  font-weight: 600;
+}
+
+.chapter-title {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.chapter-date {
+  color: var(--color-text-light);
+  font-size: 0.8rem;
+}
+
+.card-cta {
+  margin-top: auto;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, var(--color-gold) 0%, var(--color-gold-dark) 100%);
+  color: white;
+  border: none;
+  border-radius: var(--radius-xl);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: inherit;
+  text-align: center;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(201, 162, 39, 0.35);
+  }
+}
+
+.docuserie-animate {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-delay-2 {
+  transition-delay: 0.25s;
+}
+
+@media (max-width: 900px) {
+  .docuserie-card {
+    grid-template-columns: 1fr;
+  }
+
+  .card-image {
+    max-height: 300px;
+  }
+
+  .card-body {
+    padding: 1.5rem;
+  }
+}
+
+// Chapters Grid in Home (inside card)
+.chapters-home-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin: 1.5rem 0;
+
+  ::ng-deep .chapter-card {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    
+    .card-image {
+      aspect-ratio: 16/10;
+    }
+    
+    .card-content {
+      padding: 12px;
+    }
+    
+    .card-title {
+      font-size: 0.85rem;
+      margin-bottom: 6px;
+    }
+    
+    .card-body {
+      font-size: 0.75rem;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+    
+    .card-button {
+      padding: 6px 14px;
+      font-size: 0.75rem;
+    }
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}

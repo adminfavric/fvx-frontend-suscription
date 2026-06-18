@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Lita Donoso · Alkymia Solar</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!--
+    Content Security Policy: reduce el impacto de XSS bloqueando scripts
+    inline/cross-origin. La política idealmente se debería emitir vía header
+    HTTP desde el backend (django-csp) — el meta tag es la mitigación rápida.
+
+    - script-src 'self' : ningún script inline ni externo. Angular AOT no
+      necesita 'unsafe-eval' ni 'unsafe-inline'. Si en algún punto se ven
+      errores "Refused to execute inline script", revisar uso de <script>
+      en templates (no debería existir).
+    - style-src 'unsafe-inline' : Angular Material inyecta estilos en runtime
+      (overlay positioning, ripple, theming) — sin esto el shell rompe.
+    - img-src https: data: blob: : avatars de Backblaze (https), canvas →
+      PNG (data:), previews del file-uploader (blob:).
+    - connect-src 'self' http: https: : permisivo (la API puede vivir en
+      cualquier dominio según deploy). Endurecer con CSP HTTP header en prod.
+    - frame-src blob: : iframes del file-viewer-dialog para PDFs cargados.
+    - object-src 'none' : sin plugins (Flash/Java).
+    - base-uri / form-action 'self' : bloquea hijacking de <base> y submits
+      cross-origin.
+  -->
+  <!--
+    Mapbox necesita:
+    · script-src/worker-src/child-src 'blob:' — mapbox-gl evalúa workers desde blobs
+    · connect-src api.mapbox.com / events.mapbox.com — Geocoding API + telemetría
+    · img-src api.mapbox.com — tiles del mapa
+    · style-src api.mapbox.com — CSS de mapbox-gl si se carga via CDN (no nuestro caso)
+    Si el token no se configura, mapbox-gl no se importa (lazy) y nada de esto se activa.
+  -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' blob: https://accounts.google.com/gsi/client https://appleid.cdn-apple.com https://alcdn.msauth.net;
+    script-src-elem 'self' https://accounts.google.com/gsi/client https://appleid.cdn-apple.com https://alcdn.msauth.net;
+    worker-src 'self' blob:;
+    child-src 'self' blob:;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style;
+    font-src 'self' https://fonts.gstatic.com;
+    img-src 'self' data: blob: https: http://localhost:8080;
+    media-src 'self' blob: https: http://localhost:8080;
+    connect-src 'self' http: https: https://accounts.google.com/gsi/ https://appleid.apple.com https://login.microsoftonline.com https://api.mapbox.com https://events.mapbox.com;
+    frame-src 'self' blob: https://accounts.google.com/gsi/ https://appleid.apple.com https://login.microsoftonline.com https://www.youtube.com https://www.youtube-nocookie.com;
+    object-src 'none';
+    base-uri 'self';
+    form-action 'self';
+  ">
+  <link rel="icon" type="image/png" href="assets/logo-transparent.png">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Sitio público (Experiencias Lita Donoso): tipografías del diseño original -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined" rel="stylesheet">
+</head>
+<body class="mat-typography">
+  <app-root></app-root>
+</body>
+</html>

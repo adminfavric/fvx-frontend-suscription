@@ -1,0 +1,563 @@
+// Estilos de la tarjeta de KPI (app-stat-card).
+// Extraídos del `styles` inline a un styleUrl: los estilos inline cuentan
+// contra el presupuesto `anyComponentStyle` (10 kB por componente, ver
+// angular.json → budgets) y este bloque lo superaba, ROMPIENDO el build de
+// producción. Como SCSS externo se contabiliza distinto y el build pasa.
+// ViewEncapsulation por defecto (Emulated): selectores scoped al componente.
+
+:host { display: block; box-sizing: border-box; }
+
+:host.stat-card--stretch {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+:host.stat-card--max-height {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+:host.stat-card--stretch.stat-card--max-height {
+  height: 100%;
+}
+
+:host.stat-card--stretch .stat,
+:host.stat-card--max-height .stat {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+:host.stat-card--stretch .stat__body {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+:host.stat-card--max-height .stat {
+  overflow: auto;
+}
+
+:host.stat-card--stretch .stat--minimal {
+  min-height: 100%;
+}
+
+.stat {
+  --stat-accent: var(--fvx-link, #2563eb);
+  --stat-accent-bg: color-mix(in srgb, var(--stat-accent) 12%, transparent);
+  --stat-radius: var(--fvx-stat-card-radius, 6px);
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--fvx-bg-card, #fff);
+  border: 1px solid var(--fvx-border, #e2e8f0);
+  border-radius: var(--stat-radius);
+  color: var(--fvx-text-primary, #1e293b);
+  transition: box-shadow 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+  min-height: 86px;
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--fvx-text-primary, #0f172a) 4%, transparent),
+    0 1px 3px color-mix(in srgb, var(--fvx-text-primary, #0f172a) 6%, transparent);
+}
+
+.stat--icon-end {
+  flex-direction: row-reverse;
+}
+
+/* Tones — modifican --stat-accent para icono / trend / filled */
+.stat[data-tone='primary'] { --stat-accent: var(--fvx-link, #2563eb); }
+.stat[data-tone='success'] { --stat-accent: #16a34a; }
+.stat[data-tone='warning'] { --stat-accent: #d97706; }
+.stat[data-tone='danger']  { --stat-accent: #dc2626; }
+.stat[data-tone='info']    { --stat-accent: #0891b2; }
+.stat[data-tone='neutral'] { --stat-accent: var(--fvx-text-muted, #94a3b8); }
+
+/* Variants */
+.stat--filled {
+  background: var(--stat-accent-bg);
+  border-color: color-mix(in srgb, var(--stat-accent) 22%, var(--fvx-border, #e2e8f0));
+}
+.stat--outline {
+  background: transparent;
+  border-color: var(--stat-accent);
+  box-shadow: none;
+}
+.stat--minimal {
+  background: transparent;
+  border: none;
+  padding: 8px 12px;
+  min-height: 0;
+  box-shadow: none;
+}
+.stat--solid {
+  background: var(--stat-accent);
+  border-color: transparent;
+  color: #fff;
+  box-shadow:
+    0 1px 3px color-mix(in srgb, var(--stat-accent) 35%, transparent),
+    0 2px 6px color-mix(in srgb, #000 18%, transparent);
+}
+.stat--solid .stat__label {
+  color: rgba(255, 255, 255, 0.82);
+}
+.stat--solid .stat__value {
+  color: #fff;
+}
+.stat--solid .stat__prefix,
+.stat--solid .stat__suffix {
+  color: rgba(255, 255, 255, 0.78);
+}
+.stat--solid .stat__desc {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* Split: tarjeta clara + banda de acento (dashboards tipo pro) */
+.stat--split,
+.stat--split-solid {
+  align-items: stretch;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+.stat--split {
+  background: var(--fvx-bg-card, #fff);
+  border: 1px solid var(--fvx-border, #e2e8f0);
+}
+// Banda lateral: split y split-solid comparten geometría; difieren solo en el
+// fondo (definido por separado más abajo).
+.stat--split .stat__band,
+.stat--split-solid .stat__band {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  flex-shrink: 0;
+  color: #fff;
+}
+.stat--split .stat__band mat-icon,
+.stat--split-solid .stat__band mat-icon {
+  font-size: 26px;
+  width: 26px;
+  height: 26px;
+}
+.stat--split .stat__body,
+.stat--split-solid .stat__body {
+  padding: 14px 16px;
+  justify-content: center;
+  min-width: 0;
+}
+.stat--split .stat__band {
+  background: var(--stat-accent);
+}
+.stat--split .stat__label {
+  color: color-mix(in srgb, var(--stat-accent) 38%, var(--fvx-text-secondary, #475569));
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+.stat--split .stat__value {
+  color: var(--stat-accent);
+}
+.stat--split .stat__prefix,
+.stat--split .stat__suffix {
+  color: color-mix(in srgb, var(--stat-accent) 45%, var(--fvx-text-secondary, #475569));
+}
+.stat--split .stat__progress-fill {
+  background: var(--stat-accent);
+}
+
+/* Split-solid: cuerpo acento + banda más oscura */
+.stat--split-solid {
+  background: var(--stat-accent);
+  border-color: transparent;
+  color: #fff;
+  box-shadow:
+    0 1px 3px color-mix(in srgb, var(--stat-accent) 40%, transparent),
+    0 2px 8px color-mix(in srgb, #000 22%, transparent);
+}
+.stat--split-solid .stat__band {
+  background: color-mix(in srgb, var(--stat-accent) 68%, #000);
+}
+.stat--split-solid .stat__label {
+  color: rgba(255, 255, 255, 0.84);
+}
+.stat--split-solid .stat__value,
+.stat--split-solid .stat__prefix,
+.stat--split-solid .stat__suffix {
+  color: #fff;
+}
+.stat--split-solid .stat__desc {
+  color: rgba(255, 255, 255, 0.72);
+}
+.stat--split-solid .stat__progress-track {
+  background: rgba(255, 255, 255, 0.22);
+}
+.stat--split-solid .stat__progress-fill {
+  background: #fff;
+}
+
+/* Hover decorativo (elevación): independiente del modo clickable; chevron solo si es clickable */
+.stat--hover-lift {
+  cursor: pointer;
+}
+.stat--hover-lift:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 4px 12px color-mix(in srgb, var(--fvx-text-primary, #0f172a) 8%, transparent),
+    0 2px 6px color-mix(in srgb, var(--fvx-text-primary, #0f172a) 6%, transparent);
+  border-color: color-mix(in srgb, var(--stat-accent) 35%, var(--fvx-border, #e2e8f0));
+}
+.stat--outline.stat--hover-lift:hover {
+  border-color: var(--stat-accent);
+}
+.stat--minimal.stat--hover-lift:hover {
+  box-shadow: none;
+  transform: none;
+  border-color: transparent;
+}
+.stat--solid.stat--hover-lift:hover,
+.stat--split-solid.stat--hover-lift:hover {
+  box-shadow:
+    0 6px 16px color-mix(in srgb, var(--stat-accent) 45%, transparent),
+    0 2px 8px color-mix(in srgb, #000 25%, transparent);
+  border-color: transparent;
+}
+.stat--split.stat--hover-lift:hover {
+  border-color: color-mix(in srgb, var(--stat-accent) 28%, var(--fvx-border, #e2e8f0));
+}
+.stat--hover-lift:active {
+  transform: translateY(0);
+}
+
+/* Clickable */
+.stat--clickable {
+  cursor: pointer;
+}
+.stat--split.stat--clickable .stat__body,
+.stat--split-solid.stat--clickable .stat__body {
+  padding-right: 28px;
+}
+
+/* Icon tile (no banda) */
+.stat__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--stat-radius);
+  flex-shrink: 0;
+}
+.stat__icon--surface-soft {
+  background: var(--stat-accent-bg);
+  color: var(--stat-accent);
+}
+.stat__icon--surface-filled {
+  background: var(--stat-accent);
+  color: #fff;
+}
+.stat__icon--surface-muted {
+  background: var(--fvx-hover-bg, rgba(148, 163, 184, 0.15));
+  color: var(--fvx-text-secondary, #475569);
+}
+.stat--solid .stat__icon--surface-soft {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+.stat--solid .stat__icon--surface-filled {
+  background: #fff;
+  color: var(--stat-accent);
+}
+.stat--solid .stat__icon--surface-muted {
+  background: rgba(0, 0, 0, 0.18);
+  color: #fff;
+}
+.stat__icon mat-icon {
+  font-size: 22px;
+  width: 22px;
+  height: 22px;
+}
+
+/* Body */
+.stat__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.stat__label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.055em;
+  color: var(--fvx-text-secondary, #475569);
+}
+.stat__value {
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--fvx-text-primary, #1e293b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  font-variant-numeric: tabular-nums;
+}
+.stat__value--loading {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 0;
+}
+.stat__value--loading mat-spinner {
+  --mat-progress-spinner-active-indicator-color: var(--stat-accent);
+}
+.stat--solid .stat__value--loading mat-spinner {
+  --mat-progress-spinner-active-indicator-color: rgba(255, 255, 255, 0.92);
+}
+.stat--split-solid .stat__value--loading mat-spinner {
+  --mat-progress-spinner-active-indicator-color: rgba(255, 255, 255, 0.92);
+}
+.stat__prefix,
+.stat__suffix {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--fvx-text-secondary, #475569);
+}
+.stat__desc {
+  margin-top: 2px;
+  font-size: 0.6875rem;
+  color: var(--fvx-text-muted, #94a3b8);
+}
+
+/* Progress */
+.stat__progress {
+  margin-top: 10px;
+  width: 100%;
+}
+.stat__progress-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--fvx-hover-bg, rgba(148, 163, 184, 0.22));
+  overflow: hidden;
+}
+.stat__progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--stat-accent);
+  transition: width 0.28s ease;
+}
+.stat--solid .stat__progress-track {
+  background: rgba(255, 255, 255, 0.22);
+}
+.stat--solid .stat__progress-fill {
+  background: #fff;
+}
+
+/* Trend: chip mas rectangular */
+.stat__trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+  padding: 3px 8px;
+  border-radius: var(--stat-radius);
+  background: var(--fvx-hover-bg, rgba(148, 163, 184, 0.12));
+  font-size: 0.6875rem;
+  font-weight: 600;
+  width: fit-content;
+  letter-spacing: 0.02em;
+}
+.stat__trend mat-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+}
+.stat__trend--up {
+  background: color-mix(in srgb, #16a34a 12%, transparent);
+  color: #15803d;
+}
+.stat__trend--down {
+  background: color-mix(in srgb, #dc2626 12%, transparent);
+  color: #b91c1c;
+}
+.stat__trend--neutral {
+  background: var(--fvx-hover-bg, rgba(148, 163, 184, 0.12));
+  color: var(--fvx-text-secondary, #475569);
+}
+// Trend sobre fondo de acento (solid + split-solid comparten el mismo
+// tratamiento: chip translúcido claro, up/down/neutral invertidos).
+.stat--solid .stat__trend,
+.stat--split-solid .stat__trend {
+  background: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.95);
+}
+.stat--solid .stat__trend--up,
+.stat--split-solid .stat__trend--up {
+  background: rgba(255, 255, 255, 0.23);
+  color: #ecfccb;
+}
+.stat--solid .stat__trend--down,
+.stat--split-solid .stat__trend--down {
+  background: rgba(0, 0, 0, 0.21);
+  color: #fecaca;
+}
+.stat--solid .stat__trend--neutral,
+.stat--split-solid .stat__trend--neutral {
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.88);
+}
+.stat__trend-label {
+  font-weight: 500;
+  color: inherit;
+  opacity: 0.88;
+}
+
+/* Chevron */
+.stat__chevron {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--fvx-text-muted, #94a3b8);
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.18s ease;
+  pointer-events: none;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+.stat--solid .stat__chevron,
+.stat--split-solid .stat__chevron {
+  color: rgba(255, 255, 255, 0.65);
+}
+.stat--clickable:hover .stat__chevron {
+  opacity: 1;
+  transform: translate(2px, -50%);
+}
+
+/* Mini — baja altura, contenido en fila (tablas / pies de métrica) */
+.stat--compact {
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  min-height: 0;
+}
+.stat--compact.stat--icon-end:not(.stat--split):not(.stat--split-solid) {
+  flex-direction: row-reverse;
+}
+.stat--compact .stat__body {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  align-content: center;
+  gap: 4px 10px;
+  row-gap: 2px;
+}
+.stat--compact .stat__label {
+  font-size: 0.625rem;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  flex: 0 0 auto;
+}
+.stat--compact .stat__value {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.2;
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: flex-start;
+}
+.stat--compact .stat__prefix,
+.stat--compact .stat__suffix {
+  font-size: 0.6875rem;
+}
+.stat--compact .stat__icon {
+  width: 28px;
+  height: 28px;
+}
+.stat--compact .stat__icon mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+.stat--compact .stat__progress {
+  flex-basis: 100%;
+  width: 100%;
+  margin-top: 4px;
+  order: 10;
+}
+.stat--compact .stat__progress-track {
+  height: 3px;
+}
+.stat--compact .stat__trend {
+  margin-top: 0;
+  padding: 2px 6px;
+  font-size: 0.625rem;
+  gap: 3px;
+  flex: 0 0 auto;
+}
+.stat--compact .stat__trend mat-icon {
+  font-size: 12px;
+  width: 12px;
+  height: 12px;
+}
+.stat--compact .stat__desc {
+  flex-basis: 100%;
+  margin-top: 0;
+  font-size: 0.625rem;
+  text-align: left;
+  order: 11;
+}
+.stat--compact.stat--minimal {
+  padding: 4px 8px;
+}
+
+.stat--compact.stat--split,
+.stat--compact.stat--split-solid {
+  align-items: stretch;
+  padding: 0;
+  gap: 0;
+}
+.stat--compact.stat--split.stat--icon-end,
+.stat--compact.stat--split-solid.stat--icon-end {
+  flex-direction: row-reverse;
+}
+.stat--compact.stat--split .stat__band,
+.stat--compact.stat--split-solid .stat__band {
+  width: 36px;
+  flex-shrink: 0;
+  min-height: 0;
+}
+.stat--compact.stat--split .stat__band mat-icon,
+.stat--compact.stat--split-solid .stat__band mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+.stat--compact.stat--split .stat__body,
+.stat--compact.stat--split-solid .stat__body {
+  padding: 6px 10px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+}
+.stat--compact.stat--split.stat--clickable .stat__body,
+.stat--compact.stat--split-solid.stat--clickable .stat__body {
+  padding-right: 26px;
+}
+
+/* Loading state: atenuar todo */
+.stat--loading .stat__label,
+.stat--loading .stat__icon,
+.stat--loading .stat__band {
+  opacity: 0.65;
+}

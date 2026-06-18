@@ -1,0 +1,7 @@
+@use '../theme-palettes' as palettes;
+
+// Incluye ``fvx-palette-tmp-dark`` (``--fvx-hover-bg``, ``--fvx-chip-*``) para contraste
+// de píldoras en tablas y ``app-status-chip`` en UI oscura.
+html.theme-tmp-dark {
+  @include palettes.fvx-palette-tmp-dark;
+}

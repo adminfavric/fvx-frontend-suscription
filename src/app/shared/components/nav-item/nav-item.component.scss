@@ -1,0 +1,181 @@
+// Estilos del ítem de navegación del sidebar. ViewEncapsulation.None →
+// globales, para que los selectores de contexto que emite el layout
+// (.sidebar.collapsed, .nav-group--favorites) sigan alcanzando a .nav-item.
+
+// ── Item de navegación ──
+// Spec FVX: padding 8/11, radio 9, color text-2 reposo, peso 500.
+// Activo = BARRA LATERAL FINA (Convivo opción 2) — 2 señales limpias:
+//   1. Barra vertical de 3px en acento, pegada al borde izquierdo del ítem (::before).
+//   2. Ícono relleno (FILL 1) en acento + texto en --text (primario), peso semibold (600).
+// El texto del activo NO se tiñe de índigo (queda neutro); el acento vive en barra + ícono.
+// SIN fondo tintado — el ítem nunca se rellena de forma permanente (solo hover sutil).
+// Hover sigue existiendo (fondo sutil) y puede convivir con el activo.
+// Transición SOLO en color (~120ms). NO mover padding/posición.
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  // Vertical compacto: 5px de alto, 1px de separación. Horizontal (11) sin
+  // cambios. margin-left 12px (era 8): un pequeño respiro a la izquierda; los
+  // títulos de grupo lo siguen (padding-left 23 = 12 margen + 11 padding).
+  padding: 5px 11px;
+  margin: 0 8px 1px 12px;
+  border-radius: var(--fvx-radius, 9px);
+  border: 1px solid transparent;
+  box-sizing: border-box;
+  color: var(--fvx-nav-item-text);
+  position: relative;           // anclar la ⭐ derecha
+  text-decoration: none;
+  // Ítem de menú = cuerpo de lectura (rec Convivo/Claude Design): --fvx-text-base
+  // (14px desktop / 15px mobile). Es navegación primaria, merece el tamaño base.
+  font-size: var(--fvx-text-base);
+  font-weight: 500;
+  line-height: 1.3;
+  white-space: nowrap;
+  // SIN overflow:hidden a propósito: la barra del activo (::before) sobresale 8px
+  // a la izquierda hasta el filo del panel. El label recorta solo (min-width:0).
+  transition: background-color 0.12s ease, color 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+
+  &:hover {
+    color: var(--fvx-nav-item-hover-text);
+    background: var(--fvx-nav-item-hover-bg);
+    // El link global aplica `a:hover { text-decoration: underline }` (styles.scss);
+    // aquí lo anulamos — el nav-item nunca debe subrayarse al hover.
+    text-decoration: none;
+  }
+
+  &:active {
+    background: var(--fvx-nav-item-hover-bg);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow:
+      inset 0 0 0 1px var(--fvx-link, var(--fvx-accent)),
+      0 0 0 3px var(--fvx-accent-soft, color-mix(in srgb, var(--fvx-link) 24%, transparent));
+  }
+
+  // ★ ESTADO ACTIVO — barra lateral fina: texto neutro + barra + ícono relleno.
+  &.nav-item--active {
+    color: var(--fvx-nav-item-hover-text, var(--fvx-text-primary));
+    font-weight: 600;
+
+    // Barra de posición ("estás aquí") al filo IZQUIERDO del panel, FUERA de la
+    // tarjeta (como la referencia Convivo): `left: -12px` salva el margin-left
+    // del ítem (12px) y la deja a ras del borde del sidebar. No la recorta nadie:
+    // .sidebar-nav y .nav-group-inner tienen su borde izquierdo justo en x=0 y su
+    // overflow:hidden solo recorta x<0; la barra arranca en x=0. El ítem es
+    // position:relative (ancla de la ⭐) y ya NO tiene overflow:hidden.
+    &::before {
+      content: '';
+      position: absolute;
+      left: -12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 18px;
+      border-radius: 0 3px 3px 0;        // redondeado solo del lado interior
+      background: var(--fvx-nav-icon-active, var(--fvx-accent));
+    }
+
+    .nav-item-icon {
+      color: var(--fvx-nav-icon-active);
+      // Activo = variante FILLED de la fuente clásica (cargada en index.html).
+      // NO usar var(--mat-icon-font): en Material 21 (M3) apunta a "Material
+      // Symbols", que esta app NO carga → el ícono quedaba EN BLANCO (p. ej.
+      // dashboard). 'Material Icons' (filled) ya está cargada y renderiza.
+      font-family: 'Material Icons', 'Material Icons Outlined';
+    }
+  }
+}
+
+.nav-item-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--fvx-nav-icon);
+  // Reposo: variante OUTLINED de Material Icons; en activo vuelve a FILLED.
+  font-family: 'Material Icons Outlined', 'Material Icons';
+  font-variation-settings: 'FILL' 0;
+  transition: color 0.12s ease;
+}
+
+.nav-item:hover .nav-item-icon { color: var(--fvx-nav-icon-hover); }
+
+.nav-item-label {
+  min-width: 0;              // permite el ellipsis dentro del flex (el item ya no recorta)
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// ── Sidebar colapsado (modo raíl) — solo íconos centrados ──
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 9px;
+  gap: 0;
+}
+
+// ── Botón ⭐ (favorito) ──
+.nav-item .nav-item-fav {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--fvx-text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms ease, color 120ms ease, background 120ms ease;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    background: var(--fvx-hover-bg, rgba(255, 255, 255, 0.06));
+    color: var(--fvx-text-primary);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.3;
+  }
+
+  // Favorito activo: amarillo, siempre visible.
+  &.nav-item-fav--on {
+    color: #f5b400;
+    opacity: 1;
+  }
+}
+
+// Hover y activo en el item: muestra la ⭐ aunque no esté favorita.
+.nav-item:hover .nav-item-fav,
+.nav-item--active .nav-item-fav {
+  opacity: 1;
+}
+
+// ── Mobile ──
+@media (max-width: 768px) {
+  // Padding mayor para touch-target ≥44px (la regla "padding manda").
+  .nav-item {
+    padding: 11px 14px;               // alto ~44px con ícono 21px (touch-target ok)
+    font-size: var(--fvx-text-base);  // 15px en mobile vía token
+    margin: 0 8px 1px 12px;           // separación chica + margen izq. (= desktop)
+    gap: 12px;
+  }
+
+  .nav-item-icon {
+    font-size: 21px;
+    width: 21px;
+    height: 21px;
+  }
+}

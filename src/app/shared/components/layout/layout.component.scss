@@ -1,0 +1,632 @@
+@use 'variables' as v;
+
+$sidebar-w: 248px;
+$sidebar-w-collapsed: 64px;
+$topbar-h: 52px;
+
+// ── Overlay (mobile) ──
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  // Blur sutil del contenido detrás (mobile drawer del menú).
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 998;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+}
+
+// ── Sidebar ──
+// ``border-right``: separa visualmente el sidebar del lienzo. El token
+// ``--fvx-sidebar-footer-border`` ya está calibrado por tema (gris claro en
+// shells claros, translúcido blanco en oscuros, etc.); lo reutilizamos para
+// el borde derecho para no inventar otro token con la misma semántica.
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: $sidebar-w;
+  background: var(--fvx-sidebar-bg);
+  border-right: 1px solid var(--fvx-sidebar-footer-border, var(--fvx-border));
+  display: flex;
+  flex-direction: column;
+  z-index: 999;
+  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+
+  &.collapsed { width: $sidebar-w-collapsed; }
+
+  // Mobile: slide from left
+  &.mobile-hidden {
+    transform: translateX(-100%);
+    width: 85vw;
+    max-width: $sidebar-w;
+  }
+  &.mobile-open {
+    transform: translateX(0);
+    width: 85vw;
+    max-width: $sidebar-w;
+    overscroll-behavior: contain;
+  }
+}
+
+// ── Brand ──
+.sidebar-header {
+  padding: 20px 16px 16px;
+  flex-shrink: 0;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* Marca clickeable → /dashboard. El <a> envuelve logo+nombre y hereda el flex;
+   sin estilos de link (color/subrayado), con foco accesible y hover sutil. */
+.sidebar-brand__home {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  border-radius: var(--fvx-radius, 9px);
+  transition: opacity 0.12s ease;
+
+  &:hover { opacity: 0.85; }
+  &:focus-visible {
+    outline: 2px solid var(--fvx-accent-soft, color-mix(in srgb, var(--fvx-link) 40%, transparent));
+    outline-offset: 2px;
+  }
+}
+
+.brand-icon {
+  color: var(--fvx-sidebar-brand-icon);
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.brand-logo {
+  /* Mismas dimensiones que .brand-icon para que el cambio logo↔icono no salte verticalmente. */
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  flex-shrink: 0;
+  border-radius: 4px;
+}
+
+.brand-name {
+  color: var(--fvx-sidebar-brand-text);
+  font-size: var(--fvx-text-base);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.sidebar-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: var(--fvx-sidebar-close-bg);
+  border-radius: 50%;
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+
+  .mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: var(--fvx-sidebar-close-icon);
+  }
+
+  &:active {
+    background: var(--fvx-sidebar-close-bg-hover);
+  }
+}
+
+// ── Navigation ──
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px 0;
+
+  &::-webkit-scrollbar { width: 0; }
+}
+
+.nav-group {
+  margin-bottom: 2px;
+}
+
+// Encabezado de sección (HOME, COMUNIDAD ACTIVA, FINANZAS, …)
+// Spec: 11px UPPERCASE, peso 700, letter-spacing 0.9px, color text-3 (--fvx-text-xs).
+// Es información de contexto — debe estar presente pero leerse menos que los items.
+.nav-group-title {
+  display: block;
+  // Padding-left alineado con el ÍCONO del nav-item:
+  //   nav-item margin-left (12) + nav-item padding-left (11) = 23px
+  // Así "HOME / ADMINISTRATION / DEV / FAVORITOS" queda en la misma columna
+  // vertical que los iconos del menú (lectura visual coherente).
+  padding: 12px 19px 5px 23px;
+  font-size: var(--fvx-text-xs);    // 11px (escala FVX)
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.9px;
+  color: var(--fvx-nav-group-title);
+  white-space: nowrap;
+  overflow: hidden;
+  user-select: none;
+}
+
+// Variante botón: el título completo pliega/expande el grupo. Conserva el
+// aspecto small-caps; solo gana un chevron tenue a la derecha. (Sin alturas
+// en JS: el colapso es puro CSS — ver .nav-group-items abajo.)
+.nav-group-title--toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  // El feedback es SOLO opacidad: el título nunca cambia de color (ni en hover
+  // ni al click). Reposo un poco atenuado (es info de contexto).
+  opacity: 0.8;
+  transition: opacity 0.14s;
+
+  .nav-group-title-text {
+    flex: 1;                        // empuja el chevron a la derecha
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .nav-group-chevron {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: currentColor;            // MISMO color que el texto del título
+    opacity: 0.6;
+    transition: transform 0.26s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.14s;
+  }
+
+  // Hover: mismo color, solo un poco más visible (sutil). Sin tinte.
+  &:hover:not(:disabled) {
+    opacity: 1;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--fvx-border-focus, var(--fvx-nav-item-active-text));
+    outline-offset: -2px;
+    border-radius: var(--fvx-radius, 9px);
+  }
+}
+
+// Chevron rotado −90° cuando el grupo está colapsado.
+.nav-group--collapsed .nav-group-chevron {
+  transform: rotate(-90deg);
+}
+
+// ── Colapso fluido sin medir alturas ──
+// grid-template-rows 1fr → 0fr da una transición exacta a la altura real del
+// contenido. min-height:0 en el inner es CLAVE para que 0fr colapse a cero.
+.nav-group-items {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.26s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-group--collapsed .nav-group-items {
+  grid-template-rows: 0fr;
+}
+
+.nav-group-inner {
+  overflow: hidden;
+  min-height: 0;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+.nav-group--collapsed .nav-group-inner {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-group-items,
+  .nav-group-inner,
+  .nav-group-chevron {
+    transition: none;
+  }
+}
+
+.nav-group-divider {
+  height: 1px;
+  background: var(--fvx-nav-divider);
+  margin: 8px 12px;
+}
+
+// ── Sidebar footer (selector de tema — segmented control compacto) ──
+.sidebar-footer {
+  flex-shrink: 0;
+  border-top: 1px solid var(--fvx-sidebar-footer-border);
+  padding: 6px 8px 8px;
+}
+
+// Chip de entorno + versión (reemplaza al chip del topbar). Minimalista: texto
+// chico/atenuado con un punto de color según el entorno (dev=rojo, staging=ámbar).
+.sidebar-env {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px 8px;
+  font-size: var(--fvx-text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--fvx-text-muted);
+  white-space: nowrap;
+}
+.sidebar-env__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--fvx-danger, #ef4444); // dev por defecto
+}
+.sidebar-env[data-variant='warn'] .sidebar-env__dot {
+  background: var(--fvx-warning, #f59e0b); // staging
+}
+
+.sidebar.collapsed .sidebar-footer {
+  padding: 5px 5px 7px;
+}
+
+// ── Main wrapper — lienzo más tenue que la card / topbar ──
+// ``height: 100dvh`` + ``overflow: hidden`` (NO ``min-height``) acota el shell
+// al viewport: el topbar (sticky, en el flujo) ocupa su parte y ``.main-content``
+// toma el resto exacto con su propio ``overflow: auto``. Así el **scroll vive
+// SIEMPRE dentro de .main-content**, nunca en el body/wrapper. Esto elimina el
+// doble scroll que aparecía cuando una página (ej. el showcase) intentaba un
+// alto fijo y el wrapper crecía más allá del viewport.
+.main-wrapper {
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  // position: relative — necesario para que `.route-progress` (absolute) se
+  // ancle al wrapper y no al body. Sin esto, la barra aparecería arriba del
+  // topbar (al top: 52px del viewport) en lugar de DEBAJO del topbar.
+  position: relative;
+  transition: margin-left 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background: color-mix(in srgb, var(--fvx-bg-page) 92%, var(--fvx-border) 8%);
+
+  &.sidebar-expanded  { margin-left: $sidebar-w; }
+  &.sidebar-collapsed { margin-left: $sidebar-w-collapsed; }
+}
+
+// ── Top bar ──
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  flex-shrink: 0;
+  height: $topbar-h;
+  display: flex;
+  align-items: center;
+  // Espaciado consistente entre toggle / spacer / chip / botones (mat-icon-button = 40x40).
+  gap: 6px;
+  // Padding asimétrico: izquierda 12px (donde el toggle ya tiene margen natural
+  // por su touch-target), derecha 20px para que el avatar y acciones no queden
+  // pegados al borde del viewport (buenas prácticas — ver Material Design specs
+  // sobre topbar "trailing edge" con padding mayor).
+  padding: 0 20px 0 12px;
+  background: var(--fvx-bg-topbar);
+  border-bottom: 1px solid var(--fvx-border);
+}
+
+// Botones del topbar: tamaño y alineación uniformes (icon + avatar).
+.topbar-toggle,
+.topbar-action {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--fvx-text-secondary);
+  --mat-icon-button-icon-color: currentColor;
+}
+
+.topbar-action {
+  color: var(--fvx-text-muted);
+  &:hover {
+    color: var(--fvx-text-secondary);
+  }
+}
+
+// Avatar con anillo de acento (ver docs/Re-estilado _ Indigo _ Ambar.md §7).
+// El anillo va por ``box-shadow`` sobre el ``app-avatar`` — sin tocar markup.
+.topbar-user app-avatar {
+  display: block;
+  pointer-events: none;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--fvx-accent-soft, transparent);
+  transition: box-shadow 0.15s ease;
+}
+
+.topbar-user:hover app-avatar {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--fvx-link, var(--fvx-accent)) 35%, transparent);
+}
+
+.spacer { flex: 1 1 auto; }
+
+// ── Main content — scroll; la “card” vive en ``.page-container`` (mismo ancho que el control del shell)
+.main-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 12px 16px 16px;
+  overflow: auto;
+}
+
+// ── Barra de progreso de navegación entre header y main.
+// `position: absolute` para NO empujar la tabla 2px cuando aparece/desaparece.
+// Se ancla justo debajo del topbar (que es `position: sticky`); el `.main-wrapper`
+// declara `position: relative` arriba para servir de contenedor.
+.route-progress {
+  position: absolute;
+  top: $topbar-h;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  height: 2px;
+  // Color por tokens via .mat-mdc-progress-bar override en _material-overrides.scss.
+}
+
+// ── User menu ──
+// Los estilos del dropdown del avatar viven en `styles.scss` bajo
+// `.mat-mdc-menu-panel.fvx-user-menu` (mat-menu se teletransporta al body
+// vía cdk-overlay → necesita selector global, no encapsulado).
+// Aquí dejamos solo el helper que mantiene la indentación entre items con
+// y sin marca de "activo" (icono check vs invisible) usado por los submenús.
+.user-menu-blank-icon { visibility: hidden; }
+
+// ── Topbar — chip de ambiente (1.4) ──
+.topbar-env {
+  // Centrado vertical en la flex row del topbar; sin margen extra (el `gap` ya separa).
+  display: inline-flex;
+  align-items: center;
+}
+
+// ── Topbar — Command Palette trigger (estilo "Spotlight"), ahora a la derecha ──
+// Borde sutil, sin pill pesado (ver docs/Re-estilado _ Indigo _ Ambar.md §7).
+.topbar-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  min-width: 200px;
+  max-width: 320px;
+  padding: 0 8px 0 10px;
+  background: var(--fvx-bg-input, var(--fvx-bg-card));
+  border: 1px solid var(--fvx-border);
+  border-radius: var(--fvx-radius, 9px);
+  color: var(--fvx-text-muted);
+  font-family: inherit;
+  font-size: var(--fvx-text-compact);   // 13px (escala FVX)
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: var(--fvx-border-strong, var(--fvx-link));
+    color: var(--fvx-text-secondary);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--fvx-border-focus, var(--fvx-link));
+    box-shadow: 0 0 0 3px var(--fvx-accent-soft, color-mix(in srgb, var(--fvx-link) 24%, transparent));
+  }
+}
+
+.topbar-search__icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.topbar-search__placeholder {
+  flex: 1 1 auto;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar-search__kbd {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--fvx-text-primary) 6%, transparent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--fvx-text-2xs);
+  color: var(--fvx-text-muted);
+}
+
+@media (max-width: 768px) {
+  .topbar-search {
+    min-width: 32px;
+    width: 32px;
+    padding: 0;
+    justify-content: center;
+
+    .topbar-search__placeholder,
+    .topbar-search__kbd {
+      display: none;
+    }
+  }
+}
+
+// ── Topbar — Breadcrumbs (auto-derivados desde el menú backend) ──
+// Spec tipográfica: tamaño 12.5px, peso 500 intermedios / 600 actual, color
+// text-secondary intermedios / text-primary actual / text-muted separador.
+// Regla mental: siempre **un escalón por debajo del cuerpo** (más chico, más
+// tenue); el único con contraste pleno es la página actual.
+.topbar-crumbs {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;                              // el espacio lo da `margin` del separador (= 5px por lado)
+  min-width: 0;
+  margin-left: 4px;
+  font-size: var(--fvx-text-sm);       // 12px — secundario respecto al cuerpo (14px)
+  line-height: 1.2;
+  letter-spacing: 0;
+  color: var(--fvx-text-secondary);    // intermedios = text-2 (secundario)
+  flex: 0 1 auto;                      // no empuja al spacer del topbar
+}
+.topbar-crumbs__item {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 500;                    // ítems intermedios: medium
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 240px;                    // truncado con tooltip nativo via [title] en el template
+}
+a.topbar-crumbs__item:hover {
+  color: var(--fvx-text-primary);      // hover sutil: sube a primary, sin subrayar
+  text-decoration: none;
+}
+.topbar-crumbs__item--current {
+  color: var(--fvx-text-primary);      // único con contraste pleno
+  font-weight: 600;                    // semibold — "estás aquí"
+  cursor: default;                     // afirma que no es link
+}
+.topbar-crumbs__sep {
+  font-size: 14px;                     // proporcional al texto 12.5px (era 16px)
+  width: 14px;
+  height: 14px;
+  line-height: 14px;
+  color: var(--fvx-text-muted);        // text-3 — casi se desvanece
+  opacity: 1;                          // el color ya es tenue, sin opacity extra
+  margin: 0 5px;                       // spec: separación uniforme de 5px por lado
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  // En mobile el topbar es estrecho: mantenemos solo el último crumb
+  // (página actual) para no apretar las acciones de la derecha.
+  .topbar-crumbs__item:not(.topbar-crumbs__item--current),
+  .topbar-crumbs__sep {
+    display: none;
+  }
+  .topbar-crumbs__item--current {
+    max-width: 160px;
+  }
+}
+
+
+// ── Responsive ──
+@media (max-width: 768px) {
+  .main-wrapper {
+    margin-left: 0 !important;
+  }
+
+  .topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+  }
+
+  .main-content {
+    padding: 8px 10px 12px;
+    padding-top: calc(#{$topbar-h} + 8px);
+  }
+
+  .nav-group-title {
+    // Mobile: nav-item tiene margin-left=8 + padding-left=14 → 22px.
+    // Alineamos el título de grupo con el ícono del item para mantener la
+    // misma "columna" visual que en desktop.
+    padding: 16px 22px 6px;
+    font-size: var(--fvx-text-xs);     // 11px UPPER (escala FVX)
+    letter-spacing: 0.9px;
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// Favoritos del usuario (sección al tope del sidebar)
+// ────────────────────────────────────────────────────────────────────────
+// El título "FAVORITOS" usa el mismo estilo base que el resto (sin ícono
+// líder), por lo que queda alineado a la izquierda en la misma columna.
+
+
+// Indicación de D&D en favoritos sin alterar la alineación del item: la fila
+// entera es arrastrable (sin handle visible), señalizado por el cursor y por
+// un patrón de "agarre" (6 puntos) que aparece OVER la columna izquierda al
+// hacer hover. Posicionado absoluto → no empuja al icono ni al texto, por lo
+// que el item favorito conserva exactamente la misma columna visual que los
+// items del resto del menú.
+.nav-group--favorites .nav-item-row {
+  position: relative;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  // Grip de 6 puntos en gradiente radial — sin recursos extra, sin nodo extra,
+  // sin afectar la alineación del label. Aparece sutil al hover de la fila.
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    height: 14px;
+    background-image:
+      radial-gradient(circle, var(--fvx-text-muted) 1px, transparent 1.2px),
+      radial-gradient(circle, var(--fvx-text-muted) 1px, transparent 1.2px);
+    background-size: 4px 4px, 4px 4px;
+    background-position: 0 0, 4px 0;
+    background-repeat: repeat-y;
+    opacity: 0;
+    transition: opacity 120ms ease;
+    pointer-events: none;
+  }
+
+  // El grip de puntos se revela al hover y también cuando el enlace interno
+  // tiene foco de teclado (:focus-within) — pista de que la fila es reordenable.
+  // El anillo de foco lo provee el propio <a> (nav-item :focus-visible); no se
+  // duplica aquí. Con mouse el reposo se ve idéntico a antes.
+  &:hover::before,
+  &:focus-within::before {
+    opacity: 0.55;
+  }
+}
+
+// Preview de drag (CDK).
+.cdk-drag-preview {
+  border-radius: var(--fvx-radius, 9px);
+  background: var(--fvx-bg-elevated, var(--fvx-bg-card));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  opacity: 0.96;
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.35;
+}

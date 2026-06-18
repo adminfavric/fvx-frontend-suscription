@@ -1,0 +1,12 @@
+# Generados / vendor
+dist/
+.angular/
+node_modules/
+coverage/
+
+# i18n: JSON grande y estructurado — se edita a mano, no lo reflows prettier
+public/assets/i18n/en.json
+public/assets/i18n/es.json
+
+# Lockfile
+package-lock.json

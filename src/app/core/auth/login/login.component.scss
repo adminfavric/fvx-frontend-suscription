@@ -1,0 +1,428 @@
+@use 'variables' as v;
+
+/*
+ * Login FVX — variante «Lienzo de marca» (ver fvx-frontend/docs/new-login.md).
+ * Layout a dos columnas: aside inmersivo de marca (gradiente + textura blueprint)
+ * + panel de formulario. Todo con tokens --fvx-* (los 5 temas flipean solos) y
+ * fuente Geist heredada. En < 900px el aside se oculta y queda el form centrado.
+ *
+ * Tokens del doc → equivalente FVX:
+ *   --bg-app→--fvx-bg-main · --bg-sidebar→--fvx-sidebar-bg · --accent→--fvx-accent
+ *   --text/2/3→--fvx-text-primary/secondary/muted · --border*→--fvx-border*
+ */
+
+:host {
+  display: block;
+  min-height: 100dvh;
+}
+
+.login-page {
+  width: 100%;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  background: var(--fvx-bg-main);
+}
+
+/* ───────── Aside · lienzo de marca ───────── */
+.login-brand {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(36px, 5vw, 56px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-right: 1px solid var(--fvx-border);
+
+  /* Variables locales que adaptan el panel al tema (claro vs oscuro).
+     En oscuro: titular claro + líneas claras. En claro: las sobreescribe el
+     bloque [data-theme] de abajo (texto/líneas índigo). */
+  --brand-fg: var(--fvx-sidebar-brand-text);
+  --brand-line: color-mix(in srgb, var(--fvx-sidebar-brand-text) 60%, transparent);
+
+  background: radial-gradient(
+    130% 100% at 100% 0%,
+    color-mix(in srgb, var(--fvx-accent) 26%, var(--fvx-sidebar-bg)) 0%,
+    var(--fvx-sidebar-bg) 55%
+  );
+  color: var(--brand-fg);
+}
+
+/* Tema claro: el aside se aclara → texto y líneas oscuras/índigo para contraste.
+   Soporta encapsulación (:host-context) y SCSS global por si se extrae. */
+:host-context([data-theme='light']) .login-brand,
+:host-context(.theme-tmp-light) .login-brand,
+:host-context(.theme-beige) .login-brand,
+:host-context(.theme-blackandwhite) .login-brand {
+  --brand-fg: var(--fvx-text-primary);
+  --brand-line: color-mix(in srgb, var(--fvx-accent) 24%, transparent);
+}
+
+/* Textura blueprint (decorativa, aria-hidden). */
+.login-brand__pattern {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.16;
+  background-image:
+    linear-gradient(var(--brand-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--brand-line) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(160deg, #000 0%, transparent 80%);
+  -webkit-mask-image: linear-gradient(160deg, #000 0%, transparent 80%);
+}
+
+/* Marca: logo + wordmark (arriba del aside). */
+.login-brand__head {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.login-brand__mark {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--fvx-accent);
+  color: var(--fvx-accent-text);
+  box-shadow: 0 4px 16px var(--fvx-accent-glow);
+
+  mat-icon {
+    font-size: 26px;
+    width: 26px;
+    height: 26px;
+    font-variation-settings: 'FILL' 1;
+  }
+}
+
+.login-brand__wordmark {
+  line-height: 1.15;
+
+  b {
+    display: block;
+    font-size: v.$font-size-lg;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--brand-fg);
+  }
+
+  span {
+    font-size: v.$font-size-xs;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--fvx-text-muted);
+  }
+}
+
+/* Cuerpo del aside: titular + tagline + métricas. */
+.login-brand__body {
+  position: relative;
+  z-index: 1;
+  margin-top: auto;
+  max-width: 420px;
+}
+
+.login-brand__title {
+  margin: 26px 0 14px;
+  font-size: clamp(1.75rem, 2.6vw, 2.1rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--brand-fg);
+  text-wrap: balance;
+}
+
+.login-brand__tagline {
+  margin: 0;
+  font-size: v.$font-size-compact;
+  line-height: 1.6;
+  color: var(--fvx-text-secondary);
+  max-width: 38ch;
+}
+
+.login-brand__stats {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 36px;
+  margin-top: 32px;
+}
+
+.login-brand__stat {
+  .v {
+    font-size: v.$font-size-kpi;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--brand-fg);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .k {
+    margin-top: 2px;
+    font-size: v.$font-size-xs;
+    color: var(--fvx-text-muted);
+  }
+}
+
+.login-brand__foot {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 32px;
+  font-size: v.$font-size-xs;
+  color: var(--fvx-text-muted);
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  mat-icon {
+    font-size: 15px;
+    width: 15px;
+    height: 15px;
+    color: var(--fvx-text-secondary);
+  }
+}
+
+/* ───────── Panel del formulario ───────── */
+.login-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(28px, 4vw, 48px);
+  background: var(--fvx-bg-main);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 408px;
+}
+
+.login-card__header {
+  margin-bottom: 24px;
+}
+
+.login-card__title {
+  margin: 0 0 6px;
+  font-size: v.$font-size-xl;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--fvx-text-primary);
+}
+
+.login-card__subtitle {
+  margin: 0;
+  font-size: v.$font-size-sm;
+  color: var(--fvx-text-secondary);
+  line-height: 1.45;
+}
+
+/* ───────── Form ───────── */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.login-field {
+  width: 100%;
+}
+
+.field-prefix {
+  margin-right: 4px;
+  color: var(--fvx-text-muted);
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.suffix-toggle {
+  margin-right: -4px;
+  color: var(--fvx-text-muted);
+}
+
+.login-feedback {
+  margin: 12px 0 4px;
+}
+
+.login-submit {
+  width: 100%;
+  margin-top: 16px;
+  height: 44px;
+  border-radius: v.$radius-xl !important;
+  font-size: v.$font-size-md;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.login-submit__spinner {
+  display: inline-block;
+}
+
+/* ───────── Divisor + SSO ───────── */
+.login-or {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 22px 0 14px;
+  text-align: center;
+  color: var(--fvx-text-muted);
+  font-size: v.$font-size-xs;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.login-or::before,
+.login-or::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--fvx-border);
+}
+
+.login-social-btns {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+/* Solo centra el iframe del botón GIS; sin segundo borde/sombra (rompe la marca Google). */
+.login-google-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-google-host {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  outline: none;
+
+  iframe {
+    border-radius: 10px !important;
+  }
+}
+
+/* Botones SSO sobrios y uniformes (Apple, Microsoft) — estilo enterprise del doc.
+   Mismo molde para ambos: superficie sutil, borde fuerte, logo + label + chevron. */
+.login-sso-btn {
+  display: flex !important;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--fvx-border-strong);
+  border-radius: var(--fvx-radius, 9px);
+  background: var(--fvx-bg-surface-2);
+  color: var(--fvx-text-primary);
+  font-size: v.$font-size-sm;
+  font-weight: 600;
+  letter-spacing: 0;
+  transition: background var(--fvx-motion-fast, 120ms) var(--fvx-motion-easing, ease),
+    border-color var(--fvx-motion-fast, 120ms) var(--fvx-motion-easing, ease);
+
+  &:hover:not([disabled]) {
+    background: var(--fvx-bg-elevated);
+  }
+
+  .login-sso-logo {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .login-sso-label {
+    flex: 1;
+    text-align: left;
+  }
+
+  .login-sso-arrow {
+    margin-left: auto;
+    display: flex;
+    color: var(--fvx-text-muted);
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  &[disabled] {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  .login-sso-spin {
+    animation: login-sso-spin 1s linear infinite;
+  }
+}
+
+@keyframes login-sso-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ───────── Pie ───────── */
+.login-card__footer {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--fvx-border);
+}
+
+.login-card__hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: v.$font-size-xs;
+  line-height: 1.5;
+  color: var(--fvx-text-muted);
+  text-align: center;
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* ───────── Responsive ───────── */
+@media (max-width: 900px) {
+  .login-page {
+    grid-template-columns: 1fr;
+  }
+
+  .login-brand {
+    display: none;
+  }
+
+  .login-panel {
+    padding: 32px 24px;
+  }
+}

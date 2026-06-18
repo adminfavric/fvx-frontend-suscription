@@ -1,0 +1,5 @@
+@use '../theme-palettes' as palettes;
+
+html.theme-tmp-blackandwhite {
+  @include palettes.fvx-palette-tmp-blackandwhite;
+}

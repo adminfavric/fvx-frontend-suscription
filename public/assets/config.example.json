@@ -1,0 +1,6 @@
+{
+  "$comment": "Plantilla de configuración runtime del frontend FVX. COPIA este archivo a 'config.json' (mismo directorio) y rellena los valores. config.json está en .gitignore — los secretos/tokens NO se commitean. La app lo carga al arrancar (RuntimeConfigService) ANTES del bootstrap.",
+  "$instructions": "cp public/assets/config.example.json public/assets/config.json  →  luego editar config.json",
+
+  "mapboxToken": ""
+}
