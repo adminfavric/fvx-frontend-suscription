@@ -13,6 +13,18 @@ function isUnauthenticatedAuthPath(url: string): boolean {
   );
 }
 
+/**
+ * Endpoints del área de miembros (suscriptores). Usan su PROPIO Bearer (token de
+ * miembro en localStorage, ver MemberAuthService) y su propio manejo de 401
+ * (member-content → logout + /acceso). El interceptor del admin NO debe tocarlos:
+ * ni pegarles el token de admin encima, ni disparar el refresh/redirect a /login
+ * del admin. Mezclarlos hacía que una miembro con token vencido terminara en el
+ * login del admin, o que el token de admin del navegador pisara el de miembro.
+ */
+function isMemberApiPath(url: string): boolean {
+  return url.includes('/public/member/');
+}
+
 /** Añade `Authorization: Bearer <access>` a requests de NUESTRA API si hay token. */
 function withBearer(
   req: HttpRequest<unknown>,
@@ -44,6 +56,13 @@ function withBearer(
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
   const config = inject(APP_CONFIG);
+
+  // Endpoints de miembro: pasan intactos (conservan su propio Bearer) y sin la
+  // lógica de refresh/redirect del admin. Su 401 lo maneja el área de miembros.
+  if (isMemberApiPath(req.url)) {
+    return next(req);
+  }
+
   const authReq = withBearer(req, auth, config.apiUrl, config.authUrl);
 
   // En endpoints de auth dejamos pasar sin retry (un 401 en login = credenciales malas).

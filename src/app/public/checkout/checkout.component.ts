@@ -99,7 +99,7 @@ declare const paypal: any;
                   <!-- Alternativa internacional: PayPal (USD). Para clientes fuera
                        de Chile (Argentina, etc.) cuyas tarjetas no funcionan en Flow.
                        Botón oficial del SDK de PayPal (suscripción con plan_id). -->
-                  @if (m.paypalEnabled && m.paypalPlanId) {
+                  @if (paypalFeatureEnabled && m.paypalEnabled && m.paypalPlanId) {
                     <div class="intl-sep"><span>¿No eres de Chile?</span></div>
                     <div class="paymethod paymethod--intl">
                       <mat-icon>public</mat-icon>
@@ -241,6 +241,9 @@ export class CheckoutComponent implements OnInit {
   submitting = signal<'' | 'flow'>('');
   /** true mientras se carga el SDK de PayPal. */
   paypalLoading = signal(false);
+  /** Interruptor global de PayPal (environment). En false, el checkout ni
+   * muestra el bloque ni carga el SDK, aunque la membresía lo tenga activo. */
+  paypalFeatureEnabled = environment.paypalEnabled;
   checkoutResult = signal<'' | 'ok' | 'fail'>('');
 
   private content = inject(ContentService);
@@ -260,7 +263,7 @@ export class CheckoutComponent implements OnInit {
     if (r === 'ok' || r === 'fail') this.checkoutResult.set(r);
     // Si el plan ofrece PayPal, montamos su botón tras pintar el contenedor.
     const m = this.membership();
-    if (m?.paypalEnabled && m.paypalPlanId && !this.checkoutResult()) {
+    if (this.paypalFeatureEnabled && m?.paypalEnabled && m.paypalPlanId && !this.checkoutResult()) {
       setTimeout(() => this.setupPaypal(m), 0);
     }
   }

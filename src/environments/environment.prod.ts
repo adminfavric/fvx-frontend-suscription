@@ -10,6 +10,9 @@ export const environment = {
   stage: 'production' as const,
   /** Intervalo (ms) del polling del inbox de notificaciones. 180000 = 3 min. */
   inboxPollMs: 180_000,
+  /** Interruptor GLOBAL de PayPal en el frontend. En ``false`` el checkout no
+   * muestra PayPal ni carga su SDK. Ponlo en ``true`` cuando esté configurado. */
+  paypalEnabled: false,
   /** Client-id PÚBLICO de PayPal (LIVE). Reemplazar por el de producción al
    * publicar. Vacío = el botón PayPal no se renderiza. */
   paypalClientId: '',

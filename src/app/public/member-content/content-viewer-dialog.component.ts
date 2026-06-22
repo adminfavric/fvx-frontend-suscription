@@ -30,7 +30,12 @@ import { MemberContentItem } from '../services/member-auth.service';
     .viewer { position: relative; background:#15101f; color:#fff; border-radius:14px; overflow:hidden; max-width:880px; }
     .close { position:absolute; top:10px; right:10px; z-index:2; background:rgba(0,0,0,.45); border:none; color:#fff; width:38px; height:38px; border-radius:50%; cursor:pointer; display:grid; place-items:center; }
     .media { background:#000; display:flex; align-items:center; justify-content:center; }
-    .media video, .media img { width:100%; max-height:70vh; display:block; }
+    /* Video: ocupa el ancho (suele ser horizontal). */
+    .media video { width:100%; max-height:80vh; display:block; }
+    /* Imagen: se muestra COMPLETA en su proporción real (vertical u horizontal),
+       acotada por ancho y alto; se centra con barras negras si sobra espacio.
+       Antes width:100% deformaba/recortaba los posters verticales. */
+    .media img { max-width:100%; max-height:82vh; width:auto; height:auto; display:block; margin:0 auto; object-fit:contain; }
     .audio-wrap { padding:40px; display:flex; flex-direction:column; align-items:center; gap:16px; width:100%; }
     .audio-wrap mat-icon { font-size:56px; width:56px; height:56px; color:#d9a441; }
     .audio-wrap audio { width:100%; max-width:520px; }

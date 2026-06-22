@@ -16,6 +16,12 @@ export const environment = {
   /** Intervalo (ms) del polling del inbox de notificaciones. 180000 = 3 min. */
   inboxPollMs: 180_000,
   /**
+   * Interruptor GLOBAL de PayPal en el frontend. En ``false`` el checkout no
+   * muestra el bloque de PayPal ni carga su SDK, sin importar lo que diga cada
+   * membresía. Ponlo en ``true`` cuando el flujo (backend incluido) esté listo.
+   */
+  paypalEnabled: false,
+  /**
    * Client-id PÚBLICO de PayPal (SANDBOX) para cargar el SDK del botón de
    * suscripción en el checkout. Es público por diseño (va en el navegador); el
    * secret NUNCA va aquí, solo en el backend. En prod, reemplazar en
