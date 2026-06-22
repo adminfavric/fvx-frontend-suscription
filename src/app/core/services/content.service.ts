@@ -83,6 +83,27 @@ export class ContentService {
     return res.redirect_url;
   }
 
+  /**
+   * Registra en el backend la suscripción de PayPal creada por el botón del SDK
+   * (tras ``onApprove``). El backend crea la ``CheckoutSession`` (provider=paypal)
+   * para dar acceso al miembro y diferenciarla de Flow. Devuelve true si quedó
+   * suscrita.
+   */
+  async recordPaypalSubscription(payload: {
+    plan_slug: string;
+    name: string;
+    email: string;
+    subscription_id: string;
+  }): Promise<boolean> {
+    const res = await firstValueFrom(
+      this.http.post<{ subscribed?: boolean; already?: boolean }>(
+        `${environment.apiUrl}/public/paypal/subscription/record/`,
+        payload,
+      ),
+    );
+    return res.subscribed !== false;
+  }
+
   /** Eventos especiales (compra única) desde el backend Django. */
   async getEvents(): Promise<PublicEvent[]> {
     try {

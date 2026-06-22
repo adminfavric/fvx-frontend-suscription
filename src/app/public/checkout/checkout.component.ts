@@ -1,17 +1,20 @@
-import { Component, Input, OnInit, inject, signal } from '@angular/core';
+import { Component, ElementRef, Input, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { Membership, formatPrice, INSCRIPTION_OPENS } from '../data/catalog';
 import { ContentService } from '../../core/services/content.service';
+import { environment } from '../../../environments/environment';
 
 /**
  * Detalle de una membresía + formulario de contratación (checkout).
  * El slug llega por la ruta /membresias/:slug (withComponentInputBinding).
  *
- * El pago todavía está simulado: aquí se conectará luego la pasarela
- * (Flow / Reveniu / Webpay). Por ahora registra la intención de inscripción.
+ * Dos pasarelas: Flow (principal, tarjetas chilenas en CLP, vía redirección del
+ * backend) y PayPal (alternativa internacional en USD, botón del SDK que crea la
+ * suscripción con un plan_id y reporta el resultado al backend en onApprove).
  */
+declare const paypal: any;
 @Component({
   selector: 'app-checkout',
   standalone: true,
@@ -84,14 +87,33 @@ import { ContentService } from '../../core/services/content.service';
 
                   @if (error()) { <p class="checkout__error"><mat-icon>error_outline</mat-icon> {{ error() }}</p> }
 
-                  <button class="btn btn--gold" type="submit" [disabled]="submitting()">
+                  <button class="btn btn--gold" type="submit" [disabled]="!!submitting()">
                     <mat-icon>lock</mat-icon>
-                    {{ submitting() ? 'Redirigiendo a Flow…' : 'Suscribirme y registrar tarjeta' }}
+                    {{ submitting() === 'flow' ? 'Redirigiendo a Flow…' : 'Suscribirme y registrar tarjeta' }}
                   </button>
                   <p class="checkout__note">
                     Te llevaremos a Flow para registrar tu tarjeta de forma segura y activar la
                     suscripción. El pago es procesado por Flow; no almacenamos los datos de tu tarjeta.
                   </p>
+
+                  <!-- Alternativa internacional: PayPal (USD). Para clientes fuera
+                       de Chile (Argentina, etc.) cuyas tarjetas no funcionan en Flow.
+                       Botón oficial del SDK de PayPal (suscripción con plan_id). -->
+                  @if (m.paypalEnabled && m.paypalPlanId) {
+                    <div class="intl-sep"><span>¿No eres de Chile?</span></div>
+                    <div class="paymethod paymethod--intl">
+                      <mat-icon>public</mat-icon>
+                      <div>
+                        <strong>Paga con PayPal{{ m.priceUsd ? ' · ≈ US$' + m.priceUsd : '' }}</strong>
+                        <span>Alternativa internacional en dólares (ideal si tu tarjeta no es chilena). Completa tu nombre y correo arriba antes de continuar.</span>
+                      </div>
+                    </div>
+                    <!-- El SDK de PayPal renderiza aquí su botón de suscripción. -->
+                    <div #paypalContainer class="paypal-box"></div>
+                    @if (paypalLoading()) {
+                      <p class="checkout__note">Cargando PayPal…</p>
+                    }
+                  }
                 </form>
               </div>
             } @else if (checkoutResult() === 'ok') {
@@ -194,6 +216,10 @@ import { ContentService } from '../../core/services/content.service';
     .btn--gold { background: var(--lita-gold); color: var(--lita-violet-deep); width:100%; }
     .btn--violet { background: var(--lita-violet); color:#fff; }
     .btn mat-icon { font-size:18px; width:18px; height:18px; }
+    .paypal-box { margin-top:4px; min-height:45px; }
+
+    .intl-sep { display:flex; align-items:center; gap:10px; margin:6px 0 2px; color: var(--lita-muted); font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; }
+    .intl-sep::before, .intl-sep::after { content:""; flex:1; height:1px; background:#e6dccb; }
 
     .notfound { text-align:center; }
     .notfound h1 { color: var(--lita-violet-deep); }
@@ -205,14 +231,21 @@ export class CheckoutComponent implements OnInit {
   /** Llega por la ruta /membresias/:slug */
   @Input() slug = '';
 
+  /** Contenedor donde el SDK de PayPal renderiza su botón (si el plan lo ofrece). */
+  @ViewChild('paypalContainer') paypalContainer?: ElementRef<HTMLDivElement>;
+
   membership = signal<Membership | undefined>(undefined);
   form: FormGroup;
   error = signal('');
-  submitting = signal(false);
+  /** true mientras se redirige a Flow. */
+  submitting = signal<'' | 'flow'>('');
+  /** true mientras se carga el SDK de PayPal. */
+  paypalLoading = signal(false);
   checkoutResult = signal<'' | 'ok' | 'fail'>('');
 
   private content = inject(ContentService);
   private route = inject(ActivatedRoute);
+  private paypalReady = false;
 
   constructor(private fb: FormBuilder, private router: Router) {
     this.form = this.fb.group({
@@ -225,6 +258,11 @@ export class CheckoutComponent implements OnInit {
     this.membership.set(await this.content.getMembership(this.slug));
     const r = this.route.snapshot.queryParamMap.get('checkout');
     if (r === 'ok' || r === 'fail') this.checkoutResult.set(r);
+    // Si el plan ofrece PayPal, montamos su botón tras pintar el contenedor.
+    const m = this.membership();
+    if (m?.paypalEnabled && m.paypalPlanId && !this.checkoutResult()) {
+      setTimeout(() => this.setupPaypal(m), 0);
+    }
   }
 
   price = formatPrice;
@@ -240,6 +278,7 @@ export class CheckoutComponent implements OnInit {
     return { 1: '/día', 2: '/semana', 3: '/mes', 4: '/año' }[interval ?? 3] ?? '/mes';
   }
 
+  /** Suscripción vía Flow (tarjetas chilenas, CLP) — redirección del backend. */
   async submit(m: Membership): Promise<void> {
     if (this.form.invalid) {
       this.error.set('Por favor completa tu nombre y un correo válido.');
@@ -247,19 +286,92 @@ export class CheckoutComponent implements OnInit {
       return;
     }
     this.error.set('');
-    this.submitting.set(true);
+    this.submitting.set('flow');
     const v = this.form.value;
     try {
-      const url = await this.content.startCheckout({
-        plan_slug: m.slug,
-        name: v.name,
-        email: v.email,
-      });
-      // Redirige a Flow para registrar la tarjeta y activar la suscripción.
-      window.location.href = url;
+      const url = await this.content.startCheckout({ plan_slug: m.slug, name: v.name, email: v.email });
+      window.location.href = url; // a Flow para registrar la tarjeta y suscribir.
     } catch (e: any) {
-      this.submitting.set(false);
+      this.submitting.set('');
       this.error.set(e?.error?.detail || 'No se pudo iniciar el pago. Intenta nuevamente.');
     }
+  }
+
+  // ── PayPal (SDK) ───────────────────────────────────────────────────────────
+  /** Carga el SDK de PayPal (una vez) y renderiza el botón de suscripción. */
+  private async setupPaypal(m: Membership): Promise<void> {
+    if (this.paypalReady || !this.paypalContainer) return;
+    const clientId = environment.paypalClientId;
+    if (!clientId) return; // sin client-id no se puede cargar el SDK.
+    this.paypalLoading.set(true);
+    try {
+      await this.loadPaypalSdk(clientId);
+    } catch {
+      this.paypalLoading.set(false);
+      this.error.set('No se pudo cargar PayPal. Recarga la página o usa el pago con tarjeta.');
+      return;
+    }
+    this.paypalLoading.set(false);
+    if (this.paypalReady || typeof paypal === 'undefined') return;
+    this.paypalReady = true;
+
+    paypal.Buttons({
+      style: { shape: 'pill', color: 'gold', layout: 'vertical', label: 'subscribe' },
+      // Exige nombre + correo antes de abrir PayPal (los necesitamos para el acceso).
+      onClick: (_data: any, actions: any) => {
+        if (this.form.invalid) {
+          this.error.set('Completa tu nombre y un correo válido antes de pagar con PayPal.');
+          this.form.markAllAsTouched();
+          return actions.reject();
+        }
+        this.error.set('');
+        return actions.resolve();
+      },
+      createSubscription: (_data: any, actions: any) =>
+        actions.subscription.create({
+          plan_id: m.paypalPlanId,
+          subscriber: {
+            name: { given_name: this.form.value.name },
+            email_address: this.form.value.email,
+          },
+        }),
+      onApprove: async (data: any) => {
+        try {
+          await this.content.recordPaypalSubscription({
+            plan_slug: m.slug,
+            name: this.form.value.name,
+            email: this.form.value.email,
+            subscription_id: data.subscriptionID,
+          });
+          this.checkoutResult.set('ok');
+        } catch {
+          // El cobro se aprobó en PayPal pero falló el registro: marcamos ok igual
+          // (el webhook puede reconciliar) y avisamos por consola.
+          console.error('No se pudo registrar la suscripción PayPal en el backend.');
+          this.checkoutResult.set('ok');
+        }
+      },
+      onError: () =>
+        this.error.set('No se pudo completar el pago con PayPal. Intenta nuevamente.'),
+    }).render(this.paypalContainer.nativeElement);
+  }
+
+  private loadPaypalSdk(clientId: string): Promise<void> {
+    if (typeof paypal !== 'undefined') return Promise.resolve();
+    return new Promise<void>((resolve, reject) => {
+      const existing = document.getElementById('paypal-sdk') as HTMLScriptElement | null;
+      if (existing) {
+        existing.addEventListener('load', () => resolve());
+        existing.addEventListener('error', () => reject());
+        return;
+      }
+      const s = document.createElement('script');
+      s.id = 'paypal-sdk';
+      const locale = environment.paypalLocale ? `&locale=${encodeURIComponent(environment.paypalLocale)}` : '';
+      s.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&vault=true&intent=subscription${locale}`;
+      s.onload = () => resolve();
+      s.onerror = () => reject();
+      document.body.appendChild(s);
+    });
   }
 }

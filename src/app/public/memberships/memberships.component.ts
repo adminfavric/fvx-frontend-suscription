@@ -1,24 +1,17 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
-import { Membership, INSCRIPTION_OPENS, formatPrice } from '../data/catalog';
+import { Membership, formatPrice } from '../data/catalog';
 import { ContentService } from '../../core/services/content.service';
+import { LaunchScheduleComponent } from './launch-schedule.component';
 
 @Component({
   selector: 'app-memberships',
   standalone: true,
-  imports: [RouterLink, MatIconModule],
+  imports: [RouterLink, MatIconModule, LaunchScheduleComponent],
   template: `
-    <header class="page-hero">
-      <div class="page-hero__inner">
-        <span class="eyebrow">Membresías</span>
-        <h1>Elige tu camino de Alkymia</h1>
-        <p>
-          Cada membresía es un espacio independiente. Puedes inscribirte en una o combinar varias.
-          Inscripciones desde el <strong>{{ inscriptionOpens }}</strong>.
-        </p>
-      </div>
-    </header>
+    <!-- Bienvenida + calendario de iniciación (reemplaza el hero anterior) -->
+    <app-launch-schedule />
 
     <section class="list">
       @for (m of memberships(); track m.slug) {
@@ -52,7 +45,7 @@ import { ContentService } from '../../core/services/content.service';
           <div class="plan__foot">
             <span class="plan__price">{{ price(m.priceMonthly) }}@if (m.priceMonthly) {<small>/mes</small>}</span>
             <a class="btn btn--violet" [routerLink]="['/membresias', m.slug]">
-              {{ m.priceMonthly ? 'Contratar' : 'Más información' }}
+              {{ m.priceMonthly ? 'Suscribirme' : 'Más información' }}
             </a>
           </div>
         </article>
@@ -64,13 +57,7 @@ import { ContentService } from '../../core/services/content.service';
   styles: [`
     :host { --lita-violet:#5b3a8a; --lita-violet-deep:#2e1a52; --lita-gold:#d9a441; --lita-cream:#faf6ef; --lita-ink:#2a2333; --lita-muted:#6b6478; display:block; }
 
-    .page-hero { background: linear-gradient(160deg, var(--lita-violet), var(--lita-violet-deep)); color:#fff; }
-    .page-hero__inner { max-width: 900px; margin:0 auto; padding: clamp(48px,7vw,90px) clamp(16px,4vw,48px); text-align:center; }
-    .eyebrow { color: var(--lita-gold); letter-spacing:.16em; text-transform:uppercase; font-size:.78rem; }
-    .page-hero h1 { margin:14px 0 12px; font-size: clamp(1.9rem,4vw,2.8rem); }
-    .page-hero p { margin:0 auto; max-width:54ch; color:#e9e2f2; line-height:1.6; }
-
-    .list { max-width: 980px; margin: 0 auto; padding: clamp(40px,6vw,72px) clamp(16px,4vw,48px); display:flex; flex-direction:column; gap: 24px; }
+    .list { max-width: 980px; margin: 0 auto; padding: clamp(8px,2vw,24px) clamp(16px,4vw,48px) clamp(40px,6vw,72px); display:flex; flex-direction:column; gap: 24px; }
     .empty { text-align:center; color: var(--lita-muted); font-size:1.05rem; padding: 40px 0; }
 
     .plan { background:#fff; border:1px solid #eadfce; border-radius:20px; padding: 30px clamp(20px,3vw,36px); box-shadow: 0 12px 32px -22px rgba(46,26,82,.5); position:relative; }
@@ -106,7 +93,6 @@ import { ContentService } from '../../core/services/content.service';
 export class MembershipsComponent implements OnInit {
   private content = inject(ContentService);
   memberships = signal<Membership[]>([]);
-  inscriptionOpens = INSCRIPTION_OPENS;
   price = formatPrice;
 
   async ngOnInit(): Promise<void> {

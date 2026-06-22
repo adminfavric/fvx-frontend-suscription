@@ -29,6 +29,12 @@ export interface Membership {
   interval?: number;
   /** ¿Se muestra como destacada? */
   featured?: boolean;
+  /** ¿Disponible por PayPal (alternativa internacional en USD)? */
+  paypalEnabled?: boolean;
+  /** Billing plan id de PayPal (P-…) para el botón del SDK. */
+  paypalPlanId?: string;
+  /** Precio aproximado en USD para PayPal (convertido desde CLP). */
+  priceUsd?: number | null;
 }
 
 export interface SpecialEvent {

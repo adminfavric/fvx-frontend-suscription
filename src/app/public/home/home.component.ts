@@ -38,8 +38,8 @@ import { ContentService } from '../../core/services/content.service';
         <header class="memberships__head">
           <span class="eyebrow">Comunidad Alkymia Solar</span>
           <h2>Membresías</h2>
-          <p>Elige el espacio que resuena contigo. Puedes inscribirte en una o en varias.</p>
           <p class="opens"><mat-icon>event_available</mat-icon> Inscripciones abren el <strong>{{ inscriptionOpens }}</strong></p>
+          <p class="open-now"><mat-icon>check_circle</mat-icon> Inscripciones abiertas</p>
         </header>
 
         <div class="cards">
@@ -97,6 +97,12 @@ import { ContentService } from '../../core/services/content.service';
     }
     .opens mat-icon { color: var(--color-gold-dark); font-size: 20px; width: 20px; height: 20px; flex-shrink: 0; }
     .opens strong { white-space: nowrap; }
+    .open-now {
+      display: flex; width: fit-content; align-items: center; gap: 8px; margin: 12px auto 0;
+      background: rgba(63,164,106,.12); color: #2f8a59; border: 1px solid rgba(63,164,106,.35);
+      border-radius: 999px; padding: 7px 16px; font-weight: 700; font-size: .92rem;
+    }
+    .open-now mat-icon { color: #3fa46a; font-size: 18px; width: 18px; height: 18px; }
 
     .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 255px), 1fr)); gap: 26px; }
     .cards__empty { grid-column: 1 / -1; text-align: center; color: var(--color-text-light); }

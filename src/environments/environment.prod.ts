@@ -10,6 +10,11 @@ export const environment = {
   stage: 'production' as const,
   /** Intervalo (ms) del polling del inbox de notificaciones. 180000 = 3 min. */
   inboxPollMs: 180_000,
+  /** Client-id PÚBLICO de PayPal (LIVE). Reemplazar por el de producción al
+   * publicar. Vacío = el botón PayPal no se renderiza. */
+  paypalClientId: '',
+  /** Locale del SDK de PayPal (traduce los botones). es_CL = español de Chile. */
+  paypalLocale: 'es_CL',
   /** Config Firebase (proyecto gen-suscription). El frontend la inicializa en
    * app.config; hoy su uso es legacy (auth/contenido ya van por Django). Se
    * mantiene para que el build no falle; se puede remover al limpiar Firebase. */

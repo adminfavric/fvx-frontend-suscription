@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MemberAuthService } from '../services/member-auth.service';
 
@@ -12,7 +12,7 @@ import { MemberAuthService } from '../services/member-auth.service';
   selector: 'app-member-login',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, MatIconModule],
+  imports: [FormsModule, MatIconModule, RouterLink],
   template: `
     <section class="access">
       <div class="card">
@@ -39,6 +39,10 @@ import { MemberAuthService } from '../services/member-auth.service';
           </button>
           <button class="link" (click)="step.set('email'); error.set('')">Usar otro correo</button>
         }
+
+        <p class="signup">
+          ¿No tienes una cuenta? <a routerLink="/membresias">Suscríbete aquí</a>.
+        </p>
       </div>
     </section>
   `,
@@ -57,6 +61,8 @@ import { MemberAuthService } from '../services/member-auth.service';
     .link { background:none; border:none; color:var(--v); cursor:pointer; margin-top:12px; font-size:.85rem; text-decoration:underline; }
     .error { display:flex; align-items:center; gap:6px; justify-content:center; color:#b91c1c; font-size:.85rem; }
     .error mat-icon { font-size:18px; width:18px; height:18px; }
+    .signup { margin:20px 0 0; padding-top:16px; border-top:1px solid #f0e8da; font-size:.88rem; color:#6b6478; }
+    .signup a { color:var(--v); font-weight:700; }
   `],
 })
 export class MemberLoginComponent {

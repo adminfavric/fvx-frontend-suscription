@@ -113,6 +113,11 @@
   transition: all var(--transition-fast);
   position: relative;
   padding: 0.5rem 0;
+  // Sin subrayado de texto (anula el `a:hover` global); el indicador es el
+  // `::after` dorado de abajo, que sí se mantiene.
+  text-decoration: none;
+
+  &:hover { text-decoration: none; }
 
   &::after {
     content: '';
