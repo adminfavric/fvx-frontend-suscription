@@ -29,8 +29,8 @@ interface Tier {
       <span class="eyebrow">Nueva plataforma</span>
       <h2>Estamos preparando tu espacio con mucho cariño</h2>
       <p>
-        Estamos preparando con mucho cariño nuestra nueva plataforma, un espacio donde podrás
-        acceder al hermoso contenido que estamos creando para ti: videos, libros, talleres y
+        Este es un espacio donde podrás
+        acceder al nutritivo contenido que estamos creando para ti: videos, libros, talleres y
         nuestros encuentros por Zoom dedicados especialmente a nuestra comunidad.
       </p>
       <p>
