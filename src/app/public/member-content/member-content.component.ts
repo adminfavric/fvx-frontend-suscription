@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -87,8 +87,18 @@ import { MemberAuthService, MemberContentItem, MemberSubscription } from '../ser
                   <span class="lcard__play"><mat-icon>{{ playIcon(it.kind) }}</mat-icon></span>
                   <span class="lcard__badge"><mat-icon>{{ iconFor(it.kind) }}</mat-icon> {{ kindLabel(it.kind) }}</span>
                 </div>
+                @if (it.kind === 'zoom') {
+                  @switch (zoomState(it)) {
+                    @case ('live') { <span class="lcard__live"><span class="dot"></span> EN VIVO</span> }
+                    @case ('soon') { <span class="lcard__when"><mat-icon>schedule</mat-icon> En {{ countdownText(it) }}</span> }
+                    @case ('ended') { <span class="lcard__when lcard__when--off"><mat-icon>event_busy</mat-icon> Finalizada</span> }
+                  }
+                }
                 <div class="lcard__body">
                   <h3>{{ it.title }}</h3>
+                  @if (it.kind === 'zoom' && it.live_start) {
+                    <p class="lcard__sched"><mat-icon>calendar_today</mat-icon> {{ it.live_start | date: "EEE dd-MM 'a las' HH:mm" }}</p>
+                  }
                   @if (it.text) { <p>{{ it.text }}</p> }
                 </div>
               </article>
@@ -160,12 +170,20 @@ import { MemberAuthService, MemberContentItem, MemberSubscription } from '../ser
     .lcard__play mat-icon { color:#fff; font-size:52px; width:52px; height:52px; }
     .lcard__badge { position:absolute; top:10px; left:10px; display:inline-flex; align-items:center; gap:4px; background:rgba(0,0,0,.5); color:#fff; font-size:.68rem; font-weight:600; padding:4px 9px; border-radius:999px; }
     .lcard__badge mat-icon { font-size:14px; width:14px; height:14px; }
+    .lcard__live { position:absolute; top:10px; right:10px; display:inline-flex; align-items:center; gap:5px; background:#e11d48; color:#fff; font-size:.66rem; font-weight:800; letter-spacing:.04em; padding:4px 9px; border-radius:999px; }
+    .lcard__live .dot { width:7px; height:7px; border-radius:50%; background:#fff; animation:pulse 1.2s ease-in-out infinite; }
+    @keyframes pulse { 50% { opacity:.35; } }
+    .lcard__when { position:absolute; top:10px; right:10px; display:inline-flex; align-items:center; gap:4px; background:rgba(0,0,0,.6); color:#fff; font-size:.68rem; font-weight:700; padding:4px 9px; border-radius:999px; }
+    .lcard__when mat-icon { font-size:14px; width:14px; height:14px; }
+    .lcard__when--off { background:rgba(80,70,100,.85); }
+    .lcard__sched { display:inline-flex; align-items:center; gap:5px; margin:0 0 6px !important; color: var(--v) !important; font-weight:600; font-size:.8rem !important; text-transform:capitalize; -webkit-line-clamp:unset !important; }
+    .lcard__sched mat-icon { font-size:15px; width:15px; height:15px; }
     .lcard__body { padding:14px 16px 18px; }
     .lcard__body h3 { margin:0 0 5px; color:#2a2333; font-size:1.02rem; line-height:1.3; }
     .lcard__body p { margin:0; color:#6b6478; font-size:.85rem; line-height:1.45; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
   `],
 })
-export class MemberContentComponent implements OnInit {
+export class MemberContentComponent implements OnInit, OnDestroy {
   member = inject(MemberAuthService);
   private router = inject(Router);
   private dialog = inject(MatDialog);
@@ -177,6 +195,10 @@ export class MemberContentComponent implements OnInit {
   subs = signal<MemberSubscription[]>([]);
   items = signal<MemberContentItem[]>([]);
   kind = signal<string>('all');
+
+  /** Reloj que avanza cada segundo para la cuenta regresiva de las sesiones Zoom. */
+  private now = signal(Date.now());
+  private clockId?: ReturnType<typeof setInterval>;
 
   private readonly KIND_ORDER = ['video', 'audio', 'pdf', 'zoom', 'image', 'text', 'link'];
 
@@ -191,8 +213,42 @@ export class MemberContentComponent implements OnInit {
     this.kind() === 'all' ? this.items() : this.items().filter(i => i.kind === this.kind()),
   );
 
-  /** Abre el visor (video/audio/imagen/texto) o el recurso externo (pdf/zoom/link). */
+  /** Estado de una sesión Zoom según el reloj actual y la franja de la sala. */
+  zoomState(it: MemberContentItem): 'live' | 'soon' | 'ended' {
+    const now = this.now();
+    const opens = it.opens_at ? Date.parse(it.opens_at) : null;
+    const closes = it.closes_at ? Date.parse(it.closes_at) : null;
+    if (opens && now < opens) return 'soon';
+    if (closes && now > closes) return 'ended';
+    return 'live';
+  }
+
+  /** Cuenta regresiva legible hasta que abre la sala (p. ej. "2h 15m 30s"). */
+  countdownText(it: MemberContentItem): string {
+    const opens = it.opens_at ? Date.parse(it.opens_at) : null;
+    if (!opens) return '';
+    let s = Math.max(0, Math.floor((opens - this.now()) / 1000));
+    const d = Math.floor(s / 86400); s %= 86400;
+    const h = Math.floor(s / 3600); s %= 3600;
+    const m = Math.floor(s / 60); s %= 60;
+    if (d > 0) return `${d}d ${h}h ${m}m`;
+    if (h > 0) return `${h}h ${m}m ${s}s`;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
+  }
+
+  /** Abre el visor (video/audio/imagen/texto), la sala Zoom embebida o el
+   * recurso externo (pdf/link). */
   open(it: MemberContentItem): void {
+    if (it.kind === 'zoom') {
+      // Solo se entra cuando la sala está abierta (dentro de la franja).
+      if (this.zoomState(it) !== 'live') return;
+      // Entra embebido (sin link). Si no tiene reunión Zoom configurada, cae al
+      // enlace externo (compatibilidad con items antiguos).
+      if (it.has_zoom) { this.router.navigate(['/sala', it.id]); }
+      else { const url = it.external_url || it.file_url; if (url) window.open(url, '_blank', 'noopener'); }
+      return;
+    }
     if (['video', 'audio', 'image', 'text'].includes(it.kind)) {
       this.dialog.open(ContentViewerDialogComponent, {
         data: it, panelClass: 'fvx-crud-dialog', width: '880px', maxWidth: '94vw',
@@ -217,12 +273,20 @@ export class MemberContentComponent implements OnInit {
       this.plans.set(content.plans);
       this.items.set(content.content);
       this.subs.set(account.subscriptions);
+      // Reloj para la cuenta regresiva, solo si hay alguna sesión Zoom con horario.
+      if (content.content.some(i => i.kind === 'zoom' && (i.opens_at || i.closes_at))) {
+        this.clockId = setInterval(() => this.now.set(Date.now()), 1000);
+      }
     } catch (e: any) {
       if (e?.status === 401) { this.member.logout(); this.router.navigate(['/acceso']); return; }
       this.error.set('No se pudo cargar tu contenido. Intenta nuevamente.');
     } finally {
       this.loading.set(false);
     }
+  }
+
+  ngOnDestroy(): void {
+    if (this.clockId) clearInterval(this.clockId);
   }
 
   subStatus(s: MemberSubscription): string {
