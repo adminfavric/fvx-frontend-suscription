@@ -585,16 +585,11 @@ export class MemberContentComponent implements OnInit, OnDestroy {
     return { video: 'Video', audio: 'Audio', pdf: 'Documento', text: 'Texto', image: 'Imagen', zoom: 'Zoom en vivo', link: 'Enlace' }[kind] ?? kind;
   }
 
-  /** Inicia el cambio de plan: si la actual es recurrente, la marcamos para
-   * cancelarla automáticamente al suscribir la nueva (conserva acceso hasta el
-   * fin del período). Si es por período (mensualidad/manual), expira sola. */
+  /** Inicia el cambio de plan: va al catálogo en modo "cambiar". El checkout
+   * detecta la suscripción actual y la cancela al pagar la nueva (conservando el
+   * acceso hasta el fin del período). Las de período (mensualidad) expiran solas. */
   switchPlan(s: MemberSubscription): void {
-    if (!s.is_manual && s.subscription_id) {
-      localStorage.setItem('fvx_switch_from', s.subscription_id);
-    } else {
-      localStorage.removeItem('fvx_switch_from');
-    }
-    this.router.navigate(['/membresias'], { queryParams: { cambiar: '1' } });
+    this.router.navigate(['/membresias'], { queryParams: { cambiar: '1', actual: s.plan_slug } });
   }
 
   logout(): void {

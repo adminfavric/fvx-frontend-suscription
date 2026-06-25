@@ -10,29 +10,25 @@ import { PageHeaderComponent } from '../../shared/components/page-header/page-he
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import { environment } from '../../../environments/environment';
 
-interface FlowSubscription {
-  subscriptionId: string;
-  planName?: string;
-  planId?: string;
-  customerId?: string;
-  customer?: { email?: string; name?: string } | null;
-  status: number;
-  created?: string;
-  period_end?: string | null;
-  next_invoice_date?: string | null;
+/** Suscripción genérica (cualquier pasarela), desde el espejo local unificado. */
+interface Subscription {
+  id: number;
+  provider: string;
+  provider_label: string;
+  plan_name: string;
+  name: string;
+  email: string;
+  subscription_id: string;
+  is_period: boolean;
+  access_until: string | null;
+  is_active: boolean;
+  created: string;
 }
 
-const STATUS_LABEL: Record<number, string> = {
-  0: 'En prueba',
-  1: 'Activa',
-  2: 'En proceso',
-  3: 'Impaga',
-  4: 'Cancelada',
-};
-
 /**
- * Suscripciones desde Flow (espejo de solo lectura). El backend agrega las
- * suscripciones de todos los planes de Flow (`GET /api/v1/subscriptions/`).
+ * Suscripciones activas de TODAS las pasarelas (Flow, PayPal, link de pago,
+ * manual) — espejo local unificado (`GET /api/v1/subscriptions/all/`). Las
+ * acciones de cancelar/reactivar aplican solo a las recurrentes de Flow.
  */
 @Component({
   selector: 'app-subscriptions',
@@ -43,7 +39,7 @@ const STATUS_LABEL: Record<number, string> = {
    <div class="page-container">
     <app-page-header
       title="Suscripciones"
-      subtitle="Suscripciones registradas en Flow (solo lectura)."
+      subtitle="Suscripciones activas de todos los medios de pago (Flow, PayPal, link de pago y manual)."
       [breadcrumbs]="breadcrumbs">
     </app-page-header>
 
@@ -54,52 +50,60 @@ const STATUS_LABEL: Record<number, string> = {
     @if (error()) {
       <div class="state state--error"><mat-icon>error_outline</mat-icon> {{ error() }}</div>
     } @else if (!loading() && rows().length === 0) {
-      <div class="state"><mat-icon>subscriptions</mat-icon> Aún no hay suscripciones en Flow.</div>
+      <div class="state"><mat-icon>subscriptions</mat-icon> Aún no hay suscripciones activas.</div>
     } @else {
       <div class="table-wrap">
         <table mat-table [dataSource]="rows()">
           <ng-container matColumnDef="plan">
             <th mat-header-cell *matHeaderCellDef>Plan</th>
-            <td mat-cell *matCellDef="let s">{{ s.planName || s.planId || '—' }}</td>
+            <td mat-cell *matCellDef="let s">{{ s.plan_name || '—' }}</td>
           </ng-container>
           <ng-container matColumnDef="customer">
             <th mat-header-cell *matHeaderCellDef>Cliente</th>
             <td mat-cell *matCellDef="let s">
-              @if (s.customer?.name || s.customer?.email) {
-                <div class="cust">
-                  <span class="cust__name">{{ s.customer?.name || s.customer?.email }}</span>
-                  @if (s.customer?.name && s.customer?.email) { <span class="cust__email">{{ s.customer?.email }}</span> }
-                </div>
-              } @else { {{ s.customerId || '—' }} }
+              <div class="cust">
+                <span class="cust__name">{{ s.name || s.email }}</span>
+                @if (s.name && s.email) { <span class="cust__email">{{ s.email }}</span> }
+              </div>
             </td>
           </ng-container>
-          <ng-container matColumnDef="status">
+          <ng-container matColumnDef="origen">
+            <th mat-header-cell *matHeaderCellDef>Origen</th>
+            <td mat-cell *matCellDef="let s"><span class="origen">{{ s.provider_label }}</span></td>
+          </ng-container>
+          <ng-container matColumnDef="estado">
             <th mat-header-cell *matHeaderCellDef>Estado</th>
             <td mat-cell *matCellDef="let s">
-              <span class="chip" [class.chip--ok]="s.status === 1" [class.chip--bad]="s.status === 4 || s.status === 3">
-                {{ statusLabel(s.status) }}
+              <span class="chip" [class.chip--ok]="s.is_active" [class.chip--bad]="!s.is_active">
+                {{ s.is_active ? 'Activa' : 'Vencida' }}
               </span>
             </td>
           </ng-container>
-          <ng-container matColumnDef="next">
-            <th mat-header-cell *matHeaderCellDef>Próximo cobro</th>
-            <td mat-cell *matCellDef="let s">{{ (s.next_invoice_date || s.period_end) ? ((s.next_invoice_date || s.period_end) | date: 'dd-MM-yyyy') : '—' }}</td>
+          <ng-container matColumnDef="vence">
+            <th mat-header-cell *matHeaderCellDef>Vence / Cobro</th>
+            <td mat-cell *matCellDef="let s">
+              @if (s.is_period) {
+                {{ s.access_until ? (s.access_until | date: 'dd-MM-yyyy') : '—' }}
+              } @else {
+                <span class="muted">Cobro automático</span>
+              }
+            </td>
           </ng-container>
-          <ng-container matColumnDef="created">
-            <th mat-header-cell *matHeaderCellDef>Inicio</th>
-            <td mat-cell *matCellDef="let s">{{ s.created ? (s.created | date: 'dd-MM-yyyy') : '—' }}</td>
-          </ng-container>
-          <ng-container matColumnDef="subscriptionId">
-            <th mat-header-cell *matHeaderCellDef>ID Flow</th>
-            <td mat-cell *matCellDef="let s"><code>{{ s.subscriptionId }}</code></td>
+          <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef>ID</th>
+            <td mat-cell *matCellDef="let s"><code>{{ s.subscription_id || ('#' + s.id) }}</code></td>
           </ng-container>
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>Acciones</th>
             <td mat-cell *matCellDef="let s">
-              @if (s.status === 1) {
-                <button class="act act--cancel" (click)="cancel(s)" [disabled]="busy()">Cancelar</button>
+              @if (s.provider === 'flow' && s.subscription_id) {
+                @if (s.is_active) {
+                  <button class="act act--cancel" (click)="cancel(s)" [disabled]="busy()">Cancelar</button>
+                } @else {
+                  <button class="act act--reactivate" (click)="reactivate(s)" [disabled]="busy()">Reactivar</button>
+                }
               } @else {
-                <button class="act act--reactivate" (click)="reactivate(s)" [disabled]="busy()">Reactivar</button>
+                <span class="muted">—</span>
               }
             </td>
           </ng-container>
@@ -118,9 +122,11 @@ const STATUS_LABEL: Record<number, string> = {
     .cust { display: flex; flex-direction: column; line-height: 1.25; }
     .cust__name { font-weight: 600; color: var(--fvx-text-primary, #2a2333); }
     .cust__email { font-size: .78rem; color: var(--fvx-text-muted, #6b6478); }
+    .origen { display:inline-block; padding:2px 10px; border-radius:999px; font-size:.78rem; background:#f0eaf6; color:#5b3a8a; font-weight:600; }
     .chip { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .78rem; background: #ececf2; color: #555; }
     .chip--ok { background: #e3f6ea; color: #1f7a45; }
     .chip--bad { background: #fdecea; color: #c0392b; }
+    .muted { color: var(--fvx-text-muted, #828aa0); }
     .act { border-radius: 999px; padding: 5px 12px; font-size: .8rem; cursor: pointer; border: 1px solid transparent; }
     .act:disabled { opacity: .6; cursor: default; }
     .act--cancel { background: none; border-color: #e0b4b0; color: #c0392b; }
@@ -143,8 +149,8 @@ export class SubscriptionsComponent implements OnInit {
     return !!(await firstValueFrom(ref.afterClosed()));
   }
 
-  cols = ['plan', 'customer', 'status', 'next', 'created', 'subscriptionId', 'actions'];
-  rows = signal<FlowSubscription[]>([]);
+  cols = ['plan', 'customer', 'origen', 'estado', 'vence', 'id', 'actions'];
+  rows = signal<Subscription[]>([]);
   loading = signal(true);
   busy = signal(false);
   error = signal('');
@@ -152,10 +158,6 @@ export class SubscriptionsComponent implements OnInit {
     { labelKey: 'common.breadcrumbHome', link: '/admin/dashboard' },
     { label: 'Suscripciones' },
   ];
-
-  statusLabel(s: number): string {
-    return STATUS_LABEL[s] ?? `Estado ${s}`;
-  }
 
   async ngOnInit(): Promise<void> {
     await this.load();
@@ -165,28 +167,28 @@ export class SubscriptionsComponent implements OnInit {
     this.loading.set(true);
     try {
       const res = await firstValueFrom(
-        this.http.get<{ data: FlowSubscription[] }>(`${environment.apiUrl}/subscriptions/`),
+        this.http.get<{ data: Subscription[] }>(`${environment.apiUrl}/subscriptions/all/`),
       );
       this.rows.set(res?.data ?? []);
       this.error.set('');
     } catch {
-      this.error.set('No se pudieron cargar las suscripciones desde Flow.');
+      this.error.set('No se pudieron cargar las suscripciones.');
     } finally {
       this.loading.set(false);
     }
   }
 
-  async cancel(s: FlowSubscription): Promise<void> {
+  async cancel(s: Subscription): Promise<void> {
     const ok = await this.ask(
       'Cancelar suscripción',
-      `¿Cancelar la suscripción de ${s.planName || s.planId}? El cliente conserva acceso hasta el fin del período pagado.`,
+      `¿Cancelar la suscripción de ${s.plan_name}? El cliente conserva acceso hasta el fin del período pagado.`,
       'Cancelar suscripción',
     );
     if (!ok) return;
     this.busy.set(true);
     try {
       await firstValueFrom(
-        this.http.post(`${environment.apiUrl}/subscriptions/cancel/`, { subscription_id: s.subscriptionId, at_period_end: true }),
+        this.http.post(`${environment.apiUrl}/subscriptions/cancel/`, { subscription_id: s.subscription_id, at_period_end: true }),
       );
       await this.load();
     } catch {
@@ -196,10 +198,10 @@ export class SubscriptionsComponent implements OnInit {
     }
   }
 
-  async reactivate(s: FlowSubscription): Promise<void> {
+  async reactivate(s: Subscription): Promise<void> {
     const ok = await this.ask(
       'Reactivar suscripción',
-      `¿Reactivar la suscripción de ${s.planName || s.planId}? Se creará una nueva suscripción usando la tarjeta registrada del cliente.`,
+      `¿Reactivar la suscripción de ${s.plan_name}? Se creará una nueva suscripción usando la tarjeta registrada del cliente.`,
       'Reactivar',
       'primary',
     );
@@ -207,7 +209,7 @@ export class SubscriptionsComponent implements OnInit {
     this.busy.set(true);
     try {
       await firstValueFrom(
-        this.http.post(`${environment.apiUrl}/subscriptions/reactivate/`, { subscription_id: s.subscriptionId }),
+        this.http.post(`${environment.apiUrl}/subscriptions/reactivate/`, { subscription_id: s.subscription_id }),
       );
       await this.load();
     } catch {

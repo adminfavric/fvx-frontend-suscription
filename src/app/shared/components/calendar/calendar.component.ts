@@ -400,7 +400,13 @@ export class CalendarComponent implements ControlValueAccessor, Validator {
         // de minTime/maxTime debe reflejarse aunque no haya día seleccionado
         // (auditoría #4).
         this.onValidatorChange();
-        if (this.disabledSig() || !this.selected()) return;
+        if (this.disabledSig()) return;
+        // Si se fija una hora válida sin haber elegido día, asumimos HOY (con
+        // [withTime]): así "solo poner la hora" guarda fecha+hora y no queda vacío.
+        if (!this.selected() && this.withTime && this.timeCtrl.value && !isNaN(this.timeCtrl.value.getTime())) {
+          this.selected.set(new Date());
+        }
+        if (!this.selected()) return;
         this.emit();
       });
     // El locale del adapter lo sincroniza app.config con el idioma (langChanges$).

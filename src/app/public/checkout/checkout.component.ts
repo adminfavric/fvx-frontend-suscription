@@ -281,15 +281,18 @@ export class CheckoutComponent implements OnInit {
   private member = inject(MemberAuthService);
   private route = inject(ActivatedRoute);
   private paypalReady = false;
+  /** IDs de suscripciones recurrentes ACTIVAS de OTRO plan (a cancelar al pagar). */
+  private switchFromIds: string[] = [];
 
-  /** Si el miembro venía "cambiando de plan", cancela su suscripción anterior
-   * (recurrente) al iniciar el pago de la nueva. Conserva el acceso hasta el fin
-   * del período ya pagado. No bloquea el pago si la cancelación falla. */
+  /** Cancela las suscripciones recurrentes anteriores (de otro plan) al iniciar el
+   * pago de la nueva. Conserva el acceso hasta el fin del período ya pagado. No
+   * bloquea el pago si la cancelación falla. */
   private async applyPlanSwitch(): Promise<void> {
-    const oldId = localStorage.getItem('fvx_switch_from');
-    if (!oldId) return;
-    localStorage.removeItem('fvx_switch_from');
-    try { await this.member.cancelSubscription(oldId); } catch { /* no bloquear el cambio */ }
+    const ids = this.switchFromIds;
+    this.switchFromIds = [];
+    for (const id of ids) {
+      try { await this.member.cancelSubscription(id); } catch { /* no bloquear el cambio */ }
+    }
   }
 
   constructor(private fb: FormBuilder, private router: Router) {
@@ -303,10 +306,26 @@ export class CheckoutComponent implements OnInit {
     this.membership.set(await this.content.getMembership(this.slug));
     const r = this.route.snapshot.queryParamMap.get('checkout');
     if (r === 'ok' || r === 'fail') this.checkoutResult.set(r);
-    // Cambio de plan: prefijar el correo del miembro y mostrar el aviso.
-    this.switching.set(this.route.snapshot.queryParamMap.get('cambiar') === '1' || !!localStorage.getItem('fvx_switch_from'));
     const memberEmail = this.member.email();
     if (memberEmail) this.form.patchValue({ email: memberEmail });
+
+    // Cambio de plan AUTOMÁTICO: si el miembro logueado ya tiene una suscripción
+    // recurrente ACTIVA de OTRO plan, esto es un cambio → mostramos el aviso y
+    // marcamos esa(s) suscripción(es) para cancelarlas al pagar la nueva. Funciona
+    // tanto si llega por el botón "Cambiar de plan" como navegando directo.
+    this.switching.set(this.route.snapshot.queryParamMap.get('cambiar') === '1');
+    if (this.member.isLoggedIn()) {
+      try {
+        const acc = await this.member.getAccount();
+        const others = (acc.subscriptions ?? []).filter(s =>
+          s.status === 1 && !s.is_manual && !s.cancel_at_period_end &&
+          !!s.subscription_id && s.plan_slug !== this.slug);
+        if (others.length) {
+          this.switching.set(true);
+          this.switchFromIds = others.map(s => s.subscription_id);
+        }
+      } catch { /* sin sesión válida: se ignora */ }
+    }
     // Si el plan ofrece PayPal, montamos su botón tras pintar el contenedor.
     const m = this.membership();
     if (this.paypalFeatureEnabled && m?.paypalEnabled && m.paypalPlanId && !this.checkoutResult()) {

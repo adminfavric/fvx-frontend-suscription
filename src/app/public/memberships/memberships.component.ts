@@ -1,8 +1,9 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { Membership, formatPrice } from '../data/catalog';
 import { ContentService } from '../../core/services/content.service';
+import { MemberAuthService } from '../services/member-auth.service';
 import { LaunchScheduleComponent } from './launch-schedule.component';
 
 @Component({
@@ -13,9 +14,16 @@ import { LaunchScheduleComponent } from './launch-schedule.component';
     <!-- Bienvenida + calendario de iniciación (reemplaza el hero anterior) -->
     <app-launch-schedule />
 
+    @if (cambiar()) {
+      <div class="switch-bar">
+        <mat-icon>swap_horiz</mat-icon>
+        <span>Estás <strong>cambiando de plan</strong>. Elige tu nueva membresía: al contratarla, tu plan actual se cancela y <strong>conservas el acceso hasta el final del período ya pagado</strong>.</span>
+      </div>
+    }
+
     <section class="list">
       @for (m of memberships(); track m.slug) {
-        <article class="plan" [class.plan--featured]="m.featured">
+        <article class="plan" [class.plan--featured]="m.featured" [class.plan--current]="isCurrent(m.slug)">
           @if (m.image_url) { <img class="plan__img" [src]="m.image_url" [alt]="m.name" loading="lazy" /> }
           <div class="plan__head">
             <span class="plan__icon"><mat-icon>{{ m.icon }}</mat-icon></span>
@@ -44,9 +52,13 @@ import { LaunchScheduleComponent } from './launch-schedule.component';
 
           <div class="plan__foot">
             <span class="plan__price">{{ price(m.priceMonthly) }}@if (m.priceMonthly) {<small>/mes</small>}</span>
-            <a class="btn btn--violet" [routerLink]="['/membresias', m.slug]">
-              {{ m.priceMonthly ? 'Suscribirme' : 'Más información' }}
-            </a>
+            @if (isCurrent(m.slug)) {
+              <span class="plan__current-tag"><mat-icon>check_circle</mat-icon> Tu plan actual</span>
+            } @else {
+              <a class="btn btn--violet" [routerLink]="['/membresias', m.slug]" [queryParams]="cambiar() ? { cambiar: 1 } : {}">
+                {{ cambiar() ? 'Cambiar a este plan' : (m.priceMonthly ? 'Suscribirme' : 'Más información') }}
+              </a>
+            }
           </div>
         </article>
       } @empty {
@@ -88,14 +100,48 @@ import { LaunchScheduleComponent } from './launch-schedule.component';
     .btn { display:inline-flex; align-items:center; justify-content:center; padding:12px 26px; border-radius:999px; text-decoration:none; font-weight:700; transition: transform .12s, filter .15s; }
     .btn:hover { transform: translateY(-1px); }
     .btn--violet { background: var(--lita-violet); color:#fff; }
+
+    .switch-bar { max-width: 980px; margin: 0 auto; padding: 14px 18px; display:flex; gap:10px; align-items:flex-start;
+      background: color-mix(in srgb, var(--lita-gold) 16%, #fff); border:1px solid color-mix(in srgb, var(--lita-gold) 45%, transparent);
+      border-radius:14px; color: var(--lita-ink); font-size:.92rem; line-height:1.5; }
+    .switch-bar mat-icon { color:#b9842b; flex:0 0 auto; }
+    .switch-bar strong { color: var(--lita-violet-deep); }
+    .plan--current { border-color: var(--lita-violet); box-shadow: 0 0 0 2px color-mix(in srgb, var(--lita-violet) 22%, transparent); }
+    .plan__current-tag { display:inline-flex; align-items:center; gap:6px; color: var(--lita-violet); font-weight:700; font-size:.92rem; }
+    .plan__current-tag mat-icon { color:#1f7a45; font-size:20px; width:20px; height:20px; }
   `],
 })
 export class MembershipsComponent implements OnInit {
   private content = inject(ContentService);
+  private member = inject(MemberAuthService);
+  private route = inject(ActivatedRoute);
   memberships = signal<Membership[]>([]);
+  /** El visitante viene "cambiando de plan" (desde Mi contenido). */
+  cambiar = signal(false);
+  /** Slugs de los planes que el miembro YA tiene activos (para marcarlos). */
+  myPlanSlugs = signal<string[]>([]);
   price = formatPrice;
 
+  /** ¿El miembro ya tiene este plan activo? */
+  isCurrent(slug: string): boolean {
+    return this.myPlanSlugs().includes(slug);
+  }
+
   async ngOnInit(): Promise<void> {
+    const q = this.route.snapshot.queryParamMap;
+    this.cambiar.set(q.get('cambiar') === '1');
     this.memberships.set(await this.content.getMemberships());
+
+    // Planes activos del miembro (si está logueado) para marcarlos como actuales.
+    const slugs = new Set<string>();
+    const fromQuery = q.get('actual');
+    if (fromQuery) slugs.add(fromQuery);
+    if (this.member.isLoggedIn()) {
+      try {
+        const res = await this.member.getContent();
+        (res.plans ?? []).forEach(p => slugs.add(p.slug));
+      } catch { /* sin sesión válida: se ignora */ }
+    }
+    this.myPlanSlugs.set([...slugs]);
   }
 }

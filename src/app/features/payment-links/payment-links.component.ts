@@ -5,7 +5,9 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import { environment } from '../../../environments/environment';
 
 interface PaymentLink {
@@ -186,6 +188,7 @@ interface PlanOpt { id: number; name: string; amount: number | null; }
 export class PaymentLinksComponent implements OnInit {
   private http = inject(HttpClient);
   private snack = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
   private base = `${environment.apiUrl}/payment-links`;
 
   private notify(msg: string): void {
@@ -274,7 +277,17 @@ export class PaymentLinksComponent implements OnInit {
   }
 
   async remove(it: PaymentLink): Promise<void> {
-    if (!confirm(`¿Eliminar el cobro pendiente de ${it.email}?`)) return;
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Eliminar cobro pendiente',
+        message: `¿Eliminar el cobro pendiente de "${it.email}"? Esta acción no se puede deshacer.`,
+        confirmText: 'Eliminar',
+        cancelText: 'Volver',
+        color: 'warn',
+      },
+      panelClass: 'fvx-crud-dialog', width: '460px', maxWidth: '92vw',
+    });
+    if (!(await firstValueFrom(ref.afterClosed()))) return;
     try {
       await firstValueFrom(this.http.delete(`${this.base}/${it.id}/`));
       this.items.update(list => list.filter(x => x.id !== it.id));
