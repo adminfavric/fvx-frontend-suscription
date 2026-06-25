@@ -88,8 +88,8 @@ declare const paypal: any;
                   <div class="paymethod">
                     <mat-icon>verified_user</mat-icon>
                     <div>
-                      <strong>Pago nacional e internacional</strong>
-                      <span>Tarjetas chilenas e internacionales, procesado de forma segura por Flow.</span>
+                      <strong>Pago nacional</strong>
+                      <span>Sólo tarjetas chilenas, procesado de forma segura por Flow.</span>
                     </div>
                   </div>
 

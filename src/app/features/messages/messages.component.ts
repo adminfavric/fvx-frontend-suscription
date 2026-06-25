@@ -5,7 +5,10 @@ import { firstValueFrom } from 'rxjs';
 import { MatTableModule } from '@angular/material/table';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { EntityFormDialogComponent } from '../../shared/components/entity-form-dialog/entity-form-dialog.component';
 import { environment } from '../../../environments/environment';
 
 interface Lead {
@@ -98,10 +101,14 @@ const KIND_LABELS: Record<string, string> = {
                       [title]="m.is_read ? 'Marcar como no leído' : 'Marcar como leído'">
                 <mat-icon>{{ m.is_read ? 'mark_email_read' : 'mark_email_unread' }}</mat-icon>
               </button>
-              <button class="act" [class.act--on]="m.is_replied" (click)="toggleReplied(m)"
-                      [title]="m.is_replied ? 'Quitar respondido' : 'Marcar como respondido'">
-                <mat-icon>{{ m.is_replied ? 'task_alt' : 'reply' }}</mat-icon>
+              <button class="act act--reply" (click)="openReply(m)" title="Responder por correo">
+                <mat-icon>reply</mat-icon>
               </button>
+              @if (m.is_replied) {
+                <button class="act act--on" (click)="toggleReplied(m)" title="Quitar 'respondido'">
+                  <mat-icon>task_alt</mat-icon>
+                </button>
+              }
             </td>
           </ng-container>
           <tr mat-header-row *matHeaderRowDef="cols"></tr>
@@ -125,6 +132,8 @@ const KIND_LABELS: Record<string, string> = {
     .act { border:none; background:transparent; cursor:pointer; color:var(--fvx-text-muted,#6b6478); padding:4px; border-radius:6px; }
     .act:hover { background:var(--fvx-bg-surface-2,#f1f1f6); }
     .act--on { color:var(--fvx-link,#5b3a8a); }
+    .act--reply { color:#1f7a45; }
+    .act--reply:hover { background:#e3f6ea; }
     .act mat-icon { font-size:20px; width:20px; height:20px; }
     .row--unread td { font-weight:600; }
     .msg { color:var(--fvx-text-secondary,#6b6478); font-size:.88rem; }
@@ -134,6 +143,8 @@ const KIND_LABELS: Record<string, string> = {
 })
 export class MessagesComponent implements OnInit {
   private http = inject(HttpClient);
+  private dialog = inject(MatDialog);
+  private snack = inject(MatSnackBar);
   cols = ['kind', 'name', 'email', 'message', 'status', 'created', 'actions'];
   rows = signal<Lead[]>([]);
   kind = signal<string>('all');
@@ -161,6 +172,30 @@ export class MessagesComponent implements OnInit {
   toggleReplied(m: Lead): void {
     const next = !m.is_replied;
     this.patchMark(m, next ? { is_read: true, is_replied: true } : { is_replied: false });
+  }
+
+  /** Abre el diálogo para escribir y ENVIAR una respuesta por correo al remitente. */
+  openReply(m: Lead): void {
+    const ref = this.dialog.open(EntityFormDialogComponent, {
+      data: {
+        title: `Responder a ${m.name || m.email}`,
+        mode: 'create',
+        fields: [
+          { key: 'subject', label: 'Asunto', type: 'text', colspan: 2,
+            defaultValue: m.subject ? `Re: ${m.subject}` : 'Respuesta a tu mensaje' },
+          { key: 'body', label: 'Mensaje', type: 'textarea', required: true, colspan: 2,
+            info: `Se enviará por correo a ${m.email}` },
+        ],
+        submitHandler: (value: Record<string, any>) =>
+          this.http.post<Lead>(`${environment.apiUrl}/leads/${m.id}/reply/`, value),
+      },
+      panelClass: 'fvx-crud-dialog', width: '560px', maxWidth: '94vw',
+    });
+    ref.afterClosed().subscribe((updated: Lead | undefined) => {
+      if (!updated) return;
+      this.rows.update(list => list.map(x => (x.id === m.id ? { ...x, ...updated } : x)));
+      this.snack.open('Respuesta enviada por correo.', 'OK', { duration: 4000 });
+    });
   }
 
   private patchMark(m: Lead, body: { is_read?: boolean; is_replied?: boolean }): void {

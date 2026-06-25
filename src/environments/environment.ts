@@ -27,6 +27,7 @@ export const environment = {
    * secret NUNCA va aquí, solo en el backend. En prod, reemplazar en
    * environment.prod.ts por el client-id live.
    */
+  //paypalClientId: 'AS6jGJMP-GjDdvY5kt0R3rt6bBq5hHjqIackHbUiqu6MCx2kIGgLnB84mCO_pJ2uNcu1AUHDDWYwGa8y',
   paypalClientId: 'Ab0FXOw4iBLi5j8rCsfJt0sLO9wMnoFR09Od5YbRyuYFkYyDihLAkingKj0ITZKBD78ZDy7HJcgf3_1l',
   /** Locale del SDK de PayPal: traduce los botones y textos de PayPal (es_CL =
    * español de Chile). Cambia a es_AR, es_ES, en_US, etc. según el público. */
