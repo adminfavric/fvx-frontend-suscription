@@ -12,10 +12,10 @@ export const environment = {
   inboxPollMs: 180_000,
   /** Interruptor GLOBAL de PayPal en el frontend. En ``false`` el checkout no
    * muestra PayPal ni carga su SDK. Ponlo en ``true`` cuando esté configurado. */
-  paypalEnabled: false,
-  /** Client-id PÚBLICO de PayPal (LIVE). Reemplazar por el de producción al
-   * publicar. Vacío = el botón PayPal no se renderiza. */
-  paypalClientId: '',
+  paypalEnabled: true,
+  /** Client-id PÚBLICO de PayPal (LIVE). Debe ser el mismo de PAYPAL_CLIENT_ID
+   * del backend de producción. Vacío = el botón PayPal no se renderiza. */
+  paypalClientId: 'AS6jGJMP-GjDdvY5kt0R3rt6bBq5hHjqIackHbUiqu6MCx2kIGgLnB84mCO_pJ2uNcu1AUHDDWYwGa8y',
   /** Locale del SDK de PayPal (traduce los botones). es_CL = español de Chile. */
   paypalLocale: 'es_CL',
   /** Config Firebase (proyecto gen-suscription). El frontend la inicializa en
