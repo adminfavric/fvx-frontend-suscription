@@ -63,6 +63,13 @@ export const routes: Routes = [
           import('./features/programacion/programacion.component').then(m => m.ProgramacionComponent),
       },
       {
+        path: 'links-pago',
+        loadComponent: () =>
+          import('./features/payment-links/payment-links.component').then(
+            m => m.PaymentLinksComponent,
+          ),
+      },
+      {
         path: 'events',
         loadComponent: () =>
           import('./features/events/events.component').then(m => m.AdminEventsComponent),

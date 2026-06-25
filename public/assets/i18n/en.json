@@ -416,7 +416,7 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "subtitle": "Key metrics from the platform (see API `GET /api/v1/stats/`).",
+    "subtitle": "Key business metrics: members, payments and plans.",
     "breadcrumb": "Dashboard",
     "statsLoadError": "Could not load dashboard metrics. Check your connection and try again.",
     "noStats": "No metrics to display yet.",
@@ -425,7 +425,34 @@
       "usersActive": "Active users",
       "roleAdmin": "Directory role: Admin",
       "roleEditor": "Directory role: Editor",
-      "roleViewer": "Directory role: Viewer"
+      "roleViewer": "Directory role: Viewer",
+      "activeMembers": "Active members",
+      "recurringRevenue": "Recurring revenue",
+      "pendingPayments": "Pending payments",
+      "activePlans": "Active plans",
+      "totalCustomers": "Customers",
+      "newThisMonth": "New this month",
+      "failedPayments": "Failed payments"
+    },
+    "sections": {
+      "membersByPlan": "Members by plan",
+      "paymentStatus": "Payment status",
+      "byProvider": "By payment method",
+      "plansTitle": "Plans",
+      "plansSubtitle": "Active members and pending payments per plan.",
+      "noMembers": "No active members yet.",
+      "noPayments": "No payment activity yet.",
+      "noPlans": "No plans created yet."
+    },
+    "table": {
+      "plan": "Plan",
+      "price": "Price",
+      "interval": "Billing",
+      "members": "Members",
+      "pending": "Pending",
+      "status": "Status",
+      "active": "Active",
+      "inactive": "Inactive"
     }
   },
   "login": {
