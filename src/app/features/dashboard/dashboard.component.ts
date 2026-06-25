@@ -159,11 +159,21 @@ const STATUS_CHIP_BY_TONE: Record<string, StatusChipVariant> = {
                   <h4 class="breakdown-subtitle">{{ 'dashboard.sections.byProvider' | transloco }}</h4>
                   <ul class="breakdown-list">
                     @for (row of byProvider(); track row.key) {
-                      <li class="breakdown-row breakdown-row--plain">
-                        <span class="breakdown-row__label">{{ row.label }}</span>
-                        <span class="breakdown-row__value">{{ formatNumber(row.value) }}</span>
+                      <li class="prov-row">
+                        <span class="prov-row__label">{{ row.label }}</span>
+                        <span class="prov-row__nums">
+                          <span class="prov-row__count">{{ formatNumber(row.value) }} {{ row.value === 1 ? 'pago' : 'pagos' }}</span>
+                          @if (row.amount) { <span class="prov-row__amount">{{ formatMoney(row.amount, 'CLP') }}</span> }
+                        </span>
                       </li>
                     }
+                    <li class="prov-row prov-row--total">
+                      <span class="prov-row__label">Total</span>
+                      <span class="prov-row__nums">
+                        <span class="prov-row__count">{{ formatNumber(totalPayments()) }} {{ totalPayments() === 1 ? 'pago' : 'pagos' }}</span>
+                        <span class="prov-row__amount">{{ formatMoney(totalProviderAmount(), 'CLP') }}</span>
+                      </span>
+                    </li>
                   </ul>
                 }
               </app-section-card>
@@ -227,15 +237,15 @@ const STATUS_CHIP_BY_TONE: Record<string, StatusChipVariant> = {
   `,
   styles: [`
     .page-body {
-      margin-top: 0.5rem;
+      margin-top: 0.75rem;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 28px;
     }
     .stat-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
       align-items: stretch;
     }
     .stat-grid > app-stat-card { min-width: 0; }
@@ -285,6 +295,19 @@ const STATUS_CHIP_BY_TONE: Record<string, StatusChipVariant> = {
       letter-spacing: 0.04em;
       color: var(--fvx-text-muted, #828aa0);
     }
+
+    /* Desglose por medio de pago: etiqueta + (cantidad / monto). */
+    .prov-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 9px 0; border-bottom: 1px solid var(--fvx-border, #eef0f7);
+    }
+    .prov-row:last-child { border-bottom: 0; }
+    .prov-row__label { color: var(--fvx-text-secondary, #565d72); font-size: 0.9375rem; font-weight: 600; }
+    .prov-row__nums { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.25; }
+    .prov-row__count { font-size: 0.78rem; color: var(--fvx-text-muted, #828aa0); }
+    .prov-row__amount { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--fvx-text-primary, #171a26); }
+    .prov-row--total { margin-top: 4px; border-top: 2px solid var(--fvx-border, #e4e6f0); border-bottom: 0; padding-top: 11px; }
+    .prov-row--total .prov-row__label { color: var(--fvx-text-primary, #171a26); }
 
     .plans-table-wrap { width: 100%; overflow-x: auto; }
     .plans-table {
@@ -363,6 +386,10 @@ export class DashboardComponent implements OnInit {
       .filter((p) => p.subscribers > 0)
       .map((p) => ({ name: p.name, value: p.subscribers })),
   );
+
+  /** Totales del desglose por medio de pago (para la fila Total). */
+  readonly totalPayments = computed(() => this.byProvider().reduce((a, r) => a + (r.value || 0), 0));
+  readonly totalProviderAmount = computed(() => this.byProvider().reduce((a, r) => a + (r.amount || 0), 0));
 
   private readonly numberFmt = new Intl.NumberFormat('es-CL');
 

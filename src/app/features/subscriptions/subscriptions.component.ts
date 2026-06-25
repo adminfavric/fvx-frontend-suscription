@@ -1,13 +1,11 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { MatTableModule } from '@angular/material/table';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatIconModule } from '@angular/material/icon';
-import { MatDialog } from '@angular/material/dialog';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
-import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import { environment } from '../../../environments/environment';
 
 /** Suscripción genérica (cualquier pasarela), desde el espejo local unificado. */
@@ -27,8 +25,8 @@ interface Subscription {
 
 /**
  * Suscripciones activas de TODAS las pasarelas (Flow, PayPal, link de pago,
- * manual) — espejo local unificado (`GET /api/v1/subscriptions/all/`). Las
- * acciones de cancelar/reactivar aplican solo a las recurrentes de Flow.
+ * manual) — espejo local unificado (`GET /api/v1/subscriptions/all/`), con
+ * filtro por origen. Solo lectura.
  */
 @Component({
   selector: 'app-subscriptions',
@@ -49,73 +47,79 @@ interface Subscription {
 
     @if (error()) {
       <div class="state state--error"><mat-icon>error_outline</mat-icon> {{ error() }}</div>
-    } @else if (!loading() && rows().length === 0) {
-      <div class="state"><mat-icon>subscriptions</mat-icon> Aún no hay suscripciones activas.</div>
-    } @else {
-      <div class="table-wrap">
-        <table mat-table [dataSource]="rows()">
-          <ng-container matColumnDef="plan">
-            <th mat-header-cell *matHeaderCellDef>Plan</th>
-            <td mat-cell *matCellDef="let s">{{ s.plan_name || '—' }}</td>
-          </ng-container>
-          <ng-container matColumnDef="customer">
-            <th mat-header-cell *matHeaderCellDef>Cliente</th>
-            <td mat-cell *matCellDef="let s">
-              <div class="cust">
-                <span class="cust__name">{{ s.name || s.email }}</span>
-                @if (s.name && s.email) { <span class="cust__email">{{ s.email }}</span> }
-              </div>
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="origen">
-            <th mat-header-cell *matHeaderCellDef>Origen</th>
-            <td mat-cell *matCellDef="let s"><span class="origen">{{ s.provider_label }}</span></td>
-          </ng-container>
-          <ng-container matColumnDef="estado">
-            <th mat-header-cell *matHeaderCellDef>Estado</th>
-            <td mat-cell *matCellDef="let s">
-              <span class="chip" [class.chip--ok]="s.is_active" [class.chip--bad]="!s.is_active">
-                {{ s.is_active ? 'Activa' : 'Vencida' }}
-              </span>
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="vence">
-            <th mat-header-cell *matHeaderCellDef>Vence / Cobro</th>
-            <td mat-cell *matCellDef="let s">
-              @if (s.is_period) {
-                {{ s.access_until ? (s.access_until | date: 'dd-MM-yyyy') : '—' }}
-              } @else {
-                <span class="muted">Cobro automático</span>
-              }
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="id">
-            <th mat-header-cell *matHeaderCellDef>ID</th>
-            <td mat-cell *matCellDef="let s"><code>{{ s.subscription_id || ('#' + s.id) }}</code></td>
-          </ng-container>
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Acciones</th>
-            <td mat-cell *matCellDef="let s">
-              @if (s.provider === 'flow' && s.subscription_id) {
-                @if (s.is_active) {
-                  <button class="act act--cancel" (click)="cancel(s)" [disabled]="busy()">Cancelar</button>
+    } @else if (!loading()) {
+      @if (rows().length) {
+        <div class="filters">
+          <button class="chip-f" [class.chip-f--on]="filter() === 'all'" (click)="filter.set('all')">
+            Todas <span class="chip-f__n">{{ rows().length }}</span>
+          </button>
+          @for (p of providers(); track p.provider) {
+            <button class="chip-f" [class.chip-f--on]="filter() === p.provider" (click)="filter.set(p.provider)">
+              {{ p.label }} <span class="chip-f__n">{{ p.count }}</span>
+            </button>
+          }
+        </div>
+      }
+
+      @if (!rows().length) {
+        <div class="state"><mat-icon>subscriptions</mat-icon> Aún no hay suscripciones activas.</div>
+      } @else {
+        <div class="table-wrap">
+          <table mat-table [dataSource]="filtered()">
+            <ng-container matColumnDef="plan">
+              <th mat-header-cell *matHeaderCellDef>Plan</th>
+              <td mat-cell *matCellDef="let s">{{ s.plan_name || '—' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="customer">
+              <th mat-header-cell *matHeaderCellDef>Cliente</th>
+              <td mat-cell *matCellDef="let s">
+                <div class="cust">
+                  <span class="cust__name">{{ s.name || s.email }}</span>
+                  @if (s.name && s.email) { <span class="cust__email">{{ s.email }}</span> }
+                </div>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="origen">
+              <th mat-header-cell *matHeaderCellDef>Origen</th>
+              <td mat-cell *matCellDef="let s"><span class="origen">{{ s.provider_label }}</span></td>
+            </ng-container>
+            <ng-container matColumnDef="estado">
+              <th mat-header-cell *matHeaderCellDef>Estado</th>
+              <td mat-cell *matCellDef="let s">
+                <span class="chip" [class.chip--ok]="s.is_active" [class.chip--bad]="!s.is_active">
+                  {{ s.is_active ? 'Activa' : 'Vencida' }}
+                </span>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="vence">
+              <th mat-header-cell *matHeaderCellDef>Vence / Cobro</th>
+              <td mat-cell *matCellDef="let s">
+                @if (s.is_period) {
+                  {{ s.access_until ? (s.access_until | date: 'dd-MM-yyyy') : '—' }}
                 } @else {
-                  <button class="act act--reactivate" (click)="reactivate(s)" [disabled]="busy()">Reactivar</button>
+                  <span class="muted">Cobro automático</span>
                 }
-              } @else {
-                <span class="muted">—</span>
-              }
-            </td>
-          </ng-container>
-          <tr mat-header-row *matHeaderRowDef="cols"></tr>
-          <tr mat-row *matRowDef="let row; columns: cols"></tr>
-        </table>
-      </div>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="id">
+              <th mat-header-cell *matHeaderCellDef>ID</th>
+              <td mat-cell *matCellDef="let s"><code>{{ s.subscription_id || ('#' + s.id) }}</code></td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="cols"></tr>
+            <tr mat-row *matRowDef="let row; columns: cols"></tr>
+          </table>
+        </div>
+      }
     }
    </div>
   `,
   styles: [`
     :host { display: block; }
+    .filters { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 14px; }
+    .chip-f { display:inline-flex; align-items:center; gap:6px; border:1px solid var(--fvx-border,#e0d6ec); background:#fff; color: var(--fvx-primary,#5b3a8a); border-radius:999px; padding:6px 14px; font-size:.85rem; font-weight:600; cursor:pointer; }
+    .chip-f--on { background: var(--fvx-primary,#5b3a8a); color:#fff; border-color: var(--fvx-primary,#5b3a8a); }
+    .chip-f__n { background: rgba(0,0,0,.08); border-radius:999px; padding:0 7px; font-size:.72rem; }
+    .chip-f--on .chip-f__n { background: rgba(255,255,255,.25); }
     .table-wrap { overflow-x: auto; background: var(--fvx-surface, #fff); border: 1px solid var(--fvx-border, #e6e6ef); border-radius: 12px; }
     table { width: 100%; }
     code { font-size: .82rem; color: var(--fvx-text-muted, #6b6478); }
@@ -127,43 +131,41 @@ interface Subscription {
     .chip--ok { background: #e3f6ea; color: #1f7a45; }
     .chip--bad { background: #fdecea; color: #c0392b; }
     .muted { color: var(--fvx-text-muted, #828aa0); }
-    .act { border-radius: 999px; padding: 5px 12px; font-size: .8rem; cursor: pointer; border: 1px solid transparent; }
-    .act:disabled { opacity: .6; cursor: default; }
-    .act--cancel { background: none; border-color: #e0b4b0; color: #c0392b; }
-    .act--cancel:hover:not(:disabled) { background: #fdecea; }
-    .act--reactivate { background: none; border-color: #b6dcc4; color: #1f7a45; }
-    .act--reactivate:hover:not(:disabled) { background: #e3f6ea; }
     .state { display: flex; align-items: center; gap: 8px; padding: 32px; color: var(--fvx-text-muted, #6b6478); justify-content: center; }
     .state--error { color: #c0392b; }
   `],
 })
 export class SubscriptionsComponent implements OnInit {
   private http = inject(HttpClient);
-  private dialog = inject(MatDialog);
 
-  private async ask(title: string, message: string, confirmText: string, color: 'primary' | 'warn' = 'warn'): Promise<boolean> {
-    const ref = this.dialog.open(ConfirmDialogComponent, {
-      data: { title, message, confirmText, color },
-      panelClass: 'fvx-crud-dialog', width: '460px', maxWidth: '92vw',
-    });
-    return !!(await firstValueFrom(ref.afterClosed()));
-  }
-
-  cols = ['plan', 'customer', 'origen', 'estado', 'vence', 'id', 'actions'];
+  cols = ['plan', 'customer', 'origen', 'estado', 'vence', 'id'];
   rows = signal<Subscription[]>([]);
   loading = signal(true);
-  busy = signal(false);
   error = signal('');
+  /** Filtro por origen ('all' o el provider). */
+  filter = signal<string>('all');
   breadcrumbs = [
     { labelKey: 'common.breadcrumbHome', link: '/admin/dashboard' },
     { label: 'Suscripciones' },
   ];
 
-  async ngOnInit(): Promise<void> {
-    await this.load();
-  }
+  /** Orígenes presentes con su conteo, para los chips de filtro. */
+  providers = computed(() => {
+    const map = new Map<string, { provider: string; label: string; count: number }>();
+    for (const r of this.rows()) {
+      const cur = map.get(r.provider);
+      if (cur) cur.count++;
+      else map.set(r.provider, { provider: r.provider, label: r.provider_label, count: 1 });
+    }
+    return [...map.values()];
+  });
 
-  private async load(): Promise<void> {
+  /** Filas según el filtro de origen seleccionado. */
+  filtered = computed(() =>
+    this.filter() === 'all' ? this.rows() : this.rows().filter(r => r.provider === this.filter()),
+  );
+
+  async ngOnInit(): Promise<void> {
     this.loading.set(true);
     try {
       const res = await firstValueFrom(
@@ -175,47 +177,6 @@ export class SubscriptionsComponent implements OnInit {
       this.error.set('No se pudieron cargar las suscripciones.');
     } finally {
       this.loading.set(false);
-    }
-  }
-
-  async cancel(s: Subscription): Promise<void> {
-    const ok = await this.ask(
-      'Cancelar suscripción',
-      `¿Cancelar la suscripción de ${s.plan_name}? El cliente conserva acceso hasta el fin del período pagado.`,
-      'Cancelar suscripción',
-    );
-    if (!ok) return;
-    this.busy.set(true);
-    try {
-      await firstValueFrom(
-        this.http.post(`${environment.apiUrl}/subscriptions/cancel/`, { subscription_id: s.subscription_id, at_period_end: true }),
-      );
-      await this.load();
-    } catch {
-      this.error.set('No se pudo cancelar la suscripción.');
-    } finally {
-      this.busy.set(false);
-    }
-  }
-
-  async reactivate(s: Subscription): Promise<void> {
-    const ok = await this.ask(
-      'Reactivar suscripción',
-      `¿Reactivar la suscripción de ${s.plan_name}? Se creará una nueva suscripción usando la tarjeta registrada del cliente.`,
-      'Reactivar',
-      'primary',
-    );
-    if (!ok) return;
-    this.busy.set(true);
-    try {
-      await firstValueFrom(
-        this.http.post(`${environment.apiUrl}/subscriptions/reactivate/`, { subscription_id: s.subscription_id }),
-      );
-      await this.load();
-    } catch {
-      this.error.set('No se pudo reactivar la suscripción.');
-    } finally {
-      this.busy.set(false);
     }
   }
 }

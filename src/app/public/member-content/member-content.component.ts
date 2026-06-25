@@ -420,6 +420,9 @@ export class MemberContentComponent implements OnInit, OnDestroy {
   /** Reloj que avanza cada segundo para la cuenta regresiva de las sesiones Zoom. */
   private now = signal(Date.now());
   private clockId?: ReturnType<typeof setInterval>;
+  /** Vigilancia de sesión única: detecta si el miembro inició sesión en otro lado. */
+  private sessionId?: ReturnType<typeof setInterval>;
+  private onVisible = (): void => { if (document.visibilityState === 'visible') this.checkSession(); };
 
   private readonly KIND_ORDER = ['video', 'audio', 'pdf', 'image', 'text', 'link'];
 
@@ -541,10 +544,32 @@ export class MemberContentComponent implements OnInit, OnDestroy {
     } finally {
       this.loading.set(false);
     }
+    this.startSessionWatch();
   }
 
   ngOnDestroy(): void {
     if (this.clockId) clearInterval(this.clockId);
+    if (this.sessionId) clearInterval(this.sessionId);
+    document.removeEventListener('visibilitychange', this.onVisible);
+  }
+
+  /** Sondea la sesión cada 45s y al volver a la pestaña; si fue invalidada por
+   * un login en otro lugar (401), cierra y manda al acceso con el aviso. */
+  private startSessionWatch(): void {
+    this.sessionId = setInterval(() => this.checkSession(), 45_000);
+    document.addEventListener('visibilitychange', this.onVisible);
+  }
+
+  private async checkSession(): Promise<void> {
+    try {
+      await this.member.ping();
+    } catch (e: any) {
+      if (e?.status === 401) {
+        if (this.sessionId) clearInterval(this.sessionId);
+        this.member.logout();
+        this.router.navigate(['/acceso'], { queryParams: { sesion: 'otro' } });
+      }
+    }
   }
 
   subStatus(s: MemberSubscription): string {

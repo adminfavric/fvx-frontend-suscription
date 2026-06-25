@@ -125,6 +125,19 @@ function getAtPath(obj: Record<string, unknown> | null | undefined, path: string
                 </mat-form-field>
               </div>
             }
+            @case ('multiselect') {
+              <div class="field-wrapper" [style.grid-column]="isMobile ? '' : (field.colspan ? 'span ' + field.colspan : '')">
+                <span class="field-label">@if (field.labelKey) { {{ field.labelKey | transloco }} } @else { {{ field.label }} }@if (field.required) { <span class="required">*</span> }@if (field.info) { <mat-icon class="field-info" [matTooltip]="field.info" matTooltipPosition="above" matTooltipClass="field-info-tip">info_outline</mat-icon> }</span>
+                <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                  <mat-select [formControlName]="field.key" multiple [placeholder]="field.placeholder || ''">
+                    @for (opt of field.options || []; track opt.value) {
+                      <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                @if (field.hint) { <span class="field-hint">{{ field.hint }}</span> }
+              </div>
+            }
             @case ('datetime') {
               <div class="field-wrapper" [style.grid-column]="isMobile ? '' : (field.colspan ? 'span ' + field.colspan : '')">
                 <span class="field-label">@if (field.labelKey) { {{ field.labelKey | transloco }} } @else { {{ field.label }} }@if (field.required) { <span class="required">*</span> }@if (field.info) { <mat-icon class="field-info" [matTooltip]="field.info" matTooltipPosition="above" matTooltipClass="field-info-tip">info_outline</mat-icon> }</span>
@@ -418,6 +431,11 @@ export class EntityFormDialogComponent implements OnInit {
       // lo convertimos a Date para que el calendario muestre fecha + hora.
       if (field.type === 'datetime') {
         value = typeof value === 'string' && value ? new Date(value) : null;
+      }
+      // multiselect: el valor es un array. Al editar, envolvemos el valor único
+      // (p. ej. ``plan`` vía initialFrom) en un array.
+      if (field.type === 'multiselect') {
+        value = Array.isArray(value) ? value : (value !== '' && value != null ? [value] : []);
       }
       const validators = [];
       if (field.required) validators.push(Validators.required);

@@ -41,6 +41,8 @@ export interface DashboardBreakdownEntry {
   key: string;
   label: string;
   value: number;
+  /** Monto asociado (CLP) — solo en el desglose por medio de pago. */
+  amount?: number;
   /** Tono opcional para mapear a `app-status-chip` (`success` | `warning` | `danger`…). */
   tone?: string;
 }

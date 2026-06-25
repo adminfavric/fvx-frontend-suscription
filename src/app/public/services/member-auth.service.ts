@@ -94,6 +94,14 @@ export class MemberAuthService {
     return { Authorization: `Bearer ${this._token() ?? ''}` };
   }
 
+  /** Verifica que la sesión siga vigente (lanza 401 si fue invalidada por un
+   * login posterior en otro lugar). Barato; usado para el control de sesión única. */
+  async ping(): Promise<void> {
+    await firstValueFrom(
+      this.http.get(`${this.base}/ping/`, { headers: this.authHeaders() }),
+    );
+  }
+
   async getContent(): Promise<MemberContentResponse> {
     return firstValueFrom(
       this.http.get<MemberContentResponse>(`${this.base}/content/`, { headers: this.authHeaders() }),

@@ -70,8 +70,8 @@ export class ProgramacionComponent extends BaseCrudComponent<Schedule> implement
   formFields: FieldConfig[] = [
     { key: 'content', label: 'Contenido', type: 'select', required: true, colspan: 2, options: [],
       info: 'La pieza de contenido a asignar (de la biblioteca).' },
-    { key: 'plan', label: 'Membresía', type: 'select', required: true, colspan: 2, options: [],
-      info: 'A qué plan se asigna. Para varios planes, crea una programación por cada uno.' },
+    { key: 'plans', label: 'Membresías', type: 'multiselect', required: true, colspan: 2, options: [], initialFrom: 'plan',
+      info: 'Elige una o varias membresías. Se creará una programación por cada una (ej. lanzar un audio a todas).' },
     { key: 'starts_at', label: 'Disponible desde', type: 'date', required: true,
       info: 'Fecha desde la que el contenido aparece en este plan.' },
     { key: 'ends_at', label: 'Disponible hasta', type: 'date',
@@ -93,7 +93,7 @@ export class ProgramacionComponent extends BaseCrudComponent<Schedule> implement
       const cItems = (content?.results ?? content ?? []) as { id: number; title: string; kind: string }[];
       const pItems = (plans?.results ?? plans ?? []) as { id: number; name: string }[];
       const cField = this.formFields.find(f => f.key === 'content');
-      const pField = this.formFields.find(f => f.key === 'plan');
+      const pField = this.formFields.find(f => f.key === 'plans');
       if (cField) cField.options = cItems.map(c => ({ value: c.id, label: `${c.title} (${c.kind})` }));
       if (pField) pField.options = pItems.map(p => ({ value: p.id, label: p.name }));
     } catch {
