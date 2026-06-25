@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MemberAuthService } from '../services/member-auth.service';
 
@@ -16,6 +16,15 @@ import { MemberAuthService } from '../services/member-auth.service';
   template: `
     <section class="access">
       <div class="card">
+        @if (pago() === 'ok') {
+          <div class="pay pay--ok"><mat-icon>check_circle</mat-icon>
+            <span><strong>¡Pago recibido!</strong> Ingresa tu correo para entrar a tu contenido.</span>
+          </div>
+        } @else if (pago() === 'pendiente') {
+          <div class="pay pay--pend"><mat-icon>hourglass_top</mat-icon>
+            <span>Tu pago está <strong>en proceso de confirmación</strong>. Si ya pagaste, ingresa en unos minutos.</span>
+          </div>
+        }
         <span class="card__icon"><mat-icon>lock_open</mat-icon></span>
         <h1>Acceso de miembros</h1>
 
@@ -63,17 +72,26 @@ import { MemberAuthService } from '../services/member-auth.service';
     .error mat-icon { font-size:18px; width:18px; height:18px; }
     .signup { margin:20px 0 0; padding-top:16px; border-top:1px solid #f0e8da; font-size:.88rem; color:#6b6478; }
     .signup a { color:var(--v); font-weight:700; }
+    .pay { display:flex; gap:8px; align-items:flex-start; text-align:left; padding:12px 14px; border-radius:12px; margin-bottom:18px; font-size:.88rem; line-height:1.45; }
+    .pay mat-icon { flex:0 0 auto; }
+    .pay--ok { background:#e3f6ea; color:#1f7a45; }
+    .pay--pend { background:#fbf0d8; color:#b9842b; }
   `],
 })
 export class MemberLoginComponent {
   private member = inject(MemberAuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   step = signal<'email' | 'code'>('email');
   email = '';
   code = '';
   busy = signal(false);
   error = signal('');
+  /** Aviso tras volver de un pago por link (?pago=ok|pendiente). */
+  pago = signal<'' | 'ok' | 'pendiente'>(
+    (this.route.snapshot.queryParamMap.get('pago') as '' | 'ok' | 'pendiente') || '',
+  );
 
   async sendCode(): Promise<void> {
     const email = this.email.trim();

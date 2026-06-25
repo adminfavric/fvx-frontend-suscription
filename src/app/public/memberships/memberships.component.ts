@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { Membership, formatPrice } from '../data/catalog';
@@ -14,10 +14,10 @@ import { LaunchScheduleComponent } from './launch-schedule.component';
     <!-- Bienvenida + calendario de iniciación (reemplaza el hero anterior) -->
     <app-launch-schedule />
 
-    @if (cambiar()) {
+    @if (switchMode()) {
       <div class="switch-bar">
         <mat-icon>swap_horiz</mat-icon>
-        <span>Estás <strong>cambiando de plan</strong>. Elige tu nueva membresía: al contratarla, tu plan actual se cancela y <strong>conservas el acceso hasta el final del período ya pagado</strong>.</span>
+        <span>Ya tienes una membresía activa. Si eliges otra, será un <strong>cambio de plan</strong>: al contratarla, tu plan actual se cancela y <strong>conservas el acceso hasta el final del período ya pagado</strong>.</span>
       </div>
     }
 
@@ -55,8 +55,8 @@ import { LaunchScheduleComponent } from './launch-schedule.component';
             @if (isCurrent(m.slug)) {
               <span class="plan__current-tag"><mat-icon>check_circle</mat-icon> Tu plan actual</span>
             } @else {
-              <a class="btn btn--violet" [routerLink]="['/membresias', m.slug]" [queryParams]="cambiar() ? { cambiar: 1 } : {}">
-                {{ cambiar() ? 'Cambiar a este plan' : (m.priceMonthly ? 'Suscribirme' : 'Más información') }}
+              <a class="btn btn--violet" [routerLink]="['/membresias', m.slug]" [queryParams]="switchMode() ? { cambiar: 1 } : {}">
+                {{ switchMode() ? 'Cambiar a este plan' : (m.priceMonthly ? 'Suscribirme' : 'Más información') }}
               </a>
             }
           </div>
@@ -121,6 +121,10 @@ export class MembershipsComponent implements OnInit {
   /** Slugs de los planes que el miembro YA tiene activos (para marcarlos). */
   myPlanSlugs = signal<string[]>([]);
   price = formatPrice;
+
+  /** Modo "cambio de plan": viene por el botón (?cambiar) o está logueado y ya
+   * tiene al menos un plan activo (entonces contratar otro es un cambio). */
+  switchMode = computed(() => this.cambiar() || this.myPlanSlugs().length > 0);
 
   /** ¿El miembro ya tiene este plan activo? */
   isCurrent(slug: string): boolean {

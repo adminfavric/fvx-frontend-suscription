@@ -88,6 +88,22 @@ export class ContentService {
    * todos los medios: tarjeta, débito, transferencia). Devuelve la URL de Flow a
    * la que redirigir; al volver del pago el acceso se activa automáticamente.
    */
+  /** ¿El correo ya tiene una membresía activa? (para no permitir suscribirse de
+   * nuevo con un correo ya registrado; mejor que inicie sesión). */
+  async memberEmailHasActive(email: string): Promise<boolean> {
+    try {
+      const res = await firstValueFrom(
+        this.http.get<{ has_active: boolean }>(
+          `${environment.apiUrl}/public/member/check-email/`,
+          { params: { email } },
+        ),
+      );
+      return !!res?.has_active;
+    } catch {
+      return false; // ante error, no bloquear el checkout
+    }
+  }
+
   async startPaymentLink(
     payload: { plan_slug: string; name: string; email: string; months?: number },
   ): Promise<string> {

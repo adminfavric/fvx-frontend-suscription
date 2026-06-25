@@ -93,6 +93,12 @@ declare const paypal: any;
                     </div>
                   </div>
 
+                  @if (emailTaken()) {
+                    <div class="email-taken">
+                      <mat-icon>info</mat-icon>
+                      <span>Este correo ya tiene una membresía. <a routerLink="/acceso">Inicia sesión</a> para gestionarla o cambiar de plan.</span>
+                    </div>
+                  }
                   @if (error()) { <p class="checkout__error"><mat-icon>error_outline</mat-icon> {{ error() }}</p> }
 
                   <button class="btn btn--gold" type="submit" [disabled]="!!submitting()">
@@ -226,6 +232,9 @@ declare const paypal: any;
     .switch-note { display:flex; gap:10px; align-items:flex-start; padding:12px 14px; margin:0 0 16px; border-radius:12px; background: color-mix(in srgb, var(--lita-gold) 14%, #fff); border:1px solid color-mix(in srgb, var(--lita-gold) 40%, transparent); font-size:.85rem; color: var(--lita-ink); line-height:1.45; }
     .switch-note mat-icon { color:#b9842b; font-size:22px; width:22px; height:22px; flex:0 0 auto; }
     .switch-note strong { color: var(--lita-violet-deep); }
+    .email-taken { display:flex; gap:8px; align-items:flex-start; padding:11px 13px; margin:0 0 4px; border-radius:10px; background:#fff7e6; border:1px solid #f0dba4; color:#8a5a00; font-size:.85rem; line-height:1.45; }
+    .email-taken mat-icon { color:#b9842b; font-size:20px; width:20px; height:20px; flex:0 0 auto; }
+    .email-taken a { color: var(--lita-violet); font-weight:700; }
 
     .checkout__error { display:flex; align-items:center; gap:6px; color:#b91c1c; font-size:.85rem; margin:0; }
     .checkout__error mat-icon { font-size:18px; width:18px; height:18px; }
@@ -276,6 +285,21 @@ export class CheckoutComponent implements OnInit {
   checkoutResult = signal<'' | 'ok' | 'fail'>('');
   /** El visitante viene "cambiando de plan" (desde Mi contenido). */
   switching = signal(false);
+  /** El correo ingresado ya tiene una membresía y NO está logueado → debe entrar. */
+  emailTaken = signal(false);
+
+  /** Bloquea el pago si un visitante NO logueado usa un correo ya registrado.
+   * Devuelve true si puede continuar. */
+  private async ensureCanSubscribe(email: string): Promise<boolean> {
+    this.emailTaken.set(false);
+    if (this.member.isLoggedIn()) return true; // logueado: puede renovar/cambiar
+    if (await this.content.memberEmailHasActive(email)) {
+      this.emailTaken.set(true);
+      this.submitting.set('');
+      return false;
+    }
+    return true;
+  }
 
   private content = inject(ContentService);
   private member = inject(MemberAuthService);
@@ -311,8 +335,8 @@ export class CheckoutComponent implements OnInit {
 
     // Cambio de plan AUTOMÁTICO: si el miembro logueado ya tiene una suscripción
     // recurrente ACTIVA de OTRO plan, esto es un cambio → mostramos el aviso y
-    // marcamos esa(s) suscripción(es) para cancelarlas al pagar la nueva. Funciona
-    // tanto si llega por el botón "Cambiar de plan" como navegando directo.
+    // marcamos esa(s) suscripción(es) para cancelarlas al pagar la nueva. (Si está
+    // deslogueado o es el mismo plan, es una contratación/renovación normal.)
     this.switching.set(this.route.snapshot.queryParamMap.get('cambiar') === '1');
     if (this.member.isLoggedIn()) {
       try {
@@ -357,6 +381,7 @@ export class CheckoutComponent implements OnInit {
     this.submitting.set('flow');
     const v = this.form.value;
     try {
+      if (!(await this.ensureCanSubscribe(v.email))) return;
       await this.applyPlanSwitch();
       const url = await this.content.startCheckout({ plan_slug: m.slug, name: v.name, email: v.email });
       window.location.href = url; // a Flow para registrar la tarjeta y suscribir.
@@ -378,6 +403,7 @@ export class CheckoutComponent implements OnInit {
     this.submitting.set('link');
     const v = this.form.value;
     try {
+      if (!(await this.ensureCanSubscribe(v.email))) return;
       await this.applyPlanSwitch();
       const url = await this.content.startPaymentLink({
         plan_slug: m.slug, name: v.name, email: v.email, months: 1,
@@ -410,13 +436,18 @@ export class CheckoutComponent implements OnInit {
     paypal.Buttons({
       style: { shape: 'pill', color: 'gold', layout: 'vertical', label: 'subscribe' },
       // Exige nombre + correo antes de abrir PayPal (los necesitamos para el acceso).
-      onClick: (_data: any, actions: any) => {
+      onClick: async (_data: any, actions: any) => {
         if (this.form.invalid) {
           this.error.set('Completa tu nombre y un correo válido antes de pagar con PayPal.');
           this.form.markAllAsTouched();
           return actions.reject();
         }
         this.error.set('');
+        // Mismo control que Flow: si no estás logueado y el correo ya tiene
+        // membresía, no dejar suscribir (debe iniciar sesión / cambiar de plan).
+        if (!(await this.ensureCanSubscribe(this.form.value.email))) {
+          return actions.reject();
+        }
         return actions.resolve();
       },
       createSubscription: (_data: any, actions: any) =>
