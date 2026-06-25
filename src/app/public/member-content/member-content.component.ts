@@ -31,7 +31,14 @@ import { MemberAuthService, MemberContentItem, MemberSubscription } from '../ser
 
       @if (subs().length) {
         <section class="subs">
-          <h2 class="subs__title">Mi suscripción</h2>
+          <button class="subs__toggle" (click)="showSubs.set(!showSubs())" [class.is-open]="showSubs()">
+            <mat-icon class="subs__toggle-ic">card_membership</mat-icon>
+            <span>Mi suscripción y pagos</span>
+            <span class="subs__count">{{ subs().length }}</span>
+            <mat-icon class="subs__chev">expand_more</mat-icon>
+          </button>
+          @if (showSubs()) {
+          <div class="subs__list">
           @for (s of subs(); track s.subscription_id) {
             <div class="sub-card">
               <div class="sub-card__top">
@@ -44,7 +51,12 @@ import { MemberAuthService, MemberContentItem, MemberSubscription } from '../ser
                 @if (s.cancel_at_period_end) { <span class="warn"><mat-icon>info</mat-icon> Acceso hasta el {{ s.period_end | date: 'dd-MM-yyyy' }} (cancelada)</span> }
               </div>
               <div class="sub-card__actions">
-                @if (s.status === 1 && !s.cancel_at_period_end) {
+                @if (s.status === 1) {
+                  <button class="switch-btn" (click)="switchPlan(s)">
+                    <mat-icon>swap_horiz</mat-icon> Cambiar de plan
+                  </button>
+                }
+                @if (s.status === 1 && !s.cancel_at_period_end && !s.is_manual) {
                   <button class="cancel-btn" (click)="cancel(s)" [disabled]="busy()">
                     {{ busy() ? 'Cancelando…' : 'Cancelar suscripción' }}
                   </button>
@@ -52,6 +64,8 @@ import { MemberAuthService, MemberContentItem, MemberSubscription } from '../ser
                 <a class="other-btn" routerLink="/membresias">Ver otras membresías</a>
               </div>
             </div>
+          }
+          </div>
           }
         </section>
       }
@@ -210,8 +224,14 @@ import { MemberAuthService, MemberContentItem, MemberSubscription } from '../ser
     .logout:hover { background:#fff; }
     .logout mat-icon { font-size:18px; width:18px; height:18px; }
 
-    .subs { margin-bottom:32px; }
-    .subs__title { color: var(--vd); font-size:1.1rem; margin:0 0 12px; }
+    .subs { margin-bottom:24px; }
+    .subs__toggle { display:inline-flex; align-items:center; gap:8px; background:#fff; border:1px solid #eadfce; border-radius:999px; padding:8px 14px; cursor:pointer; color:var(--vd); font-size:.88rem; font-weight:600; box-shadow: var(--sombra-card,0 14px 34px -22px rgba(46,26,82,.18)); }
+    .subs__toggle:hover { background:#faf6ef; }
+    .subs__toggle-ic { font-size:18px; width:18px; height:18px; color: var(--gold-vivo); }
+    .subs__count { background:#f0eaf6; color:var(--v); border-radius:999px; padding:1px 8px; font-size:.74rem; font-weight:700; }
+    .subs__chev { font-size:20px; width:20px; height:20px; color:var(--texto-suave); transition: transform .18s; }
+    .subs__toggle.is-open .subs__chev { transform: rotate(180deg); }
+    .subs__list { display:flex; flex-direction:column; gap:12px; margin-top:12px; }
     .sub-card { background:#fff; border:1px solid #eadfce; border-radius:14px; padding:18px 20px; box-shadow: var(--sombra-card,0 14px 34px -20px rgba(46,26,82,.26)); }
     .sub-card__top { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
     .sub-card__top strong { color:var(--texto); font-size:1.05rem; }
@@ -224,6 +244,9 @@ import { MemberAuthService, MemberContentItem, MemberSubscription } from '../ser
     .sub-card__meta .warn { color:#b9842b; }
     .sub-card__meta .warn mat-icon { color:#b9842b; }
     .sub-card__actions { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+    .switch-btn { display:inline-flex; align-items:center; gap:6px; background: var(--gold-vivo,#d9a441); border:none; color:#2e1a52; border-radius:999px; padding:8px 16px; font-size:.85rem; font-weight:700; cursor:pointer; }
+    .switch-btn:hover { filter:brightness(.96); }
+    .switch-btn mat-icon { font-size:18px; width:18px; height:18px; }
     .cancel-btn { background:none; border:1px solid #e0b4b0; color:#c0392b; border-radius:999px; padding:8px 16px; font-size:.85rem; cursor:pointer; }
     .cancel-btn:hover:not(:disabled) { background:#fdecea; }
     .cancel-btn:disabled { opacity:.6; cursor:default; }
@@ -390,6 +413,8 @@ export class MemberContentComponent implements OnInit, OnDestroy {
   subs = signal<MemberSubscription[]>([]);
   items = signal<MemberContentItem[]>([]);
   kind = signal<string>('all');
+  /** "Mi suscripción y pagos" colapsada por defecto: la biblioteca es la prioridad. */
+  showSubs = signal(false);
   showHistory = signal(false);
 
   /** Reloj que avanza cada segundo para la cuenta regresiva de las sesiones Zoom. */
@@ -558,6 +583,18 @@ export class MemberContentComponent implements OnInit, OnDestroy {
   }
   kindLabel(kind: string): string {
     return { video: 'Video', audio: 'Audio', pdf: 'Documento', text: 'Texto', image: 'Imagen', zoom: 'Zoom en vivo', link: 'Enlace' }[kind] ?? kind;
+  }
+
+  /** Inicia el cambio de plan: si la actual es recurrente, la marcamos para
+   * cancelarla automáticamente al suscribir la nueva (conserva acceso hasta el
+   * fin del período). Si es por período (mensualidad/manual), expira sola. */
+  switchPlan(s: MemberSubscription): void {
+    if (!s.is_manual && s.subscription_id) {
+      localStorage.setItem('fvx_switch_from', s.subscription_id);
+    } else {
+      localStorage.removeItem('fvx_switch_from');
+    }
+    this.router.navigate(['/membresias'], { queryParams: { cambiar: '1' } });
   }
 
   logout(): void {

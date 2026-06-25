@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { MatIconModule } from '@angular/material/icon';
 import { Membership, formatPrice, INSCRIPTION_OPENS } from '../data/catalog';
 import { ContentService } from '../../core/services/content.service';
+import { MemberAuthService } from '../services/member-auth.service';
 import { environment } from '../../../environments/environment';
 
 /**
@@ -61,6 +62,13 @@ declare const paypal: any;
                 <h2>Contratar membresía</h2>
                 <p class="checkout__price">{{ price(m.priceMonthly) }}<small>{{ periodSuffix(m.interval) }}</small></p>
 
+                @if (switching()) {
+                  <div class="switch-note">
+                    <mat-icon>swap_horiz</mat-icon>
+                    <span>Estás <strong>cambiando de plan</strong>. Al contratar este, cancelamos tu plan anterior y <strong>conservas el acceso actual hasta el final del período ya pagado</strong>.</span>
+                  </div>
+                }
+
                 <form [formGroup]="form" (ngSubmit)="submit(m)">
                   <label>Nombre completo
                     <input type="text" formControlName="name" placeholder="Tu nombre" />
@@ -95,6 +103,22 @@ declare const paypal: any;
                     Te llevaremos a Flow para registrar tu tarjeta de forma segura y activar la
                     suscripción. El pago es procesado por Flow; no almacenamos los datos de tu tarjeta.
                   </p>
+
+                  <!-- Alternativa: pago MENSUAL con link de pago de Flow (cobro por
+                       mensualidad, sin tarjeta guardada). Al volver del pago, el
+                       acceso se activa automáticamente por 30 días. -->
+                  <div class="intl-sep"><span>o paga tu mensualidad</span></div>
+                  <div class="paymethod">
+                    <mat-icon>calendar_month</mat-icon>
+                    <div>
+                      <strong>Pago mensual con link de pago</strong>
+                      <span>Comprometes tu mensualidad con un link de pago seguro de Flow. Se habilitan 30 días de acceso; renuevas cada mes.</span>
+                    </div>
+                  </div>
+                  <button class="btn btn--violet" type="button" [disabled]="!!submitting()" (click)="payByLink(m)">
+                    <mat-icon>calendar_month</mat-icon>
+                    {{ submitting() === 'link' ? 'Redirigiendo a Flow…' : 'Pagar mi mensualidad' }}
+                  </button>
 
                   <!-- Alternativa internacional: PayPal (USD). Para clientes fuera
                        de Chile (Argentina, etc.) cuyas tarjetas no funcionan en Flow.
@@ -199,6 +223,10 @@ declare const paypal: any;
     .paymethod strong { display:block; font-size:.9rem; color: var(--lita-ink); }
     .paymethod span { display:block; font-size:.8rem; color: var(--lita-muted); }
 
+    .switch-note { display:flex; gap:10px; align-items:flex-start; padding:12px 14px; margin:0 0 16px; border-radius:12px; background: color-mix(in srgb, var(--lita-gold) 14%, #fff); border:1px solid color-mix(in srgb, var(--lita-gold) 40%, transparent); font-size:.85rem; color: var(--lita-ink); line-height:1.45; }
+    .switch-note mat-icon { color:#b9842b; font-size:22px; width:22px; height:22px; flex:0 0 auto; }
+    .switch-note strong { color: var(--lita-violet-deep); }
+
     .checkout__error { display:flex; align-items:center; gap:6px; color:#b91c1c; font-size:.85rem; margin:0; }
     .checkout__error mat-icon { font-size:18px; width:18px; height:18px; }
     .checkout__note { margin:4px 0 0; font-size:.78rem; color: var(--lita-muted); line-height:1.5; }
@@ -237,18 +265,32 @@ export class CheckoutComponent implements OnInit {
   membership = signal<Membership | undefined>(undefined);
   form: FormGroup;
   error = signal('');
-  /** true mientras se redirige a Flow. */
-  submitting = signal<'' | 'flow'>('');
+  /** Indica a qué medio se está redirigiendo ('flow' = suscripción tarjeta,
+   * 'link' = pago único por link de Flow / transferencia). */
+  submitting = signal<'' | 'flow' | 'link'>('');
   /** true mientras se carga el SDK de PayPal. */
   paypalLoading = signal(false);
   /** Interruptor global de PayPal (environment). En false, el checkout ni
    * muestra el bloque ni carga el SDK, aunque la membresía lo tenga activo. */
   paypalFeatureEnabled = environment.paypalEnabled;
   checkoutResult = signal<'' | 'ok' | 'fail'>('');
+  /** El visitante viene "cambiando de plan" (desde Mi contenido). */
+  switching = signal(false);
 
   private content = inject(ContentService);
+  private member = inject(MemberAuthService);
   private route = inject(ActivatedRoute);
   private paypalReady = false;
+
+  /** Si el miembro venía "cambiando de plan", cancela su suscripción anterior
+   * (recurrente) al iniciar el pago de la nueva. Conserva el acceso hasta el fin
+   * del período ya pagado. No bloquea el pago si la cancelación falla. */
+  private async applyPlanSwitch(): Promise<void> {
+    const oldId = localStorage.getItem('fvx_switch_from');
+    if (!oldId) return;
+    localStorage.removeItem('fvx_switch_from');
+    try { await this.member.cancelSubscription(oldId); } catch { /* no bloquear el cambio */ }
+  }
 
   constructor(private fb: FormBuilder, private router: Router) {
     this.form = this.fb.group({
@@ -261,6 +303,10 @@ export class CheckoutComponent implements OnInit {
     this.membership.set(await this.content.getMembership(this.slug));
     const r = this.route.snapshot.queryParamMap.get('checkout');
     if (r === 'ok' || r === 'fail') this.checkoutResult.set(r);
+    // Cambio de plan: prefijar el correo del miembro y mostrar el aviso.
+    this.switching.set(this.route.snapshot.queryParamMap.get('cambiar') === '1' || !!localStorage.getItem('fvx_switch_from'));
+    const memberEmail = this.member.email();
+    if (memberEmail) this.form.patchValue({ email: memberEmail });
     // Si el plan ofrece PayPal, montamos su botón tras pintar el contenedor.
     const m = this.membership();
     if (this.paypalFeatureEnabled && m?.paypalEnabled && m.paypalPlanId && !this.checkoutResult()) {
@@ -292,8 +338,32 @@ export class CheckoutComponent implements OnInit {
     this.submitting.set('flow');
     const v = this.form.value;
     try {
+      await this.applyPlanSwitch();
       const url = await this.content.startCheckout({ plan_slug: m.slug, name: v.name, email: v.email });
       window.location.href = url; // a Flow para registrar la tarjeta y suscribir.
+    } catch (e: any) {
+      this.submitting.set('');
+      this.error.set(e?.error?.detail || 'No se pudo iniciar el pago. Intenta nuevamente.');
+    }
+  }
+
+  /** Pago por LINK de Flow (pago único, habilita 1 mes; admite transferencia).
+   * Redirige a Flow; al volver, el acceso se activa solo. */
+  async payByLink(m: Membership): Promise<void> {
+    if (this.form.invalid) {
+      this.error.set('Por favor completa tu nombre y un correo válido.');
+      this.form.markAllAsTouched();
+      return;
+    }
+    this.error.set('');
+    this.submitting.set('link');
+    const v = this.form.value;
+    try {
+      await this.applyPlanSwitch();
+      const url = await this.content.startPaymentLink({
+        plan_slug: m.slug, name: v.name, email: v.email, months: 1,
+      });
+      window.location.href = url; // a Flow para pagar con cualquier medio.
     } catch (e: any) {
       this.submitting.set('');
       this.error.set(e?.error?.detail || 'No se pudo iniciar el pago. Intenta nuevamente.');

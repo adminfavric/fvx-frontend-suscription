@@ -20,7 +20,7 @@ export const environment = {
    * muestra el bloque de PayPal ni carga su SDK, sin importar lo que diga cada
    * membresía. Ponlo en ``true`` cuando el flujo (backend incluido) esté listo.
    */
-  paypalEnabled: false,
+  paypalEnabled: true,
   /**
    * Client-id PÚBLICO de PayPal (SANDBOX) para cargar el SDK del botón de
    * suscripción en el checkout. Es público por diseño (va en el navegador); el

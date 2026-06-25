@@ -283,7 +283,8 @@ export class ChartComponent implements OnChanges {
             radius: isDonut ? ['42%', '68%'] : '68%',
             center: ['50%', '52%'],
             data,
-            label: { color: text, fontSize: axisLabelFs },
+            // Muestra el número (valor) sobre cada porción, además del nombre.
+            label: { color: text, fontSize: axisLabelFs, formatter: '{b}: {c}' },
             emphasis: {
               itemStyle: { shadowBlur: 8, shadowColor: 'rgba(0,0,0,0.2)' },
             },

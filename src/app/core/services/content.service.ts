@@ -84,6 +84,23 @@ export class ContentService {
   }
 
   /**
+   * Inicia un pago por LINK DE PAGO de Flow (pago único que habilita N meses, con
+   * todos los medios: tarjeta, débito, transferencia). Devuelve la URL de Flow a
+   * la que redirigir; al volver del pago el acceso se activa automáticamente.
+   */
+  async startPaymentLink(
+    payload: { plan_slug: string; name: string; email: string; months?: number },
+  ): Promise<string> {
+    const res = await firstValueFrom(
+      this.http.post<{ redirect_url: string }>(
+        `${environment.apiUrl}/public/checkout/payment-link/start/`,
+        payload,
+      ),
+    );
+    return res.redirect_url;
+  }
+
+  /**
    * Registra en el backend la suscripción de PayPal creada por el botón del SDK
    * (tras ``onApprove``). El backend crea la ``CheckoutSession`` (provider=paypal)
    * para dar acceso al miembro y diferenciarla de Flow. Devuelve true si quedó

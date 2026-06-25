@@ -45,6 +45,9 @@ export interface MemberContentResponse {
 
 export interface MemberSubscription {
   subscription_id: string;
+  provider?: string;
+  /** true si es membresía por período (manual/mensualidad), no recurrente. */
+  is_manual?: boolean;
   plan_name: string;
   plan_slug: string;
   amount: number | null;

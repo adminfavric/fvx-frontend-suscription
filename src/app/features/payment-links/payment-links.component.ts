@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { environment } from '../../../environments/environment';
 
@@ -34,7 +35,7 @@ interface PlanOpt { id: number; name: string; amount: number | null; }
   selector: 'app-payment-links',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, MatIconModule, DatePipe, PageHeaderComponent],
+  imports: [CommonModule, FormsModule, MatIconModule, MatSnackBarModule, DatePipe, PageHeaderComponent],
   template: `
     <div class="page-container">
       <app-page-header
@@ -123,6 +124,9 @@ interface PlanOpt { id: number; name: string; amount: number | null; }
                           <button class="pl-btn pl-btn--sm pl-btn--gold" [disabled]="verifying() === it.id" (click)="verify(it)">
                             {{ verifying() === it.id ? 'Verificando…' : 'Verificar pago' }}
                           </button>
+                          <button class="pl-btn pl-btn--sm pl-btn--danger" title="Eliminar cobro pendiente" (click)="remove(it)">
+                            <mat-icon>delete</mat-icon>
+                          </button>
                         }
                       </td>
                     </tr>
@@ -149,6 +153,8 @@ interface PlanOpt { id: number; name: string; amount: number | null; }
     .pl-btn--gold { background:#d9a441; border-color:#d9a441; color:#2e1a52; }
     .pl-btn--gold:hover:not(:disabled) { background:#cf9a34; }
     .pl-btn--sm { padding:6px 10px; font-size:.8rem; }
+    .pl-btn--danger { color:#c0392b; border-color:#e0b4b0; }
+    .pl-btn--danger:hover:not(:disabled) { background:#fdecea; }
     .pl-btn mat-icon { font-size:18px; width:18px; height:18px; }
     button.pl-btn { margin-top:16px; }
     .pl-actions button.pl-btn { margin-top:0; }
@@ -179,7 +185,12 @@ interface PlanOpt { id: number; name: string; amount: number | null; }
 })
 export class PaymentLinksComponent implements OnInit {
   private http = inject(HttpClient);
+  private snack = inject(MatSnackBar);
   private base = `${environment.apiUrl}/payment-links`;
+
+  private notify(msg: string): void {
+    this.snack.open(msg, 'OK', { duration: 4500 });
+  }
 
   email = '';
   name = '';
@@ -235,6 +246,7 @@ export class PaymentLinksComponent implements OnInit {
       this.lastLink.set(created.payment_url);
       this.items.update(list => [created, ...list]);
       this.email = ''; this.name = ''; this.planId = null; this.months = 1;
+      this.notify('Link generado. Cópialo y envíaselo al cliente.');
     } catch (e: any) {
       this.error.set(e?.message || 'No se pudo generar el link. Revisa los datos e inténtalo de nuevo.');
     } finally {
@@ -249,14 +261,33 @@ export class PaymentLinksComponent implements OnInit {
         this.http.post<PaymentLink & { paid: boolean }>(`${this.base}/${it.id}/verify/`, {}),
       );
       this.items.update(list => list.map(x => (x.id === it.id ? { ...x, ...updated } : x)));
+      if (updated.paid) {
+        this.notify('✓ Pago confirmado. El acceso quedó activo.');
+      } else {
+        this.notify('Aún no se registra el pago en Flow. Pídele al cliente que complete el pago y vuelve a verificar.');
+      }
     } catch {
-      this.error.set('No se pudo verificar el pago. Intenta de nuevo en unos segundos.');
+      this.notify('No se pudo verificar el pago. Intenta de nuevo en unos segundos.');
     } finally {
       this.verifying.set(null);
     }
   }
 
+  async remove(it: PaymentLink): Promise<void> {
+    if (!confirm(`¿Eliminar el cobro pendiente de ${it.email}?`)) return;
+    try {
+      await firstValueFrom(this.http.delete(`${this.base}/${it.id}/`));
+      this.items.update(list => list.filter(x => x.id !== it.id));
+      this.notify('Cobro pendiente eliminado.');
+    } catch {
+      this.notify('No se pudo eliminar el cobro.');
+    }
+  }
+
   copy(url: string): void {
-    if (url) navigator.clipboard?.writeText(url);
+    if (url) {
+      navigator.clipboard?.writeText(url);
+      this.notify('Link copiado al portapapeles.');
+    }
   }
 }
