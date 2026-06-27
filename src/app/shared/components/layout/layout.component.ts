@@ -79,6 +79,7 @@ const DEFAULT_NAV_GROUPS: NavGroup[] = [
       { slug: 'fallback-subscriptions', icon: 'subscriptions', labelKey: 'layout.nav.fallback.subscriptions', route: '/admin/subscriptions' },
       { slug: 'fallback-content', icon: 'video_library', labelKey: 'layout.nav.fallback.content', route: '/admin/content' },
       { slug: 'fallback-programacion', icon: 'event_note', labelKey: 'layout.nav.fallback.programacion', route: '/admin/programacion' },
+      { slug: 'fallback-payment-links', icon: 'add_link', label: 'Cobros por link', route: '/admin/links-pago' },
       { slug: 'fallback-events', icon: 'celebration', labelKey: 'layout.nav.fallback.events', route: '/admin/events' },
       { slug: 'fallback-messages', icon: 'mail', labelKey: 'layout.nav.fallback.messages', route: '/admin/messages' },
     ],

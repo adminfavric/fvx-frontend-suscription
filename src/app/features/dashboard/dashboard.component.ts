@@ -1,16 +1,26 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import {
   StatCardComponent,
-  type StatCardIconPosition,
   type StatCardIconSurface,
   type StatCardTone,
   type StatCardVariant,
   type StatCardTrend,
 } from '../../shared/components/stat-card/stat-card.component';
+import { SectionCardComponent } from '../../shared/components/section-card/section-card.component';
+import { ChartComponent } from '../../shared/components/chart/chart.component';
+import {
+  StatusChipComponent,
+  type StatusChipVariant,
+} from '../../shared/components/status-chip/status-chip.component';
+import type { AppChartPieSlice } from '../../shared/components/chart/chart.model';
 import { DashboardStatsService } from '../../core/services/dashboard-stats.service';
-import type { DashboardStatItem } from '../../core/models/dashboard-stats.model';
+import type {
+  DashboardBreakdownEntry,
+  DashboardPlanRow,
+  DashboardStatItem,
+} from '../../core/models/dashboard-stats.model';
 
 const TONES: readonly StatCardTone[] = [
   'neutral',
@@ -29,57 +39,34 @@ const VARIANTS: readonly StatCardVariant[] = [
   'split',
   'split-solid',
 ];
-
-/** Ciclo para dashboard demo: fondos de color y split antes que solo borde/minimal. */
-const VARIANT_DEMO_CYCLE: readonly StatCardVariant[] = [
-  'filled',
-  'split-solid',
-  'solid',
-  'split',
-  'filled',
-  'outline',
-  'minimal',
-  'default',
-];
-
-/** Tonos vivos para placeholders (rotación). */
-const DEMO_ROTATING_TONES: readonly StatCardTone[] = [
-  'primary',
-  'success',
-  'info',
-  'warning',
-  'danger',
-];
-
 const TRENDS: readonly StatCardTrend[] = ['up', 'down', 'neutral'];
-const ICON_POSITIONS: readonly StatCardIconPosition[] = ['start', 'end'];
 const ICON_SURFACES: readonly StatCardIconSurface[] = ['soft', 'filled', 'muted'];
 
-function variantFromApiOrRotate(item: DashboardStatItem, index: number): StatCardVariant {
-  const raw = (item.variant ?? '').trim();
-  const v = raw as StatCardVariant;
-  // La API suele mandar ``default`` para todas las filas; eso no debe bloquear el demo visual.
-  if (raw && raw !== 'default' && VARIANTS.includes(v)) return v;
-  return VARIANT_DEMO_CYCLE[index % VARIANT_DEMO_CYCLE.length]!;
-}
+/** Tonos vivos para placeholders mientras carga. */
+const SKELETON_TONES: readonly StatCardTone[] = ['primary', 'success', 'warning', 'info'];
 
-function iconPositionFromApiOrRotate(item: DashboardStatItem, index: number): StatCardIconPosition {
-  const p = (item.icon_position ?? '') as StatCardIconPosition;
-  if (ICON_POSITIONS.includes(p)) return p;
-  return index % 2 === 0 ? 'start' : 'end';
-}
-
-function iconSurfaceFromApiOrRotate(item: DashboardStatItem, index: number): StatCardIconSurface {
-  const s = (item.icon_surface ?? '') as StatCardIconSurface;
-  if (ICON_SURFACES.includes(s)) return s;
-  return ICON_SURFACES[index % ICON_SURFACES.length]!;
-}
+/** Mapea el ``tone`` del backend al ``variant`` de ``app-status-chip``. */
+const STATUS_CHIP_BY_TONE: Record<string, StatusChipVariant> = {
+  success: 'success',
+  warning: 'warn',
+  danger: 'danger',
+  info: 'info',
+  neutral: 'neutral',
+  primary: 'info',
+};
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PageHeaderComponent, StatCardComponent, TranslocoPipe],
+  imports: [
+    PageHeaderComponent,
+    StatCardComponent,
+    SectionCardComponent,
+    ChartComponent,
+    StatusChipComponent,
+    TranslocoPipe,
+  ],
   template: `
     <div class="page-container">
       <app-page-header
@@ -94,6 +81,7 @@ function iconSurfaceFromApiOrRotate(item: DashboardStatItem, index: number): Sta
         @if (error()) {
           <p class="dashboard-error" role="alert">{{ 'dashboard.statsLoadError' | transloco }}</p>
         } @else {
+          <!-- ── KPIs ─────────────────────────────────────────────────── -->
           <div class="stat-grid" [attr.aria-busy]="loading()">
             @if (loading()) {
               @for (s of skeletonSlots; track s) {
@@ -101,10 +89,9 @@ function iconSurfaceFromApiOrRotate(item: DashboardStatItem, index: number): Sta
                   [label]="'dashboard.loadingKpi' | transloco"
                   icon="insights"
                   [loading]="true"
-                  [tone]="demoRotatingTones[s % demoRotatingTones.length]"
-                  [variant]="statCardDemoVariants[s % statCardDemoVariants.length]"
+                  [tone]="skeletonTones[s % skeletonTones.length]"
                   [stretchHeight]="true"
-                  [minHeight]="dashboardStatCardMinHeight"
+                  [minHeight]="kpiMinHeight"
                 />
               }
             } @else {
@@ -112,19 +99,19 @@ function iconSurfaceFromApiOrRotate(item: DashboardStatItem, index: number): Sta
                 <app-stat-card
                   [icon]="item.icon"
                   [label]="labelForItem(item)"
-                  [value]="item.value"
+                  [value]="displayValue(item)"
+                  [prefix]="item.prefix"
+                  [suffix]="item.suffix"
                   [description]="item.description"
                   [tone]="toneFor(item, i)"
-                  [variant]="variantFor(item, i)"
+                  [variant]="variantFor(item)"
                   [trend]="trendFor(item)"
                   [trendValue]="item.trend_value"
                   [trendLabel]="item.trend_label"
-                  [iconPosition]="iconPositionFor(item, i)"
                   [iconSurface]="iconSurfaceFor(item, i)"
-                  [progress]="progressFor(item, i)"
                   [loading]="false"
                   [stretchHeight]="true"
-                  [minHeight]="dashboardStatCardMinHeight"
+                  [minHeight]="kpiMinHeight"
                   [hoverLift]="true"
                 />
               } @empty {
@@ -132,22 +119,236 @@ function iconSurfaceFromApiOrRotate(item: DashboardStatItem, index: number): Sta
               }
             }
           </div>
+
+          @if (!loading()) {
+            <!-- ── Gráfico + estado de pagos ──────────────────────────── -->
+            <div class="dashboard-split">
+              <app-section-card
+                class="dashboard-split__main"
+                [title]="'dashboard.sections.membersByPlan' | transloco"
+                icon="donut_large"
+              >
+                @if (planSlices().length) {
+                  <app-chart
+                    chartType="donut"
+                    [pieSlices]="planSlices()"
+                    [height]="300"
+                  />
+                } @else {
+                  <p class="dashboard-empty">{{ 'dashboard.sections.noMembers' | transloco }}</p>
+                }
+              </app-section-card>
+
+              <app-section-card
+                class="dashboard-split__aside"
+                [title]="'dashboard.sections.paymentStatus' | transloco"
+                icon="receipt_long"
+              >
+                <ul class="breakdown-list">
+                  @for (row of byStatus(); track row.key) {
+                    <li class="breakdown-row">
+                      <app-status-chip [variant]="chipVariant(row)" [label]="row.label" />
+                      <span class="breakdown-row__value">{{ formatNumber(row.value) }}</span>
+                    </li>
+                  } @empty {
+                    <li class="dashboard-empty">{{ 'dashboard.sections.noPayments' | transloco }}</li>
+                  }
+                </ul>
+
+                @if (byProvider().length) {
+                  <h4 class="breakdown-subtitle">{{ 'dashboard.sections.byProvider' | transloco }}</h4>
+                  <ul class="breakdown-list">
+                    @for (row of byProvider(); track row.key) {
+                      <li class="prov-row">
+                        <span class="prov-row__label">{{ row.label }}</span>
+                        <span class="prov-row__nums">
+                          <span class="prov-row__count">{{ formatNumber(row.value) }} {{ row.value === 1 ? 'pago' : 'pagos' }}</span>
+                          @if (row.amount) { <span class="prov-row__amount">{{ formatMoney(row.amount, 'CLP') }}</span> }
+                        </span>
+                      </li>
+                    }
+                    <li class="prov-row prov-row--total">
+                      <span class="prov-row__label">Total</span>
+                      <span class="prov-row__nums">
+                        <span class="prov-row__count">{{ formatNumber(totalPayments()) }} {{ totalPayments() === 1 ? 'pago' : 'pagos' }}</span>
+                        <span class="prov-row__amount">{{ formatMoney(totalProviderAmount(), 'CLP') }}</span>
+                      </span>
+                    </li>
+                  </ul>
+                }
+              </app-section-card>
+            </div>
+
+            <!-- ── Tabla de planes ────────────────────────────────────── -->
+            <app-section-card
+              [title]="'dashboard.sections.plansTitle' | transloco"
+              [subtitle]="'dashboard.sections.plansSubtitle' | transloco"
+              icon="workspace_premium"
+              [noPadding]="true"
+            >
+              @if (plans().length) {
+                <div class="plans-table-wrap">
+                  <table class="plans-table">
+                    <thead>
+                      <tr>
+                        <th>{{ 'dashboard.table.plan' | transloco }}</th>
+                        <th>{{ 'dashboard.table.price' | transloco }}</th>
+                        <th>{{ 'dashboard.table.interval' | transloco }}</th>
+                        <th class="num">{{ 'dashboard.table.members' | transloco }}</th>
+                        <th class="num">{{ 'dashboard.table.pending' | transloco }}</th>
+                        <th>{{ 'dashboard.table.status' | transloco }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (plan of plans(); track plan.id) {
+                        <tr>
+                          <td class="plans-table__name">{{ plan.name }}</td>
+                          <td>{{ formatMoney(plan.amount, plan.currency) }}</td>
+                          <td>{{ plan.interval_label || '—' }}</td>
+                          <td class="num">{{ formatNumber(plan.subscribers) }}</td>
+                          <td class="num">
+                            @if (plan.pending > 0) {
+                              <span class="pending-badge">{{ formatNumber(plan.pending) }}</span>
+                            } @else {
+                              <span class="muted">0</span>
+                            }
+                          </td>
+                          <td>
+                            <app-status-chip
+                              [variant]="plan.is_active ? 'success' : 'muted'"
+                              [label]="(plan.is_active ? 'dashboard.table.active' : 'dashboard.table.inactive') | transloco"
+                            />
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              } @else {
+                <p class="dashboard-empty dashboard-empty--padded">
+                  {{ 'dashboard.sections.noPlans' | transloco }}
+                </p>
+              }
+            </app-section-card>
+          }
         }
       </section>
     </div>
   `,
   styles: [`
-    .page-body { margin-top: 0.5rem; }
+    .page-body {
+      margin-top: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
     .stat-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
       align-items: stretch;
     }
-    .stat-grid > app-stat-card {
-      min-width: 0;
+    .stat-grid > app-stat-card { min-width: 0; }
+
+    .dashboard-split {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+      align-items: start;
     }
-    .stat-grid__cell { min-width: 0; }
+    @media (max-width: 900px) {
+      .dashboard-split { grid-template-columns: 1fr; }
+    }
+    .dashboard-split__main,
+    .dashboard-split__aside { min-width: 0; }
+
+    .breakdown-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .breakdown-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .breakdown-row--plain {
+      padding: 6px 0;
+      border-bottom: 1px solid var(--fvx-border, #e4e6f0);
+    }
+    .breakdown-row--plain:last-child { border-bottom: 0; }
+    .breakdown-row__label { color: var(--fvx-text-secondary, #565d72); font-size: 0.9375rem; }
+    .breakdown-row__value {
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--fvx-text-primary, #171a26);
+    }
+    .breakdown-subtitle {
+      margin: 18px 0 10px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--fvx-text-muted, #828aa0);
+    }
+
+    /* Desglose por medio de pago: etiqueta + (cantidad / monto). */
+    .prov-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 9px 0; border-bottom: 1px solid var(--fvx-border, #eef0f7);
+    }
+    .prov-row:last-child { border-bottom: 0; }
+    .prov-row__label { color: var(--fvx-text-secondary, #565d72); font-size: 0.9375rem; font-weight: 600; }
+    .prov-row__nums { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.25; }
+    .prov-row__count { font-size: 0.78rem; color: var(--fvx-text-muted, #828aa0); }
+    .prov-row__amount { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--fvx-text-primary, #171a26); }
+    .prov-row--total { margin-top: 4px; border-top: 2px solid var(--fvx-border, #e4e6f0); border-bottom: 0; padding-top: 11px; }
+    .prov-row--total .prov-row__label { color: var(--fvx-text-primary, #171a26); }
+
+    .plans-table-wrap { width: 100%; overflow-x: auto; }
+    .plans-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9375rem;
+    }
+    .plans-table th,
+    .plans-table td {
+      padding: 12px 16px;
+      text-align: left;
+      white-space: nowrap;
+    }
+    .plans-table th {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--fvx-text-muted, #828aa0);
+      background: var(--fvx-bg-surface-2, #eef0f7);
+      border-bottom: 1px solid var(--fvx-border, #e4e6f0);
+    }
+    .plans-table tbody tr { border-bottom: 1px solid var(--fvx-border, #e4e6f0); }
+    .plans-table tbody tr:last-child { border-bottom: 0; }
+    .plans-table tbody tr:hover { background: var(--fvx-hover-bg, rgba(40, 50, 120, 0.045)); }
+    .plans-table td { color: var(--fvx-text-secondary, #565d72); }
+    .plans-table__name { font-weight: 600; color: var(--fvx-text-primary, #171a26); }
+    .plans-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .muted { color: var(--fvx-text-muted, #828aa0); }
+    .pending-badge {
+      display: inline-block;
+      min-width: 22px;
+      padding: 1px 8px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.8125rem;
+      color: var(--fvx-chip-warn-fg, #dd9512);
+      background: var(--fvx-chip-warn-bg, #fbf0d8);
+      border: 1px solid var(--fvx-chip-warn-border, #f0dba4);
+    }
+
     .dashboard-error {
       margin: 0;
       color: var(--fvx-states-error, #b91c1c);
@@ -158,39 +359,55 @@ function iconSurfaceFromApiOrRotate(item: DashboardStatItem, index: number): Sta
       color: var(--fvx-text-secondary, #475569);
       font-size: 0.9375rem;
     }
+    .dashboard-empty--padded { padding: 16px; }
   `],
 })
 export class DashboardComponent implements OnInit {
   /** Placeholders mientras carga el primer ``GET /stats/``. */
-  readonly skeletonSlots = [0, 1, 2, 3, 4, 5] as const;
+  readonly skeletonSlots = [0, 1, 2, 3, 4, 5, 6] as const;
+  readonly skeletonTones = SKELETON_TONES;
 
-  /**
-   * Alto mínimo uniforme de las KPI en grid (la fila estira al mayor contenido;
-   * `stretchHeight` en la tarjeta hace que todas alcancen ese alto).
-   */
-  readonly dashboardStatCardMinHeight = '118px';
-
-  /** Ciclo demo (skeleton y cuando la API manda solo ``variant: default``). */
-  readonly statCardDemoVariants = VARIANT_DEMO_CYCLE;
-
-  readonly demoRotatingTones = DEMO_ROTATING_TONES;
+  /** Alto mínimo uniforme de las KPI en grid. */
+  readonly kpiMinHeight = '118px';
 
   private readonly stats = inject(DashboardStatsService);
   private readonly transloco = inject(TranslocoService);
 
   readonly items = signal<DashboardStatItem[]>([]);
+  readonly plans = signal<DashboardPlanRow[]>([]);
+  readonly byStatus = signal<DashboardBreakdownEntry[]>([]);
+  readonly byProvider = signal<DashboardBreakdownEntry[]>([]);
   readonly loading = signal(true);
   readonly error = signal(false);
+
+  /** Porciones del donut: solo planes con miembros activos. */
+  readonly planSlices = computed<AppChartPieSlice[]>(() =>
+    this.plans()
+      .filter((p) => p.subscribers > 0)
+      .map((p) => ({ name: p.name, value: p.subscribers })),
+  );
+
+  /** Totales del desglose por medio de pago (para la fila Total). */
+  readonly totalPayments = computed(() => this.byProvider().reduce((a, r) => a + (r.value || 0), 0));
+  readonly totalProviderAmount = computed(() => this.byProvider().reduce((a, r) => a + (r.amount || 0), 0));
+
+  private readonly numberFmt = new Intl.NumberFormat('es-CL');
 
   ngOnInit(): void {
     this.stats.getStats().subscribe({
       next: (res) => {
         this.items.set(res.items ?? []);
+        this.plans.set(res.plans ?? []);
+        this.byStatus.set(res.by_status ?? []);
+        this.byProvider.set(res.by_provider ?? []);
         this.loading.set(false);
         this.error.set(false);
       },
       error: () => {
         this.items.set([]);
+        this.plans.set([]);
+        this.byStatus.set([]);
+        this.byProvider.set([]);
         this.loading.set(false);
         this.error.set(true);
       },
@@ -208,23 +425,31 @@ export class DashboardComponent implements OnInit {
     return t;
   }
 
-  /**
-   * Respeta el tono de la API; si falta o es inválido, rota entre tonos vivos para el demo.
-   */
-  toneFor(item: DashboardStatItem, index: number): StatCardTone {
-    const raw = (item.tone ?? '').trim();
-    const t = raw as StatCardTone;
-    if (raw && TONES.includes(t)) return t;
-    return DEMO_ROTATING_TONES[index % DEMO_ROTATING_TONES.length]!;
+  /** Formatea valores numéricos con separador de miles; deja strings tal cual. */
+  displayValue(item: DashboardStatItem): string {
+    return typeof item.value === 'number' ? this.numberFmt.format(item.value) : String(item.value);
   }
 
-  /**
-   * Si la API envía un ``variant`` distinto de ``default``, se respeta.
-   * Si omite el campo o manda ``default`` (caso habitual del backend plantilla),
-   * se usa un ciclo demo con fondos de color (``filled``, ``solid``, ``split-*``, …).
-   */
-  variantFor(item: DashboardStatItem, index: number): StatCardVariant {
-    return variantFromApiOrRotate(item, index);
+  formatNumber(value: number): string {
+    return this.numberFmt.format(value);
+  }
+
+  formatMoney(amount: number | null, currency: string): string {
+    if (amount == null) {
+      return '—';
+    }
+    return `$${this.numberFmt.format(amount)} ${currency || 'CLP'}`;
+  }
+
+  toneFor(item: DashboardStatItem, index: number): StatCardTone {
+    const raw = (item.tone ?? '').trim() as StatCardTone;
+    if (raw && TONES.includes(raw)) return raw;
+    return SKELETON_TONES[index % SKELETON_TONES.length]!;
+  }
+
+  variantFor(item: DashboardStatItem): StatCardVariant {
+    const raw = (item.variant ?? '').trim() as StatCardVariant;
+    return raw && VARIANTS.includes(raw) ? raw : 'default';
   }
 
   trendFor(item: DashboardStatItem): StatCardTrend | undefined {
@@ -235,25 +460,13 @@ export class DashboardComponent implements OnInit {
     return TRENDS.includes(tr) ? tr : undefined;
   }
 
-  iconPositionFor(item: DashboardStatItem, index: number): StatCardIconPosition {
-    return iconPositionFromApiOrRotate(item, index);
-  }
-
   iconSurfaceFor(item: DashboardStatItem, index: number): StatCardIconSurface {
-    return iconSurfaceFromApiOrRotate(item, index);
+    const s = (item.icon_surface ?? '') as StatCardIconSurface;
+    if (ICON_SURFACES.includes(s)) return s;
+    return ICON_SURFACES[index % ICON_SURFACES.length]!;
   }
 
-  progressFor(item: DashboardStatItem, index: number): number | null | undefined {
-    const v = item.progress;
-    if (v != null) {
-      const n = Number(v);
-      return Number.isNaN(n) ? undefined : n;
-    }
-    const variant = variantFromApiOrRotate(item, index);
-    if (variant === 'solid' || variant === 'split-solid') {
-      const demos = [78, 62, 88, 52, 94];
-      return demos[index % demos.length];
-    }
-    return undefined;
+  chipVariant(row: DashboardBreakdownEntry): StatusChipVariant {
+    return STATUS_CHIP_BY_TONE[row.tone ?? ''] ?? 'neutral';
   }
 }

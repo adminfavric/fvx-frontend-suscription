@@ -84,6 +84,39 @@ export class ContentService {
   }
 
   /**
+   * Inicia un pago por LINK DE PAGO de Flow (pago único que habilita N meses, con
+   * todos los medios: tarjeta, débito, transferencia). Devuelve la URL de Flow a
+   * la que redirigir; al volver del pago el acceso se activa automáticamente.
+   */
+  /** ¿El correo ya tiene una membresía activa? (para no permitir suscribirse de
+   * nuevo con un correo ya registrado; mejor que inicie sesión). */
+  async memberEmailHasActive(email: string): Promise<boolean> {
+    try {
+      const res = await firstValueFrom(
+        this.http.get<{ has_active: boolean }>(
+          `${environment.apiUrl}/public/member/check-email/`,
+          { params: { email } },
+        ),
+      );
+      return !!res?.has_active;
+    } catch {
+      return false; // ante error, no bloquear el checkout
+    }
+  }
+
+  async startPaymentLink(
+    payload: { plan_slug: string; name: string; email: string; months?: number },
+  ): Promise<string> {
+    const res = await firstValueFrom(
+      this.http.post<{ redirect_url: string }>(
+        `${environment.apiUrl}/public/checkout/payment-link/start/`,
+        payload,
+      ),
+    );
+    return res.redirect_url;
+  }
+
+  /**
    * Registra en el backend la suscripción de PayPal creada por el botón del SDK
    * (tras ``onApprove``). El backend crea la ``CheckoutSession`` (provider=paypal)
    * para dar acceso al miembro y diferenciarla de Flow. Devuelve true si quedó

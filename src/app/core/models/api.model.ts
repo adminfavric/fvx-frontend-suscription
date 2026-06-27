@@ -23,7 +23,7 @@ export interface FieldConfig {
   /** i18n key (Transloco); if set, overrides `label` in UI. */
   labelKey?: string;
   label: string;
-  type: 'text' | 'number' | 'email' | 'select' | 'textarea' | 'boolean' | 'date' | 'password' | 'autocomplete' | 'image' | 'file';
+  type: 'text' | 'number' | 'email' | 'select' | 'multiselect' | 'textarea' | 'boolean' | 'date' | 'datetime' | 'password' | 'autocomplete' | 'image' | 'file';
   /** Para type 'file'/'image': filtro de tipos aceptados (atributo accept del input). */
   accept?: string;
   /**

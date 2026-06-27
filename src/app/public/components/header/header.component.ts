@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { PopupService } from '../../services/popup.service';
+import { MemberAuthService } from '../../services/member-auth.service';
 
 @Component({
   selector: 'app-header',
@@ -19,7 +20,11 @@ export class HeaderComponent {
    * el menú sea legible sobre el fondo claro desde el inicio. */
   isHome = true;
 
-  constructor(private popupService: PopupService, private router: Router) {
+  constructor(
+    private popupService: PopupService,
+    private router: Router,
+    public member: MemberAuthService,
+  ) {
     this.isHome = this.computeIsHome(this.router.url);
     this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
@@ -45,6 +50,13 @@ export class HeaderComponent {
   }
 
   goHome(): void {
+    this.closeMobileMenu();
+    this.router.navigate(['/']);
+  }
+
+  /** Cierra la sesión del miembro y vuelve a la página normal (sin sesión). */
+  logout(): void {
+    this.member.logout();
     this.closeMobileMenu();
     this.router.navigate(['/']);
   }

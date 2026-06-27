@@ -16,6 +16,15 @@ export const routes: Routes = [
     canActivate: [loginGuard],
   },
 
+  // Sala Zoom en vivo (embebida). Fuera del layout público: el SDK ocupa toda
+  // la pantalla. Requiere sesión de miembro; el backend valida plan + horario.
+  {
+    path: 'sala/:id',
+    canActivate: [memberGuard],
+    loadComponent: () =>
+      import('./public/zoom-room/zoom-room.component').then(m => m.ZoomRoomComponent),
+  },
+
   // ── Administración (scaffold) — movido a /admin para liberar la raíz al sitio público ──
   {
     path: 'admin',
@@ -52,6 +61,13 @@ export const routes: Routes = [
         path: 'programacion',
         loadComponent: () =>
           import('./features/programacion/programacion.component').then(m => m.ProgramacionComponent),
+      },
+      {
+        path: 'links-pago',
+        loadComponent: () =>
+          import('./features/payment-links/payment-links.component').then(
+            m => m.PaymentLinksComponent,
+          ),
       },
       {
         path: 'events',

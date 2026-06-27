@@ -387,7 +387,7 @@ export class CalendarComponent implements ControlValueAccessor, Validator {
   readonly selectedLabel = computed(() => {
     this.localeTick(); // dependencia: recomputar al cambiar idioma
     const d = this.selected();
-    if (!d) return '';
+    if (!d || isNaN(d.getTime())) return '';
     return this.dateAdapter.format(d, this.withTime ? this.dateTimeFormat : this.dateFormat);
   });
 
@@ -400,7 +400,13 @@ export class CalendarComponent implements ControlValueAccessor, Validator {
         // de minTime/maxTime debe reflejarse aunque no haya día seleccionado
         // (auditoría #4).
         this.onValidatorChange();
-        if (this.disabledSig() || !this.selected()) return;
+        if (this.disabledSig()) return;
+        // Si se fija una hora válida sin haber elegido día, asumimos HOY (con
+        // [withTime]): así "solo poner la hora" guarda fecha+hora y no queda vacío.
+        if (!this.selected() && this.withTime && this.timeCtrl.value && !isNaN(this.timeCtrl.value.getTime())) {
+          this.selected.set(new Date());
+        }
+        if (!this.selected()) return;
         this.emit();
       });
     // El locale del adapter lo sincroniza app.config con el idioma (langChanges$).
@@ -434,7 +440,10 @@ export class CalendarComponent implements ControlValueAccessor, Validator {
     const date = this.selected();
     if (!date) return null;
     const out = new Date(date);
-    if (this.withTime && this.timeCtrl.value) {
+    // Guarda contra una hora inválida del timepicker (mientras se teclea o si
+    // falla el parse): sin esto, setHours(NaN, …) deja un Date inválido que
+    // rompe el formato del footer y el toISOString al guardar.
+    if (this.withTime && this.timeCtrl.value && !isNaN(this.timeCtrl.value.getTime())) {
       const t = this.timeCtrl.value;
       out.setHours(t.getHours(), t.getMinutes(), t.getSeconds(), 0);
     } else if (!this.withTime) {

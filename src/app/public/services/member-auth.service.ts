@@ -12,6 +12,29 @@ export interface MemberContentItem {
   external_url: string;
   image_url: string;
   created: string;
+  /** Sesión Zoom: inicio/fin de la franja en vivo (ISO) y banderas calculadas. */
+  live_start?: string | null;
+  live_end?: string | null;
+  /** ``true`` si la sala se puede abrir ahora (dentro de la franja). */
+  live_open?: boolean;
+  /** ``true`` si la sesión tiene una reunión Zoom configurada en el servidor. */
+  has_zoom?: boolean;
+  /** Momento exacto (ISO) en que la sala abre (incluye el margen previo) y cierra. */
+  opens_at?: string | null;
+  closes_at?: string | null;
+}
+
+/** Datos para unirse a la sesión Zoom embebida (firma de vida corta del SDK).
+ * El link nunca viaja: solo esta firma, emitida por el backend al miembro
+ * habilitado y dentro de la franja horaria. */
+export interface ZoomJoinInfo {
+  signature: string;
+  sdkKey: string;
+  meetingNumber: string;
+  passcode: string;
+  userName: string;
+  userEmail: string;
+  topic: string;
 }
 
 export interface MemberContentResponse {
@@ -22,6 +45,9 @@ export interface MemberContentResponse {
 
 export interface MemberSubscription {
   subscription_id: string;
+  provider?: string;
+  /** true si es membresía por período (manual/mensualidad), no recurrente. */
+  is_manual?: boolean;
   plan_name: string;
   plan_slug: string;
   amount: number | null;
@@ -68,6 +94,14 @@ export class MemberAuthService {
     return { Authorization: `Bearer ${this._token() ?? ''}` };
   }
 
+  /** Verifica que la sesión siga vigente (lanza 401 si fue invalidada por un
+   * login posterior en otro lugar). Barato; usado para el control de sesión única. */
+  async ping(): Promise<void> {
+    await firstValueFrom(
+      this.http.get(`${this.base}/ping/`, { headers: this.authHeaders() }),
+    );
+  }
+
   async getContent(): Promise<MemberContentResponse> {
     return firstValueFrom(
       this.http.get<MemberContentResponse>(`${this.base}/content/`, { headers: this.authHeaders() }),
@@ -79,6 +113,32 @@ export class MemberAuthService {
       this.http.get<{ email: string; subscriptions: MemberSubscription[] }>(`${this.base}/account/`, {
         headers: this.authHeaders(),
       }),
+    );
+  }
+
+  /** Pide la firma para unirse a la sesión Zoom embebida. El backend valida plan
+   * activo + franja horaria; lanza 403/409/503 si no corresponde. */
+  async getZoomSignature(contentId: number): Promise<ZoomJoinInfo> {
+    return firstValueFrom(
+      this.http.post<ZoomJoinInfo>(
+        `${this.base}/content/${contentId}/zoom/`,
+        {},
+        { headers: this.authHeaders() },
+      ),
+    );
+  }
+
+  /** Latido que mantiene la presencia en la sala (candado de entrada única). */
+  async zoomHeartbeat(contentId: number): Promise<void> {
+    await firstValueFrom(
+      this.http.post(`${this.base}/content/${contentId}/zoom/heartbeat/`, {}, { headers: this.authHeaders() }),
+    );
+  }
+
+  /** Libera la presencia al salir de la sala (best-effort). */
+  async zoomLeave(contentId: number): Promise<void> {
+    await firstValueFrom(
+      this.http.post(`${this.base}/content/${contentId}/zoom/leave/`, {}, { headers: this.authHeaders() }),
     );
   }
 

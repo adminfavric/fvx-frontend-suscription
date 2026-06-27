@@ -19,6 +19,7 @@ import { FieldConfig } from '../../../core/models/api.model';
 import { isHttpError } from '../../../core/http/http-error';
 import { FileUploaderComponent } from '../file-uploader/file-uploader.component';
 import type { FileUploadResult } from '../file-uploader/providers/file-upload-provider';
+import { CalendarComponent } from '../calendar/calendar.component';
 
 export interface EntityFormDialogData {
   title: string;
@@ -45,6 +46,7 @@ function getAtPath(obj: Record<string, unknown> | null | undefined, path: string
   }, obj);
 }
 
+
 @Component({
   selector: 'app-entity-form-dialog',
   standalone: true,
@@ -62,6 +64,7 @@ function getAtPath(obj: Record<string, unknown> | null | undefined, path: string
     MatIconModule,
     MatTooltipModule,
     FileUploaderComponent,
+    CalendarComponent,
     TranslocoPipe,
   ],
   template: `
@@ -120,6 +123,26 @@ function getAtPath(obj: Record<string, unknown> | null | undefined, path: string
                   <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
                   <mat-datepicker #picker></mat-datepicker>
                 </mat-form-field>
+              </div>
+            }
+            @case ('multiselect') {
+              <div class="field-wrapper" [style.grid-column]="isMobile ? '' : (field.colspan ? 'span ' + field.colspan : '')">
+                <span class="field-label">@if (field.labelKey) { {{ field.labelKey | transloco }} } @else { {{ field.label }} }@if (field.required) { <span class="required">*</span> }@if (field.info) { <mat-icon class="field-info" [matTooltip]="field.info" matTooltipPosition="above" matTooltipClass="field-info-tip">info_outline</mat-icon> }</span>
+                <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                  <mat-select [formControlName]="field.key" multiple [placeholder]="field.placeholder || ''">
+                    @for (opt of field.options || []; track opt.value) {
+                      <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                @if (field.hint) { <span class="field-hint">{{ field.hint }}</span> }
+              </div>
+            }
+            @case ('datetime') {
+              <div class="field-wrapper" [style.grid-column]="isMobile ? '' : (field.colspan ? 'span ' + field.colspan : '')">
+                <span class="field-label">@if (field.labelKey) { {{ field.labelKey | transloco }} } @else { {{ field.label }} }@if (field.required) { <span class="required">*</span> }@if (field.info) { <mat-icon class="field-info" [matTooltip]="field.info" matTooltipPosition="above" matTooltipClass="field-info-tip">info_outline</mat-icon> }</span>
+                <app-calendar [withTime]="true" timeInterval="15min" [formControlName]="field.key"></app-calendar>
+                @if (field.hint) { <span class="field-hint">{{ field.hint }}</span> }
               </div>
             }
             @case ('image') {
@@ -404,6 +427,16 @@ export class EntityFormDialogComponent implements OnInit {
       if (value === undefined || value === null || value === '') {
         value = field.type === 'boolean' ? false : '';
       }
+      // datetime (app-calendar): trabaja con objetos Date. El backend manda ISO;
+      // lo convertimos a Date para que el calendario muestre fecha + hora.
+      if (field.type === 'datetime') {
+        value = typeof value === 'string' && value ? new Date(value) : null;
+      }
+      // multiselect: el valor es un array. Al editar, envolvemos el valor único
+      // (p. ej. ``plan`` vía initialFrom) en un array.
+      if (field.type === 'multiselect') {
+        value = Array.isArray(value) ? value : (value !== '' && value != null ? [value] : []);
+      }
       const validators = [];
       if (field.required) validators.push(Validators.required);
       if (field.type === 'email') validators.push(Validators.email);
@@ -431,6 +464,14 @@ export class EntityFormDialogComponent implements OnInit {
         result[field.key] = `${y}-${m}-${d}`;
       }
 
+      // datetime (app-calendar): Date → ISO 8601 (con zona) para el backend.
+      // Solo si es un Date VÁLIDO; si no, null (evita el RangeError de toISOString).
+      if (field.type === 'datetime') {
+        result[field.key] = val instanceof Date && !isNaN(val.getTime())
+          ? val.toISOString()
+          : null;
+      }
+
       // Null out empty optional FK / number fields
       if (val === '' || val === undefined) {
         if (field.type === 'select' || field.type === 'number') {
@@ -438,8 +479,8 @@ export class EntityFormDialogComponent implements OnInit {
         }
       }
 
-      // Null out empty date fields
-      if (field.type === 'date' && !val) {
+      // Null out empty date / datetime fields
+      if ((field.type === 'date' || field.type === 'datetime') && !val) {
         result[field.key] = null;
       }
     }

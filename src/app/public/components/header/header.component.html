@@ -14,7 +14,12 @@
       <a class="nav-link" routerLink="/eventos" (click)="closeMobileMenu()">Eventos</a>
       <a class="nav-link" (click)="openPopup('about')">Sobre Lita Donoso</a>
       <a class="nav-link" (click)="openPopup('contacto')">Contacto</a>
-      <a class="nav-link nav-cta" routerLink="/mi-contenido" (click)="closeMobileMenu()">Acceso a mi cuenta</a>
+      @if (member.isLoggedIn()) {
+        <a class="nav-link nav-cta" routerLink="/mi-contenido" (click)="closeMobileMenu()">Mi cuenta</a>
+        <a class="nav-link nav-logout" (click)="logout()" title="Cerrar sesión">Salir</a>
+      } @else {
+        <a class="nav-link nav-cta" routerLink="/mi-contenido" (click)="closeMobileMenu()">Acceso a mi cuenta</a>
+      }
     </nav>
 
     <button class="hamburger" (click)="toggleMobileMenu()" [class.active]="mobileMenuOpen" aria-label="Menu">
@@ -30,6 +35,11 @@
     <a class="nav-link" routerLink="/eventos" (click)="toggleMobileMenu()">Eventos</a>
     <a class="nav-link" (click)="openPopup('about'); toggleMobileMenu()">Sobre Lita Donoso</a>
     <a class="nav-link" (click)="openPopup('contacto'); toggleMobileMenu()">Contacto</a>
-    <a class="nav-link nav-cta" routerLink="/mi-contenido" (click)="toggleMobileMenu()">Acceso a mi cuenta</a>
+    @if (member.isLoggedIn()) {
+      <a class="nav-link nav-cta" routerLink="/mi-contenido" (click)="toggleMobileMenu()">Mi cuenta</a>
+      <a class="nav-link nav-logout" (click)="logout()">Salir</a>
+    } @else {
+      <a class="nav-link nav-cta" routerLink="/mi-contenido" (click)="toggleMobileMenu()">Acceso a mi cuenta</a>
+    }
   </nav>
 </header>

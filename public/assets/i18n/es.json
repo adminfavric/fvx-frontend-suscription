@@ -416,7 +416,7 @@
   },
   "dashboard": {
     "title": "Panel",
-    "subtitle": "Métricas clave de la plataforma (API `GET /api/v1/stats/`).",
+    "subtitle": "Métricas clave del negocio: miembros, pagos y planes.",
     "breadcrumb": "Panel",
     "statsLoadError": "No se pudieron cargar las métricas. Compruebe la conexión e inténtelo de nuevo.",
     "noStats": "Aún no hay métricas para mostrar.",
@@ -425,7 +425,34 @@
       "usersActive": "Usuarios activos",
       "roleAdmin": "Rol en directorio: Admin",
       "roleEditor": "Rol en directorio: Editor",
-      "roleViewer": "Rol en directorio: Viewer"
+      "roleViewer": "Rol en directorio: Viewer",
+      "activeMembers": "Miembros activos",
+      "recurringRevenue": "Ingreso recurrente",
+      "pendingPayments": "Pagos pendientes",
+      "activePlans": "Planes activos",
+      "totalCustomers": "Clientes",
+      "newThisMonth": "Nuevos este mes",
+      "failedPayments": "Pagos fallidos"
+    },
+    "sections": {
+      "membersByPlan": "Miembros por plan",
+      "paymentStatus": "Estado de pagos",
+      "byProvider": "Por medio de pago",
+      "plansTitle": "Planes",
+      "plansSubtitle": "Miembros activos y pagos pendientes por plan.",
+      "noMembers": "Aún no hay miembros activos.",
+      "noPayments": "Aún no hay actividad de pagos.",
+      "noPlans": "Aún no hay planes creados."
+    },
+    "table": {
+      "plan": "Plan",
+      "price": "Precio",
+      "interval": "Cobro",
+      "members": "Miembros",
+      "pending": "Pendientes",
+      "status": "Estado",
+      "active": "Activo",
+      "inactive": "Inactivo"
     }
   },
   "login": {
