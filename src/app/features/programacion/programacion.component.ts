@@ -67,16 +67,34 @@ export class ProgramacionComponent extends BaseCrudComponent<Schedule> implement
     { key: 'ends_at', label: 'Hasta', render: r => r.ends_at || 'Sin fin' },
   ];
 
+  /** CREAR: permite varias membresías → crea una programación por cada una. */
   formFields: FieldConfig[] = [
     { key: 'content', label: 'Contenido', type: 'select', required: true, colspan: 2, options: [],
       info: 'La pieza de contenido a asignar (de la biblioteca).' },
-    { key: 'plans', label: 'Membresías', type: 'multiselect', required: true, colspan: 2, options: [], initialFrom: 'plan',
+    { key: 'plans', label: 'Membresías', type: 'multiselect', required: true, colspan: 2, options: [],
       info: 'Elige una o varias membresías. Se creará una programación por cada una (ej. lanzar un audio a todas).' },
     { key: 'starts_at', label: 'Disponible desde', type: 'date', required: true,
       info: 'Fecha desde la que el contenido aparece en este plan.' },
     { key: 'ends_at', label: 'Disponible hasta', type: 'date',
       info: 'Déjalo vacío para que esté disponible "sin fin" (hasta que elimines la asignación).' },
   ];
+
+  /** EDITAR: cada fila es UNA membresía → selección simple (evita duplicados/500). */
+  editFields: FieldConfig[] = [
+    { key: 'content', label: 'Contenido', type: 'select', required: true, colspan: 2, options: [],
+      info: 'La pieza de contenido a asignar (de la biblioteca).' },
+    { key: 'plan', label: 'Membresía', type: 'select', required: true, colspan: 2, options: [],
+      info: 'Membresía de esta programación. Para agregar otras, crea una nueva programación.' },
+    { key: 'starts_at', label: 'Disponible desde', type: 'date', required: true,
+      info: 'Fecha desde la que el contenido aparece en este plan.' },
+    { key: 'ends_at', label: 'Disponible hasta', type: 'date',
+      info: 'Déjalo vacío para que esté disponible "sin fin".' },
+  ];
+
+  /** Crear usa multi-membresía; editar usa membresía simple (una fila = un plan). */
+  protected override getFormDialogFields(entity?: Schedule): FieldConfig[] {
+    return entity ? this.editFields : this.formFields;
+  }
 
   override actions: TableAction[] = [
     { icon: 'edit', label: '', labelKey: 'crud.actions.edit', action: 'edit', color: 'primary' },
@@ -92,10 +110,13 @@ export class ProgramacionComponent extends BaseCrudComponent<Schedule> implement
       ]);
       const cItems = (content?.results ?? content ?? []) as { id: number; title: string; kind: string }[];
       const pItems = (plans?.results ?? plans ?? []) as { id: number; name: string }[];
-      const cField = this.formFields.find(f => f.key === 'content');
-      const pField = this.formFields.find(f => f.key === 'plans');
-      if (cField) cField.options = cItems.map(c => ({ value: c.id, label: `${c.title} (${c.kind})` }));
-      if (pField) pField.options = pItems.map(p => ({ value: p.id, label: p.name }));
+      const contentOpts = cItems.map(c => ({ value: c.id, label: `${c.title} (${c.kind})` }));
+      const planOpts = pItems.map(p => ({ value: p.id, label: p.name }));
+      // Cargar opciones en AMBOS juegos de campos (crear y editar).
+      for (const f of [...this.formFields, ...this.editFields]) {
+        if (f.key === 'content') f.options = contentOpts;
+        if (f.key === 'plans' || f.key === 'plan') f.options = planOpts;
+      }
     } catch {
       /* sin opciones; reintentar recargando */
     }
