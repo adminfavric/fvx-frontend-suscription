@@ -173,8 +173,10 @@ export class MemberLoginComponent implements OnDestroy {
       this.step.set('code');
       this.notice.set('');
       this.startResendCountdown();
-    } catch {
-      this.error.set('No se pudo enviar el código. Intenta nuevamente.');
+    } catch (e: any) {
+      // Muestra el mensaje del backend (p. ej. "no encontramos una suscripción
+      // con ese correo") si viene; si no, uno genérico.
+      this.error.set(e?.error?.detail || 'No se pudo enviar el código. Intenta nuevamente.');
     } finally {
       this.busy.set(false);
     }
