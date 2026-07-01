@@ -168,32 +168,6 @@ import { MemberAuthService, MemberContentItem, MemberSubscription } from '../ser
             </div>
           }
         </div>
-
-        <!-- ── HISTORIAL DE SESIONES ── -->
-        @if (historySessions().length) {
-          <button class="hist-toggle" (click)="showHistory.set(!showHistory())">
-            <mat-icon>history</mat-icon>
-            Historial de sesiones
-            <span class="hist-count">{{ historySessions().length }}</span>
-            <mat-icon class="hist-chevron">{{ showHistory() ? 'expand_less' : 'expand_more' }}</mat-icon>
-          </button>
-
-          @if (showHistory()) {
-            <div class="hist-grid">
-              @for (it of historySessions(); track it.id) {
-                <article class="hist-card">
-                  <div class="hist-card__cover"><mat-icon>videocam</mat-icon></div>
-                  <div class="hist-card__body">
-                    <span class="hist-seal"><mat-icon>event_busy</mat-icon> Finalizada</span>
-                    <h4>{{ it.title }}</h4>
-                    @if (it.live_start) { <p>{{ it.live_start | date: "dd-MM-yyyy 'a las' HH:mm" }}</p> }
-                    <p class="hist-note">Grabación próximamente</p>
-                  </div>
-                </article>
-              }
-            </div>
-          }
-        }
       }
     </section>
   `,
@@ -422,7 +396,6 @@ export class MemberContentComponent implements OnInit, OnDestroy {
   kind = signal<string>('all');
   /** "Mi suscripción y pagos" colapsada por defecto: la biblioteca es la prioridad. */
   showSubs = signal(false);
-  showHistory = signal(false);
 
   /** Reloj que avanza cada segundo para la cuenta regresiva de las sesiones Zoom. */
   private now = signal(Date.now());
@@ -442,11 +415,6 @@ export class MemberContentComponent implements OnInit, OnDestroy {
     this.zoomItems()
       .filter(i => this.zoomState(i) === 'soon')
       .sort((a, b) => (this.opensMs(a) ?? 0) - (this.opensMs(b) ?? 0)),
-  );
-  historySessions = computed(() =>
-    this.zoomItems()
-      .filter(i => this.zoomState(i) === 'ended')
-      .sort((a, b) => (this.closesMs(b) ?? 0) - (this.closesMs(a) ?? 0)),
   );
   hasSessions = computed(() => this.liveSessions().length > 0 || this.soonSessions().length > 0);
 

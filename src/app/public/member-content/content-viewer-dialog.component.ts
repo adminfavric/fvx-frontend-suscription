@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, Inject, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Inject, OnInit, computed, inject, signal } from '@angular/core';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { MemberAuthService, MemberContentItem } from '../services/member-auth.service';
 
 /** Visor modal de una pieza de la biblioteca (reproduce/​muestra según el tipo). */
@@ -15,10 +16,16 @@ import { MemberAuthService, MemberContentItem } from '../services/member-auth.se
       <div class="media" (contextmenu)="block($event)">
         @switch (item.kind) {
           @case ('video') {
-            <video controls autoplay preload="metadata" [src]="mediaUrl()"
-                   controlsList="nodownload noremoteplayback noplaybackrate"
-                   disablePictureInPicture disableRemotePlayback
-                   (contextmenu)="block($event)"></video>
+            @if (embedUrl()) {
+              <iframe class="embed" [src]="embedUrl()" title="{{ item.title }}"
+                      frameborder="0" allow="autoplay; fullscreen; picture-in-picture"
+                      allowfullscreen></iframe>
+            } @else {
+              <video controls autoplay preload="metadata" [src]="mediaUrl()"
+                     controlsList="nodownload noremoteplayback noplaybackrate"
+                     disablePictureInPicture disableRemotePlayback
+                     (contextmenu)="block($event)"></video>
+            }
           }
           @case ('audio') {
             <div class="audio-wrap"><mat-icon>graphic_eq</mat-icon>
@@ -43,6 +50,8 @@ import { MemberAuthService, MemberContentItem } from '../services/member-auth.se
     .media { background:#000; display:flex; align-items:center; justify-content:center; }
     /* Video: ocupa el ancho (suele ser horizontal). */
     .media video { width:100%; max-height:80vh; display:block; }
+    /* Embed (YouTube/Vimeo): iframe 16:9 responsivo. */
+    .media .embed { width:100%; aspect-ratio:16/9; max-height:80vh; display:block; border:0; }
     /* Imagen: se muestra COMPLETA en su proporción real (vertical u horizontal),
        acotada por ancho y alto; se centra con barras negras si sobra espacio.
        Antes width:100% deformaba/recortaba los posters verticales. */
@@ -59,11 +68,25 @@ import { MemberAuthService, MemberContentItem } from '../services/member-auth.se
 })
 export class ContentViewerDialogComponent implements OnInit {
   private auth = inject(MemberAuthService);
+  private sanitizer = inject(DomSanitizer);
 
   /** URL efectiva del archivo: parte vacía y se rellena con una URL FIRMADA de
    * vida corta pedida al backend. La URL permanente nunca llega al cliente; en
    * dev/local el backend devuelve la URL directa (no hay nada que firmar). */
   readonly mediaUrl = signal<string>('');
+
+  /** Si la URL es de YouTube/Vimeo, devuelve la URL de EMBED (sanitizada) para
+   * mostrarla en un iframe; si es un archivo directo (MP4), devuelve null y se
+   * usa el reproductor nativo <video>. */
+  readonly embedUrl = computed<SafeResourceUrl | null>(() => {
+    const u = this.mediaUrl();
+    if (!u) return null;
+    const yt = u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/);
+    if (yt) return this.sanitizer.bypassSecurityTrustResourceUrl(`https://www.youtube-nocookie.com/embed/${yt[1]}`);
+    const vim = u.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+    if (vim) return this.sanitizer.bypassSecurityTrustResourceUrl(`https://player.vimeo.com/video/${vim[1]}`);
+    return null;
+  });
 
   constructor(
     public ref: MatDialogRef<ContentViewerDialogComponent>,

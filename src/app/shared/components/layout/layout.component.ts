@@ -83,6 +83,7 @@ const DEFAULT_NAV_GROUPS: NavGroup[] = [
       { slug: 'fallback-events', icon: 'celebration', labelKey: 'layout.nav.fallback.events', route: '/admin/events' },
       { slug: 'fallback-messages', icon: 'mail', labelKey: 'layout.nav.fallback.messages', route: '/admin/messages' },
       { slug: 'fallback-correos', icon: 'campaign', label: 'Correos masivos', route: '/admin/correos' },
+      { slug: 'fallback-comp-access', icon: 'vpn_key', label: 'Accesos de cortesía', route: '/admin/acceso-cortesia' },
     ],
   },
   {
