@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, Inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Inject, OnInit, inject, signal } from '@angular/core';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { MemberContentItem } from '../services/member-auth.service';
+import { MemberAuthService, MemberContentItem } from '../services/member-auth.service';
 
 /** Visor modal de una pieza de la biblioteca (reproduce/​muestra según el tipo). */
 @Component({
@@ -12,11 +12,22 @@ import { MemberContentItem } from '../services/member-auth.service';
   template: `
     <div class="viewer">
       <button class="close" (click)="ref.close()" aria-label="Cerrar"><mat-icon>close</mat-icon></button>
-      <div class="media">
+      <div class="media" (contextmenu)="block($event)">
         @switch (item.kind) {
-          @case ('video') { <video controls autoplay preload="metadata" [src]="item.file_url"></video> }
-          @case ('audio') { <div class="audio-wrap"><mat-icon>graphic_eq</mat-icon><audio controls autoplay [src]="item.file_url"></audio></div> }
-          @case ('image') { <img [src]="item.file_url" [alt]="item.title" /> }
+          @case ('video') {
+            <video controls autoplay preload="metadata" [src]="mediaUrl()"
+                   controlsList="nodownload noremoteplayback noplaybackrate"
+                   disablePictureInPicture disableRemotePlayback
+                   (contextmenu)="block($event)"></video>
+          }
+          @case ('audio') {
+            <div class="audio-wrap"><mat-icon>graphic_eq</mat-icon>
+              <audio controls autoplay [src]="mediaUrl()"
+                     controlsList="nodownload noremoteplayback noplaybackrate"
+                     (contextmenu)="block($event)"></audio>
+            </div>
+          }
+          @case ('image') { <img [src]="mediaUrl()" [alt]="item.title" draggable="false" (contextmenu)="block($event)" /> }
           @default { <div class="text"><p>{{ item.text }}</p></div> }
         }
       </div>
@@ -46,9 +57,33 @@ import { MemberContentItem } from '../services/member-auth.service';
     .meta p { margin:0; color:#cbc4dd; font-size:.9rem; line-height:1.5; }
   `],
 })
-export class ContentViewerDialogComponent {
+export class ContentViewerDialogComponent implements OnInit {
+  private auth = inject(MemberAuthService);
+
+  /** URL efectiva del archivo: parte vacía y se rellena con una URL FIRMADA de
+   * vida corta pedida al backend. La URL permanente nunca llega al cliente; en
+   * dev/local el backend devuelve la URL directa (no hay nada que firmar). */
+  readonly mediaUrl = signal<string>('');
+
   constructor(
     public ref: MatDialogRef<ContentViewerDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public item: MemberContentItem,
   ) {}
+
+  async ngOnInit(): Promise<void> {
+    // Solo los tipos con archivo servido necesitan URL firmada.
+    if (!['video', 'audio', 'image'].includes(this.item.kind)) return;
+    try {
+      this.mediaUrl.set(await this.auth.getMediaUrl(this.item.id));
+    } catch {
+      // Sin conexión / sin acceso: se queda vacío (no hay URL permanente que usar).
+      this.mediaUrl.set('');
+    }
+  }
+
+  /** Bloquea el menú contextual (clic derecho → "Guardar video como…"). */
+  block(event: Event): boolean {
+    event.preventDefault();
+    return false;
+  }
 }

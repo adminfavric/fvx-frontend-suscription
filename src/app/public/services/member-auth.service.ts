@@ -8,7 +8,10 @@ export interface MemberContentItem {
   title: string;
   kind: 'video' | 'audio' | 'pdf' | 'text' | 'image' | 'zoom' | 'link';
   text: string;
-  file_url: string;
+  /** El backend ya NO envía la URL permanente del archivo (anti-robo de link).
+   * Para reproducir se pide una URL FIRMADA de vida corta con ``getMediaUrl``.
+   * ``has_file`` indica si esta pieza tiene archivo servido. */
+  has_file?: boolean;
   external_url: string;
   image_url: string;
   created: string;
@@ -106,6 +109,18 @@ export class MemberAuthService {
     return firstValueFrom(
       this.http.get<MemberContentResponse>(`${this.base}/content/`, { headers: this.authHeaders() }),
     );
+  }
+
+  /** Pide una URL firmada de vida corta para reproducir/ver el archivo del
+   * contenido (video/audio/imagen/PDF). El link caduca en minutos y va atado a
+   * la membresía activa: no se puede compartir ni "robar" para verlo fuera. */
+  async getMediaUrl(contentId: number): Promise<string> {
+    const res = await firstValueFrom(
+      this.http.get<{ url: string }>(`${this.base}/content/${contentId}/media/`, {
+        headers: this.authHeaders(),
+      }),
+    );
+    return res.url;
   }
 
   async getAccount(): Promise<{ email: string; subscriptions: MemberSubscription[] }> {

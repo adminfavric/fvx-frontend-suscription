@@ -82,6 +82,7 @@ const DEFAULT_NAV_GROUPS: NavGroup[] = [
       { slug: 'fallback-payment-links', icon: 'add_link', label: 'Cobros por link', route: '/admin/links-pago' },
       { slug: 'fallback-events', icon: 'celebration', labelKey: 'layout.nav.fallback.events', route: '/admin/events' },
       { slug: 'fallback-messages', icon: 'mail', labelKey: 'layout.nav.fallback.messages', route: '/admin/messages' },
+      { slug: 'fallback-correos', icon: 'campaign', label: 'Correos masivos', route: '/admin/correos' },
     ],
   },
   {

@@ -3,6 +3,7 @@ import { DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { MatTableModule } from '@angular/material/table';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatIconModule } from '@angular/material/icon';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
@@ -32,7 +33,7 @@ interface Subscription {
   selector: 'app-subscriptions',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, MatTableModule, MatProgressBarModule, MatIconModule, PageHeaderComponent],
+  imports: [DatePipe, MatTableModule, MatPaginatorModule, MatProgressBarModule, MatIconModule, PageHeaderComponent],
   template: `
    <div class="page-container">
     <app-page-header
@@ -50,11 +51,11 @@ interface Subscription {
     } @else if (!loading()) {
       @if (rows().length) {
         <div class="filters">
-          <button class="chip-f" [class.chip-f--on]="filter() === 'all'" (click)="filter.set('all')">
+          <button class="chip-f" [class.chip-f--on]="filter() === 'all'" (click)="setFilter('all')">
             Todas <span class="chip-f__n">{{ rows().length }}</span>
           </button>
           @for (p of providers(); track p.provider) {
-            <button class="chip-f" [class.chip-f--on]="filter() === p.provider" (click)="filter.set(p.provider)">
+            <button class="chip-f" [class.chip-f--on]="filter() === p.provider" (click)="setFilter(p.provider)">
               {{ p.label }} <span class="chip-f__n">{{ p.count }}</span>
             </button>
           }
@@ -65,7 +66,7 @@ interface Subscription {
         <div class="state"><mat-icon>subscriptions</mat-icon> Aún no hay suscripciones activas.</div>
       } @else {
         <div class="table-wrap">
-          <table mat-table [dataSource]="filtered()">
+          <table mat-table [dataSource]="paged()">
             <ng-container matColumnDef="plan">
               <th mat-header-cell *matHeaderCellDef>Plan</th>
               <td mat-cell *matCellDef="let s">{{ s.plan_name || '—' }}</td>
@@ -108,6 +109,14 @@ interface Subscription {
             <tr mat-header-row *matHeaderRowDef="cols"></tr>
             <tr mat-row *matRowDef="let row; columns: cols"></tr>
           </table>
+          <mat-paginator
+            [length]="filtered().length"
+            [pageSize]="pageSize()"
+            [pageIndex]="pageIndex()"
+            [pageSizeOptions]="[10, 20, 50, 100]"
+            (page)="onPage($event)"
+            aria-label="Paginación de suscripciones">
+          </mat-paginator>
         </div>
       }
     }
@@ -144,6 +153,9 @@ export class SubscriptionsComponent implements OnInit {
   error = signal('');
   /** Filtro por origen ('all' o el provider). */
   filter = signal<string>('all');
+  /** Paginación client-side (los datos llegan completos en una sola carga). */
+  pageSize = signal(20);
+  pageIndex = signal(0);
   breadcrumbs = [
     { labelKey: 'common.breadcrumbHome', link: '/admin/dashboard' },
     { label: 'Suscripciones' },
@@ -164,6 +176,23 @@ export class SubscriptionsComponent implements OnInit {
   filtered = computed(() =>
     this.filter() === 'all' ? this.rows() : this.rows().filter(r => r.provider === this.filter()),
   );
+
+  /** Página actual de las filas filtradas (paginación client-side). */
+  paged = computed(() => {
+    const start = this.pageIndex() * this.pageSize();
+    return this.filtered().slice(start, start + this.pageSize());
+  });
+
+  /** Cambia el filtro y vuelve a la primera página (evita quedar fuera de rango). */
+  setFilter(provider: string): void {
+    this.filter.set(provider);
+    this.pageIndex.set(0);
+  }
+
+  onPage(e: PageEvent): void {
+    this.pageSize.set(e.pageSize);
+    this.pageIndex.set(e.pageIndex);
+  }
 
   async ngOnInit(): Promise<void> {
     this.loading.set(true);

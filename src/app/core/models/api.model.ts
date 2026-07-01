@@ -43,6 +43,14 @@ export interface FieldConfig {
   info?: string;
   placeholder?: string;
   colspan?: number;
+  /**
+   * Visibilidad condicional: el campo solo se muestra si el valor del campo
+   * `field` coincide con `equals` (valor único o lista de valores admitidos).
+   * Ej.: `{ field: 'kind', equals: 'zoom' }` muestra el campo solo cuando el
+   * tipo es Zoom. Los campos ocultos siguen en el formulario (su valor vacío se
+   * envía/anula normalmente).
+   */
+  showWhen?: { field: string; equals: unknown | unknown[] };
 }
 
 export interface ColumnConfig {

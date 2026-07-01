@@ -84,6 +84,7 @@ function getAtPath(obj: Record<string, unknown> | null | undefined, path: string
       <form [formGroup]="form" class="dialog-form"
             [ngStyle]="isMobile ? mobileStyles.form : desktopStyles.form">
         @for (field of data.fields; track field.key) {
+          @if (isVisible(field)) {
           @switch (field.type) {
             @case ('select') {
               <div class="field-wrapper" [style.grid-column]="isMobile ? '' : (field.colspan ? 'span ' + field.colspan : '')">
@@ -202,6 +203,7 @@ function getAtPath(obj: Record<string, unknown> | null | undefined, path: string
                 @if (field.hint) { <span class="field-hint">{{ field.hint }}</span> }
               </div>
             }
+          }
           }
         }
       </form>
@@ -345,6 +347,16 @@ function getAtPath(obj: Record<string, unknown> | null | undefined, path: string
 export class EntityFormDialogComponent implements OnInit {
   form!: FormGroup;
   isMobile = window.innerWidth <= 768;
+
+  /** Visibilidad condicional de un campo (``showWhen``). Sin condición → visible.
+   * Reactivo: se reevalúa en cada ciclo de detección al cambiar el campo maestro
+   * (p. ej. ocultar los campos de Zoom cuando el Tipo no es "Zoom"). */
+  isVisible(field: FieldConfig): boolean {
+    const cond = field.showWhen;
+    if (!cond) return true;
+    const current = this.form?.get(cond.field)?.value;
+    return Array.isArray(cond.equals) ? cond.equals.includes(current) : current === cond.equals;
+  }
 
   /** Campo tipo `image`: el uploader sube el archivo y aquí guardamos la URL
    * resultante en el control del formulario (se persiste como image_url). */

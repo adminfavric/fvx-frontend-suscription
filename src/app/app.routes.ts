@@ -79,6 +79,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/messages/messages.component').then(m => m.MessagesComponent),
       },
+      {
+        path: 'correos',
+        loadComponent: () =>
+          import('./features/broadcast/broadcast.component').then(m => m.BroadcastComponent),
+      },
       // Showcase de componentes: SOLO en dev. En producción no se registra la
       // ruta (ni se importa el chunk), así las 12 demos no viajan al bundle prod.
       ...(environment.production

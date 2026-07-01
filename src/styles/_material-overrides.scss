@@ -670,10 +670,12 @@ html .mat-mdc-icon-button {
 
 // Backdrop — tinte índigo profundo en vez de negro puro. Coherente con la
 // filosofía Índigo+Ámbar (sombras tintadas, nunca neutras).
+// SIN `backdrop-filter: blur` a propósito: difuminar TODA la página detrás del
+// diálogo es muy costoso en GPU y ralentiza notablemente al abrir el popup
+// (sobre todo en tablas con mucho contenido). El tinte semitransparente basta
+// para el efecto modal sin el costo de repintado.
 .cdk-overlay-dark-backdrop {
-  background: rgba(4, 7, 20, 0.55) !important;
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  background: rgba(4, 7, 20, 0.45) !important;
 }
 
 // Control ⋯ dentro de la cabecera existente (sin franja extra fuera del header).

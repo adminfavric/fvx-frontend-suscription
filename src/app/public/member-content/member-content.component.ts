@@ -105,6 +105,9 @@ import { MemberAuthService, MemberContentItem, MemberSubscription } from '../ser
 
           @for (it of soonSessions(); track it.id) {
             <article class="soon-card" aria-disabled="true">
+              @if (it.image_url) {
+                <div class="soon-cover"><img [src]="it.image_url" [alt]="it.title" loading="lazy" /></div>
+              }
               <span class="soon-eyebrow"><mat-icon>hourglass_top</mat-icon> Próxima sesión</span>
               <h3>{{ it.title }}</h3>
               @if (it.live_start) {
@@ -313,6 +316,10 @@ import { MemberAuthService, MemberContentItem, MemberSubscription } from '../ser
       background:#fff; border:1px solid rgba(217,164,65,.4); border-radius:20px; padding:22px 24px;
       box-shadow: 0 14px 40px -22px rgba(46,26,82,.28);
     }
+    /* Portada de la sesión (antes de estar "en vivo"): se muestra si el
+       contenido Zoom tiene imagen de portada configurada. */
+    .soon-cover { margin:-22px -24px 16px; border-radius:20px 20px 0 0; overflow:hidden; aspect-ratio:16/9; background:#f0eaf6; }
+    .soon-cover img { width:100%; height:100%; object-fit:cover; display:block; }
     .soon-eyebrow { display:inline-flex; align-items:center; gap:6px; color: var(--gold-vivo); font-weight:700; font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; }
     .soon-eyebrow mat-icon { font-size:17px; width:17px; height:17px; }
     .soon-card h3 { font-family:'Playfair Display',serif; color: var(--vd); margin:8px 0 6px; font-size: clamp(1.2rem,2.2vw,1.5rem); }
@@ -502,9 +509,8 @@ export class MemberContentComponent implements OnInit, OnDestroy {
     if (this.zoomState(it) !== 'live') return;
     if (it.has_zoom) {
       this.router.navigate(['/sala', it.id]);
-    } else {
-      const url = it.external_url || it.file_url;
-      if (url) window.open(url, '_blank', 'noopener');
+    } else if (it.external_url) {
+      window.open(it.external_url, '_blank', 'noopener');
     }
   }
 
@@ -514,10 +520,21 @@ export class MemberContentComponent implements OnInit, OnDestroy {
       this.dialog.open(ContentViewerDialogComponent, {
         data: it, panelClass: 'fvx-crud-dialog', width: '880px', maxWidth: '94vw',
       });
-    } else {
-      const url = it.file_url || it.external_url;
-      if (url) window.open(url, '_blank', 'noopener');
+      return;
     }
+    // Enlace externo (YouTube/Vimeo): se abre tal cual.
+    if (!it.has_file && it.external_url) {
+      window.open(it.external_url, '_blank', 'noopener');
+      return;
+    }
+    // PDF u otro archivo servido: se pide una URL FIRMADA de vida corta. La
+    // ventana se abre YA (síncrona) para no gatillar el bloqueo de pop-ups y
+    // luego se redirige al obtener la firma.
+    const w = window.open('', '_blank', 'noopener');
+    this.member.getMediaUrl(it.id).then(url => {
+      if (w) w.location.href = url;
+      else window.open(url, '_blank', 'noopener');
+    }).catch(() => { if (w) w.close(); });
   }
 
   playIcon(kind: string): string {
