@@ -11,11 +11,16 @@ interface Schedule {
   id: number;
   content: number;
   content_title?: string;
+  content_kind?: string;
   plan: number;
   plan_name?: string;
   starts_at: string;
   ends_at: string | null;
 }
+
+const KIND_LABELS: Record<string, string> = {
+  video: 'Video', audio: 'Audio', pdf: 'PDF', text: 'Texto', image: 'Imagen', zoom: 'Zoom', link: 'Enlace',
+};
 
 /**
  * Programación: el hub que asigna una pieza de contenido a un plan durante un
@@ -62,6 +67,7 @@ export class ProgramacionComponent extends BaseCrudComponent<Schedule> implement
 
   columns: ColumnConfig[] = [
     { key: 'content_title', label: 'Contenido', sortable: false },
+    { key: 'content_kind', label: 'Tipo', render: r => KIND_LABELS[r.content_kind ?? ''] ?? (r.content_kind || '—') },
     { key: 'plan_name', label: 'Membresía' },
     { key: 'starts_at', label: 'Desde' },
     { key: 'ends_at', label: 'Hasta', render: r => r.ends_at || 'Sin fin' },
