@@ -25,6 +25,7 @@ import {
   FileUploadProvider,
   FileUploadResult,
 } from './providers/file-upload-provider';
+import { SignedUrlUploadProvider } from './providers/signed-url-upload.provider';
 import { NotificationService } from '../../../core/services/notification.service';
 
 export type UploadItemStatus = 'queued' | 'uploading' | 'success' | 'error' | 'canceled';
@@ -300,6 +301,9 @@ export interface UploadItem {
 })
 export class FileUploaderComponent implements OnDestroy {
   private provider = inject<FileUploadProvider | null>(FILE_UPLOAD_PROVIDER, { optional: true });
+  /** Provider de subida DIRECTA al bucket (presigned PUT) para archivos grandes
+   * (videos): no pasan por el backend. Se usa cuando `[direct]="true"`. */
+  private directProvider = inject(SignedUrlUploadProvider);
 
   ngOnDestroy(): void {
     // Cancela las suscripciones de upload en curso (clear() hace
@@ -323,6 +327,10 @@ export class FileUploaderComponent implements OnDestroy {
   @Input() metadata?: Record<string, string>;
   /** Si `true`, auto-inicia upload al seleccionar/soltar; si `false` solo encola. */
   @Input() autoUpload = true;
+
+  /** Si `true`, sube DIRECTO al bucket (presigned PUT) sin pasar por el backend.
+   * Ideal para archivos grandes (videos). Si `false`, usa el provider global. */
+  @Input() direct = false;
 
   /**
    * Modo de render.
@@ -419,7 +427,9 @@ export class FileUploaderComponent implements OnDestroy {
   }
 
   startUpload(it: UploadItem): void {
-    if (!this.provider) {
+    // `direct` → subida directa al bucket (presigned); si no, provider global.
+    const provider = this.direct ? this.directProvider : this.provider;
+    if (!provider) {
       it.status = 'error';
       it.error = this.transloco.translate('fileUploader.noProvider');
       this.notifier.error(this.transloco.translate('fileUploader.noProviderDetail'));
@@ -434,7 +444,7 @@ export class FileUploaderComponent implements OnDestroy {
       metadata: this.metadata,
     };
 
-    it.sub = this.provider
+    it.sub = provider
       .upload(it.file, ctx, (p) => {
         it.progress = p.progress;
         this.refresh();

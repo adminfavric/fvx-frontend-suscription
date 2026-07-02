@@ -185,8 +185,9 @@ function getAtPath(obj: Record<string, unknown> | null | undefined, path: string
                   variant="mini"
                   [accept]="field.accept || ''"
                   pathPrefix="content"
-                  [maxFileSizeMb]="500"
+                  [maxFileSizeMb]="1024"
                   [multiple]="false"
+                  [direct]="true"
                   buttonLabel="Subir archivo"
                   (uploaded)="onImageUploaded(field.key, $event)">
                 </app-file-uploader>
