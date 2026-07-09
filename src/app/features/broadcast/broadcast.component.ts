@@ -59,7 +59,7 @@ interface BroadcastPlan { id: number; name: string; count: number; }
           <h3><mat-icon>edit</mat-icon> Mensaje</h3>
           <label class="fld">
             <span>Asunto</span>
-            <input type="text" [(ngModel)]="subject" placeholder="Asunto del correo" maxlength="180" />
+            <input type="text" [ngModel]="subject()" (ngModelChange)="subject.set($event)" placeholder="Asunto del correo" maxlength="180" />
           </label>
 
           <span class="fld-label">Contenido</span>
@@ -81,8 +81,13 @@ interface BroadcastPlan { id: number; name: string; count: number; }
 
           <div class="actions">
             <div class="test">
-              <input type="email" [(ngModel)]="testEmail" placeholder="correo@cliente.com" />
-              <button class="btn btn--ghost" [disabled]="sending() || !canSend()" (click)="sendTest()">
+              <input type="email" [(ngModel)]="testEmail" placeholder="Escribe o elige un suscrito…" list="subs-list" />
+              <datalist id="subs-list">
+                @for (s of subscribers(); track s.email) {
+                  <option [value]="s.email">{{ s.label }}</option>
+                }
+              </datalist>
+              <button class="btn btn--ghost" [disabled]="sending() || !canSend() || !testEmail.trim()" (click)="sendTest()">
                 <mat-icon>outgoing_mail</mat-icon> Enviar a este correo
               </button>
             </div>
@@ -160,9 +165,11 @@ export class BroadcastComponent implements OnInit {
   sending = signal(false);
   selected = signal<Set<number>>(new Set());
 
-  subject = '';
+  subject = signal('');
   testEmail = '';
   html = signal('');
+  /** Suscritos activos (para elegir a quién enviar un correo individual). */
+  subscribers = signal<{ email: string; label: string }[]>([]);
 
   private base = `${environment.apiUrl}/broadcast/`;
 
@@ -173,7 +180,7 @@ export class BroadcastComponent implements OnInit {
     return this.plans().filter(p => sel.has(p.id)).reduce((n, p) => n + p.count, 0);
   });
 
-  canSend = computed(() => !!this.subject.trim() && !!this.html().trim());
+  canSend = computed(() => !!this.subject().trim() && !!this.html().trim());
 
   togglePlan(id: number): void {
     const next = new Set(this.selected());
@@ -214,6 +221,25 @@ export class BroadcastComponent implements OnInit {
     } finally {
       this.loading.set(false);
     }
+    // Suscritos activos para el selector de envío individual (no bloquea si falla).
+    try {
+      const subs = await firstValueFrom(
+        this.http.get<{ data: { email: string; name: string; plan_name: string }[] }>(
+          `${environment.apiUrl}/subscriptions/all/`,
+        ),
+      );
+      const seen = new Set<string>();
+      const list: { email: string; label: string }[] = [];
+      for (const s of subs?.data ?? []) {
+        const email = (s.email || '').trim();
+        if (!email || seen.has(email.toLowerCase())) continue;
+        seen.add(email.toLowerCase());
+        list.push({ email, label: `${s.name || email}${s.plan_name ? ' · ' + s.plan_name : ''}` });
+      }
+      this.subscribers.set(list);
+    } catch {
+      /* selector opcional: si falla, el envío individual sigue funcionando escribiendo el correo */
+    }
   }
 
   async sendTest(): Promise<void> {
@@ -222,7 +248,7 @@ export class BroadcastComponent implements OnInit {
     this.sending.set(true);
     try {
       await firstValueFrom(this.http.post(this.base, {
-        subject: this.subject.trim(), html: this.html(), test_to: to,
+        subject: this.subject().trim(), html: this.html(), test_to: to,
       }));
       this.notify.success(`Correo enviado a ${to}.`);
     } catch {
@@ -248,7 +274,7 @@ export class BroadcastComponent implements OnInit {
       this.sending.set(true);
       try {
         const res = await firstValueFrom(this.http.post<{ sent: number; recipients: number }>(this.base, {
-          subject: this.subject.trim(), html: this.html(), plan_ids: [...this.selected()],
+          subject: this.subject().trim(), html: this.html(), plan_ids: [...this.selected()],
         }));
         this.notify.success(`Correo enviado a ${res?.sent ?? 0} miembro(s).`);
       } catch {
