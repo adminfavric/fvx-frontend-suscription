@@ -12,7 +12,6 @@ export const FALLBACK_MENU_PATHS: readonly string[] = [
   '/admin/programacion',
   '/admin/events',
   '/admin/messages',
-  '/admin/notificaciones',
   '/admin/components',
 ];
 

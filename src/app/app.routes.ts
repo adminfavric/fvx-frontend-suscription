@@ -85,13 +85,6 @@ export const routes: Routes = [
           import('./features/broadcast/broadcast.component').then(m => m.BroadcastComponent),
       },
       {
-        path: 'notificaciones',
-        loadComponent: () =>
-          import('./features/notifications/notifications.component').then(
-            m => m.NotificationsComponent,
-          ),
-      },
-      {
         path: 'acceso-cortesia',
         loadComponent: () =>
           import('./features/comp-access/comp-access.component').then(m => m.CompAccessComponent),
