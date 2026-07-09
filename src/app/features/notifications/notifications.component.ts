@@ -204,11 +204,16 @@ export class NotificationsComponent implements OnInit {
     this.loading.set(true);
     try {
       // timeout: si la petición se cuelga, cae al estado de error (no queda en blanco).
-      this.data.set(
-        await firstValueFrom(
-          this.http.get<NotificationsData>(`${this.base}/`).pipe(timeout(15000)),
-        ),
+      const raw = await firstValueFrom(
+        this.http.get<Partial<NotificationsData>>(`${this.base}/`).pipe(timeout(15000)),
       );
+      // Normalizamos: el panel nunca debe crashear si el backend devuelve una
+      // forma parcial (p. ej. una versión anterior sin `celery`).
+      this.data.set({
+        reminders: raw?.reminders ?? [],
+        email: raw?.email ?? { host: '', from_email: '', looks_real: false },
+        celery: raw?.celery ?? { healthy: false, last_run_at: null },
+      });
     } catch (e) {
       console.error('[notificaciones] no se pudo cargar el panel:', e);
       this.data.set(null);
