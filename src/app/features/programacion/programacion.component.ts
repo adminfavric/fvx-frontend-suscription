@@ -16,7 +16,7 @@ interface Schedule {
   plan_name?: string;
   starts_at: string;
   ends_at: string | null;
-  date_tbd?: boolean;
+  date_mode?: 'date' | 'tbd' | 'available';
 }
 
 const KIND_LABELS: Record<string, string> = {
@@ -72,7 +72,8 @@ export class ProgramacionComponent extends BaseCrudComponent<Schedule> implement
     { key: 'plan_name', label: 'Membresía' },
     { key: 'starts_at', label: 'Desde' },
     { key: 'ends_at', label: 'Hasta', render: r => r.ends_at || 'Sin fin' },
-    { key: 'date_tbd', label: 'Fecha', render: r => (r.date_tbd ? 'Por confirmar' : 'Definida') },
+    { key: 'date_mode', label: 'Fecha', render: r =>
+      ({ tbd: 'Por confirmar', available: 'Material disponible' } as Record<string, string>)[r.date_mode ?? 'date'] ?? 'Definida' },
   ];
 
   /** CREAR: permite varias membresías → crea una programación por cada una. */
@@ -85,8 +86,13 @@ export class ProgramacionComponent extends BaseCrudComponent<Schedule> implement
       info: 'Fecha desde la que el contenido aparece en este plan.' },
     { key: 'ends_at', label: 'Disponible hasta', type: 'date',
       info: 'Déjalo vacío para que esté disponible "sin fin" (hasta que elimines la asignación).' },
-    { key: 'date_tbd', label: 'Por confirmar fecha', type: 'boolean', defaultValue: false, colspan: 2,
-      info: 'Márcalo si la actividad aún no tiene fecha definitiva: en "Próximas actividades" aparecerá como "Fecha por confirmar" y seguirá visible aunque su fecha "Desde" no sea futura. Al confirmar la fecha, desmárcalo.' },
+    { key: 'date_mode', label: 'Cómo mostrar la fecha', type: 'select', defaultValue: 'date', colspan: 2,
+      options: [
+        { value: 'date', label: 'Mostrar fecha' },
+        { value: 'tbd', label: 'Por confirmar' },
+        { value: 'available', label: 'Material disponible' },
+      ],
+      info: 'En "Próximas actividades": "Mostrar fecha" usa la fecha real (o la hora de la sesión en vivo) y desaparece al pasar; "Por confirmar" aparece siempre como "Fecha por confirmar"; "Material disponible" aparece siempre como "Material disponible" (contenido sin fecha, ya disponible).' },
   ];
 
   /** EDITAR: cada fila es UNA membresía → selección simple (evita duplicados/500). */
@@ -99,8 +105,13 @@ export class ProgramacionComponent extends BaseCrudComponent<Schedule> implement
       info: 'Fecha desde la que el contenido aparece en este plan.' },
     { key: 'ends_at', label: 'Disponible hasta', type: 'date',
       info: 'Déjalo vacío para que esté disponible "sin fin".' },
-    { key: 'date_tbd', label: 'Por confirmar fecha', type: 'boolean', defaultValue: false, colspan: 2,
-      info: 'Márcalo si la actividad aún no tiene fecha definitiva: en "Próximas actividades" aparecerá como "Fecha por confirmar" y seguirá visible aunque su fecha "Desde" no sea futura. Al confirmar la fecha, desmárcalo.' },
+    { key: 'date_mode', label: 'Cómo mostrar la fecha', type: 'select', defaultValue: 'date', colspan: 2,
+      options: [
+        { value: 'date', label: 'Mostrar fecha' },
+        { value: 'tbd', label: 'Por confirmar' },
+        { value: 'available', label: 'Material disponible' },
+      ],
+      info: 'En "Próximas actividades": "Mostrar fecha" usa la fecha real (o la hora de la sesión en vivo) y desaparece al pasar; "Por confirmar" aparece siempre como "Fecha por confirmar"; "Material disponible" aparece siempre como "Material disponible" (contenido sin fecha, ya disponible).' },
   ];
 
   /** Crear usa multi-membresía; editar usa membresía simple (una fila = un plan). */
