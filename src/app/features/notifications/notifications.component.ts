@@ -69,6 +69,9 @@ interface NotificationsData {
           <mat-icon>{{ d.email.looks_real ? 'mark_email_read' : 'unsubscribe' }}</mat-icon>
           {{ d.email.looks_real ? 'Correo configurado (' + d.email.host + ')' : 'Correo NO configurado para producción (' + (d.email.host || '—') + ')' }}
         </span>
+        <button mat-stroked-button class="refresh" (click)="reload()">
+          <mat-icon>refresh</mat-icon> Actualizar estado
+        </button>
       </div>
 
       @if (!d.celery.healthy) {
@@ -204,8 +207,12 @@ export class NotificationsComponent implements OnInit {
     this.loading.set(true);
     try {
       // timeout: si la petición se cuelga, cae al estado de error (no queda en blanco).
+      // `_t`: cache-buster — URL única en cada carga para que el navegador NUNCA
+      // sirva una respuesta vieja cacheada (era la causa del estado "desactualizado").
       const raw = await firstValueFrom(
-        this.http.get<Partial<NotificationsData>>(`${this.base}/`).pipe(timeout(15000)),
+        this.http
+          .get<Partial<NotificationsData>>(`${this.base}/`, { params: { _t: `${Date.now()}` } })
+          .pipe(timeout(15000)),
       );
       // Normalizamos: el panel nunca debe crashear si el backend devuelve una
       // forma parcial (p. ej. una versión anterior sin `celery`).
