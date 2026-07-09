@@ -2,10 +2,10 @@ import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@ang
 import { DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { timeout } from 'rxjs/operators';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatButtonModule } from '@angular/material/button';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { PageHeaderComponent, type PageBreadcrumb } from '../../shared/components/page-header/page-header.component';
 import { environment } from '../../../environments/environment';
@@ -44,7 +44,6 @@ interface NotificationsData {
     MatIconModule,
     MatSlideToggleModule,
     MatButtonModule,
-    MatProgressSpinnerModule,
     PageHeaderComponent,
   ],
   template: `
@@ -55,7 +54,10 @@ interface NotificationsData {
     </app-page-header>
 
     @if (loading()) {
-      <div class="center"><mat-spinner diameter="34"></mat-spinner></div>
+      <div class="center">
+        <span class="loader" aria-hidden="true"></span>
+        <p class="loadtxt">Cargando notificaciones…</p>
+      </div>
     } @else if (data(); as d) {
       <!-- Estado del sistema -->
       <div class="status">
@@ -127,12 +129,19 @@ interface NotificationsData {
         }
       </div>
     } @else {
-      <p class="hint hint--warn"><mat-icon>error_outline</mat-icon> No se pudo cargar el panel de notificaciones.</p>
+      <div class="errbox">
+        <p class="hint hint--warn"><mat-icon>error_outline</mat-icon> No se pudo cargar el panel de notificaciones.</p>
+        <button mat-stroked-button (click)="reload()"><mat-icon>refresh</mat-icon> Reintentar</button>
+      </div>
     }
   `,
   styles: [`
     :host { display:block; }
-    .center { display:grid; place-items:center; padding:60px 0; }
+    .center { display:flex; flex-direction:column; align-items:center; gap:14px; padding:60px 0; }
+    .loader { width:34px; height:34px; border-radius:50%; border:3px solid #e7e2ef; border-top-color:#5b3a8a; animation:spin .8s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .loadtxt { color:#6b6478; font-size:.9rem; margin:0; }
+    .errbox { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-top:16px; }
     .status { display:flex; flex-wrap:wrap; gap:12px; margin:8px 0 4px; }
     .pill {
       display:inline-flex; align-items:center; gap:7px; padding:8px 14px; border-radius:999px;
@@ -191,11 +200,17 @@ export class NotificationsComponent implements OnInit {
     await this.reload();
   }
 
-  private async reload(): Promise<void> {
+  async reload(): Promise<void> {
     this.loading.set(true);
     try {
-      this.data.set(await firstValueFrom(this.http.get<NotificationsData>(`${this.base}/`)));
-    } catch {
+      // timeout: si la petición se cuelga, cae al estado de error (no queda en blanco).
+      this.data.set(
+        await firstValueFrom(
+          this.http.get<NotificationsData>(`${this.base}/`).pipe(timeout(15000)),
+        ),
+      );
+    } catch (e) {
+      console.error('[notificaciones] no se pudo cargar el panel:', e);
       this.data.set(null);
     } finally {
       this.loading.set(false);

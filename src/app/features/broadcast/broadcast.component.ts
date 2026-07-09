@@ -81,15 +81,20 @@ interface BroadcastPlan { id: number; name: string; count: number; }
 
           <div class="actions">
             <div class="test">
-              <input type="email" [(ngModel)]="testEmail" placeholder="tu-correo@ejemplo.com" />
+              <input type="email" [(ngModel)]="testEmail" placeholder="correo@cliente.com" />
               <button class="btn btn--ghost" [disabled]="sending() || !canSend()" (click)="sendTest()">
-                <mat-icon>outgoing_mail</mat-icon> Enviar prueba
+                <mat-icon>outgoing_mail</mat-icon> Enviar a este correo
               </button>
             </div>
             <button class="btn btn--primary" [disabled]="sending() || !canSend()" (click)="send()">
               <mat-icon>campaign</mat-icon> Enviar a los miembros
             </button>
           </div>
+          <p class="test-hint">
+            <mat-icon>person</mat-icon>
+            <span>¿Escribirle a <strong>una sola persona</strong> (un cliente puntual o una prueba)? Pon su
+            correo arriba y usa <em>“Enviar a este correo”</em>: recibe el mismo mensaje y no se envía a los demás.</span>
+          </p>
           @if (sending()) { <p class="sending">Enviando…</p> }
         </section>
       </div>
@@ -127,6 +132,8 @@ interface BroadcastPlan { id: number; name: string; count: number; }
     .actions { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:16px; flex-wrap:wrap; }
     .test { display:flex; align-items:center; gap:8px; flex:1; min-width:240px; }
     .test input { flex:1; border:1px solid var(--fvx-border,#d9d3e4); border-radius:9px; padding:9px 12px; font-size:.88rem; }
+    .test-hint { display:flex; align-items:flex-start; gap:7px; margin:12px 0 0; color:var(--fvx-text-muted,#6b6478); font-size:.82rem; line-height:1.5; }
+    .test-hint mat-icon { font-size:17px; width:17px; height:17px; color:var(--fvx-primary,#5b3a8a); flex:0 0 auto; margin-top:1px; }
     .btn { display:inline-flex; align-items:center; gap:6px; border:none; border-radius:999px; padding:10px 18px; font-size:.9rem; font-weight:700; cursor:pointer; }
     .btn:disabled { opacity:.55; cursor:default; }
     .btn mat-icon { font-size:19px; width:19px; height:19px; }
@@ -211,15 +218,15 @@ export class BroadcastComponent implements OnInit {
 
   async sendTest(): Promise<void> {
     const to = this.testEmail.trim();
-    if (!to || !to.includes('@')) { this.notify.error('Escribe un correo válido para la prueba.'); return; }
+    if (!to || !to.includes('@')) { this.notify.error('Escribe un correo válido.'); return; }
     this.sending.set(true);
     try {
       await firstValueFrom(this.http.post(this.base, {
         subject: this.subject.trim(), html: this.html(), test_to: to,
       }));
-      this.notify.success(`Prueba enviada a ${to}.`);
+      this.notify.success(`Correo enviado a ${to}.`);
     } catch {
-      this.notify.error('No se pudo enviar la prueba.');
+      this.notify.error('No se pudo enviar el correo.');
     } finally {
       this.sending.set(false);
     }
