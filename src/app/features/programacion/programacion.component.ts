@@ -16,6 +16,7 @@ interface Schedule {
   plan_name?: string;
   starts_at: string;
   ends_at: string | null;
+  date_tbd?: boolean;
 }
 
 const KIND_LABELS: Record<string, string> = {
@@ -71,6 +72,7 @@ export class ProgramacionComponent extends BaseCrudComponent<Schedule> implement
     { key: 'plan_name', label: 'Membresía' },
     { key: 'starts_at', label: 'Desde' },
     { key: 'ends_at', label: 'Hasta', render: r => r.ends_at || 'Sin fin' },
+    { key: 'date_tbd', label: 'Fecha', render: r => (r.date_tbd ? 'Por confirmar' : 'Definida') },
   ];
 
   /** CREAR: permite varias membresías → crea una programación por cada una. */
@@ -83,6 +85,8 @@ export class ProgramacionComponent extends BaseCrudComponent<Schedule> implement
       info: 'Fecha desde la que el contenido aparece en este plan.' },
     { key: 'ends_at', label: 'Disponible hasta', type: 'date',
       info: 'Déjalo vacío para que esté disponible "sin fin" (hasta que elimines la asignación).' },
+    { key: 'date_tbd', label: 'Por confirmar fecha', type: 'boolean', defaultValue: false, colspan: 2,
+      info: 'Márcalo si la actividad aún no tiene fecha definitiva: en "Próximas actividades" aparecerá como "Fecha por confirmar" y seguirá visible aunque su fecha "Desde" no sea futura. Al confirmar la fecha, desmárcalo.' },
   ];
 
   /** EDITAR: cada fila es UNA membresía → selección simple (evita duplicados/500). */
@@ -95,6 +99,8 @@ export class ProgramacionComponent extends BaseCrudComponent<Schedule> implement
       info: 'Fecha desde la que el contenido aparece en este plan.' },
     { key: 'ends_at', label: 'Disponible hasta', type: 'date',
       info: 'Déjalo vacío para que esté disponible "sin fin".' },
+    { key: 'date_tbd', label: 'Por confirmar fecha', type: 'boolean', defaultValue: false, colspan: 2,
+      info: 'Márcalo si la actividad aún no tiene fecha definitiva: en "Próximas actividades" aparecerá como "Fecha por confirmar" y seguirá visible aunque su fecha "Desde" no sea futura. Al confirmar la fecha, desmárcalo.' },
   ];
 
   /** Crear usa multi-membresía; editar usa membresía simple (una fila = un plan). */
