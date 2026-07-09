@@ -35,12 +35,24 @@ import { MemberAuthService, MemberContentItem } from '../services/member-auth.se
             </div>
           }
           @case ('image') { <img [src]="mediaUrl()" [alt]="item.title" draggable="false" (contextmenu)="block($event)" /> }
+          @case ('pdf') {
+            @if (safeMediaUrl()) {
+              <iframe class="pdf" [src]="safeMediaUrl()" title="{{ item.title }}"></iframe>
+            } @else {
+              <div class="loading"><mat-icon>hourglass_empty</mat-icon><p>Cargando documento…</p></div>
+            }
+          }
           @default { <div class="text"><p>{{ item.text }}</p></div> }
         }
       </div>
       <div class="meta">
         <h2>{{ item.title }}</h2>
         @if (item.text && item.kind !== 'text') { <p>{{ item.text }}</p> }
+        @if (item.kind === 'pdf' && mediaUrl()) {
+          <a class="open-tab" [href]="mediaUrl()" target="_blank" rel="noopener">
+            <mat-icon>open_in_new</mat-icon> Abrir en pestaña nueva
+          </a>
+        }
       </div>
     </div>
   `,
@@ -61,9 +73,16 @@ import { MemberAuthService, MemberContentItem } from '../services/member-auth.se
     .audio-wrap audio { width:100%; max-width:520px; }
     .text { padding:32px; background:#fff; color:#2a2333; max-height:70vh; overflow:auto; width:100%; }
     .text p { white-space:pre-line; line-height:1.7; margin:0; }
+    /* PDF: se muestra dentro del modal (sin abrir pestaña nueva). */
+    .media .pdf { width:100%; height:82vh; border:0; display:block; background:#fff; }
+    .loading { padding:56px; display:flex; flex-direction:column; align-items:center; gap:14px; color:#cbc4dd; width:100%; }
+    .loading mat-icon { font-size:44px; width:44px; height:44px; color:#d9a441; }
     .meta { padding:18px 22px; }
     .meta h2 { margin:0 0 6px; font-size:1.2rem; }
     .meta p { margin:0; color:#cbc4dd; font-size:.9rem; line-height:1.5; }
+    .open-tab { display:inline-flex; align-items:center; gap:6px; margin-top:10px; color:#d9a441; text-decoration:none; font-size:.9rem; }
+    .open-tab:hover { text-decoration:underline; }
+    .open-tab mat-icon { font-size:18px; width:18px; height:18px; }
   `],
 })
 export class ContentViewerDialogComponent implements OnInit {
@@ -88,6 +107,13 @@ export class ContentViewerDialogComponent implements OnInit {
     return null;
   });
 
+  /** URL firmada del PDF, saneada para poder incrustarla en el <iframe> del
+   * modal (la firma es de vida corta y atada a la membresía). */
+  readonly safeMediaUrl = computed<SafeResourceUrl | null>(() => {
+    const u = this.mediaUrl();
+    return u ? this.sanitizer.bypassSecurityTrustResourceUrl(u) : null;
+  });
+
   constructor(
     public ref: MatDialogRef<ContentViewerDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public item: MemberContentItem,
@@ -95,7 +121,7 @@ export class ContentViewerDialogComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     // Solo los tipos con archivo servido necesitan URL firmada.
-    if (!['video', 'audio', 'image'].includes(this.item.kind)) return;
+    if (!['video', 'audio', 'image', 'pdf'].includes(this.item.kind)) return;
     try {
       this.mediaUrl.set(await this.auth.getMediaUrl(this.item.id));
     } catch {

@@ -19,6 +19,32 @@ export interface SubscriptionIntent {
   cycle: string;
 }
 
+/** Una actividad dentro de una columna del bloque "Próximas actividades". */
+export interface LaunchTierItem {
+  title: string;
+  when: string;
+}
+/** Columna por nivel/membresía del bloque "Próximas actividades". */
+export interface LaunchTier {
+  name: string;
+  badge?: string;
+  featured?: boolean;
+  items: LaunchTierItem[];
+}
+/** Bloque de bienvenida + "Próximas actividades" (desde `GET /public/launch-schedule/`).
+ * El texto es editable; las columnas (`tiers`) las deriva el backend en vivo de la
+ * Programación (admin/programacion), así que aquí llegan ya listas. */
+export interface LaunchSchedule {
+  enabled: boolean;
+  intro_title: string;
+  intro_body: string;
+  gift_note: string;
+  timezone_label: string;
+  heading: string;
+  tiers: LaunchTier[];
+  signature: string;
+}
+
 /** Evento especial (compra única) que viene del backend Django. */
 export interface PublicEvent {
   slug: string;
@@ -59,6 +85,22 @@ export class ContentService {
       return list ?? [];
     } catch {
       return [];
+    }
+  }
+
+  /**
+   * Bloque de bienvenida + "Próximas actividades" que se muestra antes de las
+   * membresías. El backend arma las columnas en vivo desde la Programación
+   * (admin/programacion). Devuelve null si falla o si el backend no responde
+   * (el componente simplemente no muestra el bloque).
+   */
+  async getLaunchSchedule(): Promise<LaunchSchedule | null> {
+    try {
+      return await firstValueFrom(
+        this.http.get<LaunchSchedule>(`${environment.apiUrl}/public/launch-schedule/`),
+      );
+    } catch {
+      return null;
     }
   }
 

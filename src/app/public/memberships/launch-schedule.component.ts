@@ -1,84 +1,78 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
+import { ContentService, LaunchSchedule } from '../../core/services/content.service';
 
 /**
  * Bloque de lanzamiento que se muestra ANTES de las membresías: mensaje de
- * bienvenida de la nueva plataforma + "Próximas actividades" (calendario de
- * iniciación por nivel de suscripción, en horario de Chile). Es contenido
- * estático de campaña; cuando la plataforma esté poblada se puede retirar o
- * mover a administración.
+ * bienvenida de la nueva plataforma + "Próximas actividades". El texto y la
+ * visibilidad los sirve el backend (`GET /public/launch-schedule/`); las columnas
+ * de actividades por nivel las deriva el backend EN VIVO de la Programación
+ * (admin/programacion), así que este bloque siempre calza con lo agendado.
+ * Si el backend no responde o el bloque está desactivado, no se muestra nada.
  */
-interface Activity {
-  title: string;
-  when: string;
-}
-interface Tier {
-  name: string;
-  badge?: string;
-  featured?: boolean;
-  items: Activity[];
-}
-
 @Component({
   selector: 'app-launch-schedule',
   standalone: true,
   imports: [MatIconModule],
   template: `
-    <!-- Mensaje de bienvenida -->
-    <section class="intro">
-      <span class="eyebrow">Nueva plataforma</span>
-      <h2>Estamos preparando tu espacio con mucho cariño</h2>
-      <p>
-        Este es un espacio donde podrás
-        acceder al nutritivo contenido que estamos creando para ti: videos, libros, talleres y
-        nuestros encuentros por Zoom dedicados especialmente a nuestra comunidad.
-      </p>
-      <p>
-        Ya tenemos las primeras fechas confirmadas. Si aún no ves nada en tu panel de
-        suscripción, ¡no te preocupes! Aquí abajo te compartimos el calendario de iniciación.
-      </p>
-      <p class="gift">
-        <mat-icon>card_giftcard</mat-icon>
-        <span>
-          Y como agradecimiento por tu confianza y tu espera, quienes se hayan registrado
-          <strong>antes del 25 de junio</strong> recibirán un <strong>regalo sorpresa</strong>. 🎁
-        </span>
-      </p>
-    </section>
-
-    <!-- Próximas actividades (calendario por nivel) -->
-    <section class="schedule">
-      <div class="schedule__inner">
-        <div class="schedule__top">
-          <span class="brand"><em>Experiencias</em> LITA DONOSO</span>
-          <span class="tz">Horarios de Chile · GMT-3</span>
-        </div>
-        <span class="eyebrow eyebrow--gold">Inicia el contenido</span>
-        <h3>Próximas actividades</h3>
-
-        <div class="cols">
-          @for (t of tiers; track t.name) {
-            <article class="col" [class.col--featured]="t.featured">
-              @if (t.badge) { <span class="col__badge">{{ t.badge }}</span> }
-              <h4>{{ t.name }}</h4>
-              <ul>
-                @for (a of t.items; track a.title) {
-                  <li>
-                    <span class="dot"></span>
-                    <div>
-                      <p class="act">{{ a.title }}</p>
-                      <p class="when">{{ a.when }}</p>
-                    </div>
-                  </li>
-                }
-              </ul>
-            </article>
+    @if (data(); as d) {
+      @if (d.enabled) {
+        <!-- Mensaje de bienvenida -->
+        <section class="intro">
+          <span class="eyebrow">Nueva plataforma</span>
+          <h2>{{ d.intro_title }}</h2>
+          @for (p of introParagraphs(); track $index) {
+            <p>{{ p }}</p>
           }
-        </div>
+          @if (d.gift_note) {
+            <p class="gift">
+              <mat-icon>card_giftcard</mat-icon>
+              <span>{{ d.gift_note }}</span>
+            </p>
+          }
+        </section>
 
-        <p class="sign">Con cariño,<br /><strong>Grupo Alkymia</strong></p>
-      </div>
-    </section>
+        <!-- Próximas actividades (calendario por nivel) -->
+        <section class="schedule">
+          <div class="schedule__inner">
+            <div class="schedule__top">
+              <span class="brand"><em>Experiencias</em> LITA DONOSO</span>
+              <span class="tz">{{ d.timezone_label }}</span>
+            </div>
+            <span class="eyebrow eyebrow--gold">Inicia el contenido</span>
+            <h3>{{ d.heading }}</h3>
+
+            @if (d.tiers.length) {
+              <div class="cols">
+                @for (t of d.tiers; track t.name) {
+                  <article class="col" [class.col--featured]="t.featured">
+                    @if (t.badge) { <span class="col__badge">{{ t.badge }}</span> }
+                    <h4>{{ t.name }}</h4>
+                    <ul>
+                      @for (a of t.items; track a.title + a.when) {
+                        <li>
+                          <span class="dot"></span>
+                          <div>
+                            <p class="act">{{ a.title }}</p>
+                            <p class="when">{{ a.when }}</p>
+                          </div>
+                        </li>
+                      } @empty {
+                        <li class="empty">Próximamente anunciaremos las fechas.</li>
+                      }
+                    </ul>
+                  </article>
+                }
+              </div>
+            } @else {
+              <p class="none">Pronto publicaremos las próximas actividades.</p>
+            }
+
+            <p class="sign">Con cariño,<br /><strong>{{ d.signature }}</strong></p>
+          </div>
+        </section>
+      }
+    }
   `,
   styles: [`
     :host {
@@ -125,38 +119,31 @@ interface Tier {
     .act { font-family:'Playfair Display', serif; margin:0; color:#fbf7ff; font-size:1.05rem; line-height:1.4; }
     .when { margin:4px 0 0; color: color-mix(in srgb, var(--lita-gold) 85%, #fff); font-size:.82rem; letter-spacing:.02em; }
 
+    .col li.empty { color: color-mix(in srgb, var(--lita-gold) 60%, #cfc6de); font-size:.9rem; font-style:italic; }
+    .none { color:#e9e2f2; opacity:.85; text-align:center; padding: clamp(20px,4vw,36px) 0; }
+
     .sign { margin: clamp(26px,4vw,40px) 0 0; color:#e9e2f2; line-height:1.6; }
     .sign strong { color:#fff; font-family:'Playfair Display', serif; font-size:1.1rem; }
 
     @media (max-width: 820px) { .cols { grid-template-columns: 1fr; } .col__badge { left:18px; transform:none; } }
   `],
 })
-export class LaunchScheduleComponent {
-  tiers: Tier[] = [
-    {
-      name: 'BÁSICO',
-      items: [
-        { title: 'Taller Alkymia Solar para Principiantes', when: 'Domingo 28 · 03:00 PM' },
-      ],
-    },
-    {
-      name: 'PREMIUM',
-      items: [
-        { title: 'Taller de Sanación del Árbol Genealógico', when: 'Domingo 28 · 10:00 AM' },
-        { title: 'Taller Alkymia Solar para Principiantes', when: 'Domingo 28 · 03:00 PM' },
-        { title: 'Podcast + Conversatorio (tema sorpresa)', when: 'Lunes 29 · 10:00 AM' },
-      ],
-    },
-    {
-      name: 'ORO',
-      badge: 'Acceso completo',
-      featured: true,
-      items: [
-        { title: 'Taller de Sanación del Árbol Genealógico', when: 'Domingo 28 · 10:00 AM' },
-        { title: 'Taller Alkymia Solar para Principiantes', when: 'Domingo 28 · 03:00 PM' },
-        { title: 'Podcast + Conversatorio (tema sorpresa)', when: 'Lunes 29 · 10:00 AM' },
-        { title: 'Escuelas', when: 'Fechas por definir' },
-      ],
-    },
-  ];
+export class LaunchScheduleComponent implements OnInit {
+  private content = inject(ContentService);
+
+  /** Bloque servido por el backend (texto + columnas ya derivadas de la
+   * Programación). null mientras carga o si el backend no responde. */
+  readonly data = signal<LaunchSchedule | null>(null);
+
+  /** Párrafos de la bienvenida: el backend los separa con una línea en blanco. */
+  readonly introParagraphs = computed<string[]>(() =>
+    (this.data()?.intro_body ?? '')
+      .split(/\n{2,}/)
+      .map(p => p.trim())
+      .filter(Boolean),
+  );
+
+  async ngOnInit(): Promise<void> {
+    this.data.set(await this.content.getLaunchSchedule());
+  }
 }

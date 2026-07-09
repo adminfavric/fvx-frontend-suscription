@@ -98,6 +98,7 @@ import { MemberAuthService, MemberContentItem, MemberSubscription } from '../ser
               <div class="live-banner__body">
                 <span class="live-kicker"><mat-icon>videocam</mat-icon> Zoom en vivo</span>
                 <h3>{{ it.title }}</h3>
+                @if (it.text) { <p class="live-desc">{{ it.text }}</p> }
                 <span class="enter-btn">Entrar a la sala <mat-icon>arrow_forward</mat-icon></span>
               </div>
             </article>
@@ -113,6 +114,7 @@ import { MemberAuthService, MemberContentItem, MemberSubscription } from '../ser
               @if (it.live_start) {
                 <p class="soon-date"><mat-icon>calendar_today</mat-icon> {{ it.live_start | date: "EEEE dd 'de' MMMM 'a las' HH:mm" }}</p>
               }
+              @if (it.text) { <p class="soon-desc">{{ it.text }}</p> }
               <div class="tiles">
                 @for (t of countdownTiles(it); track t.l) {
                   <div class="tile"><span class="tile__v">{{ t.v }}</span><span class="tile__l">{{ t.l }}</span></div>
@@ -279,7 +281,8 @@ import { MemberAuthService, MemberContentItem, MemberSubscription } from '../ser
     .live-banner__body { position:relative; z-index:1; margin-top:12px; }
     .live-kicker { display:inline-flex; align-items:center; gap:5px; font-size:.8rem; color: var(--gold-vivo); font-weight:600; }
     .live-kicker mat-icon { font-size:17px; width:17px; height:17px; }
-    .live-banner__body h3 { font-family:'Playfair Display',serif; margin:6px 0 16px; font-size: clamp(1.3rem,2.4vw,1.7rem); line-height:1.2; }
+    .live-banner__body h3 { font-family:'Playfair Display',serif; margin:6px 0 12px; font-size: clamp(1.3rem,2.4vw,1.7rem); line-height:1.2; }
+    .live-desc { margin:0 0 16px; color: rgba(255,255,255,.86); font-size:.94rem; line-height:1.6; max-width:62ch; white-space:pre-line; }
     .enter-btn {
       display:inline-flex; align-items:center; gap:6px; background: var(--gold-vivo); color:#2a1a06;
       font-weight:700; font-size:.92rem; padding:10px 20px; border-radius:999px;
@@ -297,8 +300,9 @@ import { MemberAuthService, MemberContentItem, MemberSubscription } from '../ser
     .soon-eyebrow { display:inline-flex; align-items:center; gap:6px; color: var(--gold-vivo); font-weight:700; font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; }
     .soon-eyebrow mat-icon { font-size:17px; width:17px; height:17px; }
     .soon-card h3 { font-family:'Playfair Display',serif; color: var(--vd); margin:8px 0 6px; font-size: clamp(1.2rem,2.2vw,1.5rem); }
-    .soon-date { display:inline-flex; align-items:center; gap:6px; color: var(--texto-suave); font-size:.9rem; margin:0 0 16px; text-transform:capitalize; }
+    .soon-date { display:inline-flex; align-items:center; gap:6px; color: var(--texto-suave); font-size:.9rem; margin:0 0 14px; text-transform:capitalize; }
     .soon-date mat-icon { font-size:17px; width:17px; height:17px; color: var(--v); }
+    .soon-desc { margin:0 0 18px; color: var(--texto-suave); font-size:.92rem; line-height:1.6; max-width:70ch; white-space:pre-line; }
     .tiles { display:flex; gap:10px; flex-wrap:wrap; }
     .tile {
       display:flex; flex-direction:column; align-items:center; gap:3px; min-width:58px;
@@ -482,22 +486,26 @@ export class MemberContentComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Abre el visor (video/audio/imagen/texto) o el recurso externo (pdf/link). */
+  /** Abre el visor modal (video/audio/imagen/texto/PDF) o el recurso externo (link). */
   open(it: MemberContentItem): void {
-    if (['video', 'audio', 'image', 'text'].includes(it.kind)) {
+    // Todo lo que servimos nosotros se ve DENTRO del modal (sin abrir pestañas
+    // nuevas, así no hay que habilitar pop-ups en cada PC). El PDF se incrusta
+    // en un <iframe> con la URL firmada de vida corta.
+    if (['video', 'audio', 'image', 'text'].includes(it.kind) ||
+        (it.kind === 'pdf' && it.has_file)) {
       this.dialog.open(ContentViewerDialogComponent, {
         data: it, panelClass: 'fvx-crud-dialog', width: '880px', maxWidth: '94vw',
       });
       return;
     }
-    // Enlace externo (YouTube/Vimeo): se abre tal cual.
+    // Enlace externo (YouTube/Vimeo, o PDF alojado en otro sitio): se abre tal cual.
     if (!it.has_file && it.external_url) {
       window.open(it.external_url, '_blank', 'noopener');
       return;
     }
-    // PDF u otro archivo servido: se pide una URL FIRMADA de vida corta. La
-    // ventana se abre YA (síncrona) para no gatillar el bloqueo de pop-ups y
-    // luego se redirige al obtener la firma.
+    // Otro archivo servido: se pide una URL FIRMADA de vida corta. La ventana se
+    // abre YA (síncrona) para no gatillar el bloqueo de pop-ups y luego se
+    // redirige al obtener la firma.
     const w = window.open('', '_blank', 'noopener');
     this.member.getMediaUrl(it.id).then(url => {
       if (w) w.location.href = url;

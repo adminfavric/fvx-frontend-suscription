@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { HeroComponent } from '../components/hero/hero.component';
 import { AboutComponent } from '../components/about/about.component';
-import { DocuserieComponent } from '../components/docuserie/docuserie.component';
+// import { DocuserieComponent } from '../components/docuserie/docuserie.component'; // sección oculta temporalmente
 import { ExperiencesComponent } from '../components/experiences/experiences.component';
 import { HealingComponent } from '../components/healing/healing.component';
 import { NewsletterComponent } from '../components/newsletter/newsletter.component';
@@ -23,7 +23,7 @@ import { ContentService } from '../../core/services/content.service';
     MatIconModule,
     HeroComponent,
     AboutComponent,
-    DocuserieComponent,
+    // DocuserieComponent, // sección oculta temporalmente
     ExperiencesComponent,
     HealingComponent,
     NewsletterComponent,
@@ -67,7 +67,8 @@ import { ContentService } from '../../core/services/content.service';
       </div>
     </section>
 
-    <app-docuserie />
+    <!-- Sección Docuserie oculta temporalmente -->
+    <!-- <app-docuserie /> -->
     <app-experiences />
     <app-healing />
     <app-newsletter />
