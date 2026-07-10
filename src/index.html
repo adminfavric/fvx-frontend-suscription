@@ -20,7 +20,8 @@
       PNG (data:), previews del file-uploader (blob:).
     - connect-src 'self' http: https: : permisivo (la API puede vivir en
       cualquier dominio según deploy). Endurecer con CSP HTTP header en prod.
-    - frame-src blob: : iframes del file-viewer-dialog para PDFs cargados.
+    - frame-src blob: + *.backblazeb2.com : iframes del visor de PDFs (los
+      archivos servidos vienen firmados desde Backblaze B2).
     - object-src 'none' : sin plugins (Flash/Java).
     - base-uri / form-action 'self' : bloquea hijacking de <base> y submits
       cross-origin.
@@ -51,7 +52,7 @@
     img-src 'self' data: blob: https: http://localhost:8080;
     media-src 'self' blob: https: http://localhost:8080;
     connect-src 'self' http: https: wss://*.zoom.us https://*.zoom.us https://accounts.google.com/gsi/ https://appleid.apple.com https://login.microsoftonline.com https://api.mapbox.com https://events.mapbox.com;
-    frame-src 'self' blob: https://*.zoom.us https://zoom.us https://accounts.google.com/gsi/ https://appleid.apple.com https://login.microsoftonline.com https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://www.paypal.com https://www.sandbox.paypal.com;
+    frame-src 'self' blob: https://*.backblazeb2.com https://*.zoom.us https://zoom.us https://accounts.google.com/gsi/ https://appleid.apple.com https://login.microsoftonline.com https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://www.paypal.com https://www.sandbox.paypal.com;
     object-src 'none';
     base-uri 'self';
     form-action 'self';
