@@ -94,6 +94,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/users/users.component').then(m => m.UsersComponent),
       },
+      {
+        path: 'historial-correos',
+        loadComponent: () =>
+          import('./features/email-history/email-history.component').then(
+            m => m.EmailHistoryComponent,
+          ),
+      },
       // Showcase de componentes: SOLO en dev. En producción no se registra la
       // ruta (ni se importa el chunk), así las 12 demos no viajan al bundle prod.
       ...(environment.production

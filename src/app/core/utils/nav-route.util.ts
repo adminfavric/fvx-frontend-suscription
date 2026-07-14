@@ -13,6 +13,7 @@ export const FALLBACK_MENU_PATHS: readonly string[] = [
   '/admin/events',
   '/admin/messages',
   '/admin/usuarios',
+  '/admin/historial-correos',
   '/admin/components',
 ];
 
