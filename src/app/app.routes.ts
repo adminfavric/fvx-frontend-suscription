@@ -89,6 +89,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/comp-access/comp-access.component').then(m => m.CompAccessComponent),
       },
+      {
+        path: 'usuarios',
+        loadComponent: () =>
+          import('./features/users/users.component').then(m => m.UsersComponent),
+      },
       // Showcase de componentes: SOLO en dev. En producción no se registra la
       // ruta (ni se importa el chunk), así las 12 demos no viajan al bundle prod.
       ...(environment.production
