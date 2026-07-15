@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { environment } from '../../../environments/environment';
+import { labelKeyForMenuItem, labelKeyForMenuSection } from '../../core/utils/nav-i18n.util';
 import { BaseCrudComponent } from '../../shared/base/base-crud.component';
 import { CrudPageComponent } from '../../shared/components/crud-page/crud-page.component';
 import { ColumnConfig, FieldConfig, TableAction, FilterConfig } from '../../core/models/api.model';
@@ -116,7 +117,6 @@ export class UsersComponent extends BaseCrudComponent<User> implements OnInit {
     { key: 'last_name', label: 'Last Name', labelKey: 'crud.field.lastName', type: 'text', required: true },
     { key: 'password', label: 'Password', labelKey: 'crud.field.password', type: 'password', required: true },
     { key: 'is_active', label: 'Active', labelKey: 'crud.field.active', type: 'boolean' },
-    { key: 'is_staff', label: 'Staff', labelKey: 'crud.field.staff', type: 'boolean' },
   ];
 
   override actions: TableAction[] = [
@@ -177,13 +177,6 @@ export class UsersComponent extends BaseCrudComponent<User> implements OnInit {
 
     const canManageStaff = !!this.authUser()?.is_staff;
     return withRole.map(f => {
-      if (f.key === 'is_staff') {
-        return {
-          ...f,
-          disabled: !canManageStaff,
-          hint: !canManageStaff ? this.t.translate('users.form.staffRestrictedHint') : undefined,
-        };
-      }
       if (f.key === 'role') {
         return {
           ...f,
@@ -215,10 +208,15 @@ export class UsersComponent extends BaseCrudComponent<User> implements OnInit {
       ),
     )
       .then(pages => {
-        this.pageOptions = (pages ?? []).map(p => ({
-          value: p.slug,
-          label: p.section ? `${p.section} · ${p.name}` : p.name,
-        }));
+        // Traduce con el MISMO mecanismo del menú lateral (algunas páginas se
+        // sembraron con nombre en inglés; el sidebar las muestra traducidas).
+        this.pageOptions = (pages ?? []).map(p => {
+          const itemKey = labelKeyForMenuItem('', p.slug);
+          const item = itemKey ? this.t.translate(itemKey) : p.name;
+          const secKey = labelKeyForMenuSection(null, p.section);
+          const section = secKey ? this.t.translate(secKey) : p.section;
+          return { value: p.slug, label: section ? `${section} · ${item}` : item };
+        });
       })
       .catch(() => {
         /* sin opciones: el campo queda vacío, no bloquea crear/editar usuarios */
