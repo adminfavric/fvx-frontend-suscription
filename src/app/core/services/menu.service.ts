@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { catchError, of, tap } from 'rxjs';
 import { APP_CONFIG } from '../config/app-config.token';
-import { allowedPathPrefixesForMenu } from '../utils/nav-route.util';
+import { allowedPathPrefixesForMenu, normalizeNavRoute } from '../utils/nav-route.util';
 import type { MenuResponse, MenuSectionDto } from '../models/menu.model';
 
 @Injectable({ providedIn: 'root' })
@@ -72,17 +72,38 @@ export class MenuService {
     const raw = absolutePathOrStateUrl.split('?')[0] || '/';
     const path = (raw.startsWith('/') ? raw : `/${raw}`) || '/';
 
-    // System paths always available inside the authenticated shell, regardless of menu config.
-    // El shell autenticado vive bajo /admin (la raíz es el sitio público).
+    // Páginas de sistema (error/redirección) siempre disponibles.
     if (
-      path === '/admin/dashboard' ||
       path === '/admin/not-found' ||
       path === '/admin/forbidden' ||
       path === '/admin/server-error'
     ) {
       return true;
     }
+    // Panel/Dashboard: disponible solo si el menú del usuario lo incluye (así un
+    // usuario con acceso limitado no ve el panel con las métricas del negocio).
+    // Excepción de seguridad: si el menú aún no cargó o falló, se permite (evita
+    // dejar el shell sin ninguna página válida).
+    if (path === '/admin/dashboard' && (this.loadFailed() || this.sections().length === 0)) {
+      return true;
+    }
     const prefixes = allowedPathPrefixesForMenu(this.sections(), this.loadFailed());
     return prefixes.some(b => path === b || (b.length > 1 && path.startsWith(b + '/')));
+  }
+
+  /**
+   * Primera página permitida del menú del usuario — para aterrizar tras login o al
+   * denegar una ruta. Si el menú falló al cargar, cae al Panel (permitido en ese
+   * caso). Si el usuario no tiene NINGUNA página, va a «forbidden» (sin loop).
+   */
+  firstAllowedPath(): string {
+    if (this.loadFailed()) return '/admin/dashboard';
+    for (const s of this.sections()) {
+      for (const it of s.items) {
+        const r = normalizeNavRoute(it.route);
+        if (r) return r;
+      }
+    }
+    return '/admin/forbidden';
   }
 }

@@ -15,5 +15,7 @@ export const menuAccessGuard: CanActivateFn = async (_route, state): Promise<boo
   if (menu.isPathAllowed(state.url)) {
     return true;
   }
-  return router.createUrlTree(['/admin/dashboard']);
+  // Sin acceso a esta ruta → a la primera página que SÍ puede ver (no al panel,
+  // que puede estar restringido para usuarios con acceso limitado).
+  return router.createUrlTree([menu.firstAllowedPath()]);
 };

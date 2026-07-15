@@ -141,16 +141,16 @@ export class UsersComponent extends BaseCrudComponent<User> implements OnInit {
   ];
 
   protected override getFormDialogFields(entity?: User): FieldConfig[] {
+    // Solo 2 opciones claras: "Puede editar" (ADMIN) o "Solo ver" (VIEWER).
+    // El backend solo deja editar a ADMIN/staff, así que EDITOR se retira para no confundir.
     const roleOpts = [
-      { value: 'ADMIN', label: this.t.translate('users.role.admin') },
-      { value: 'EDITOR', label: this.t.translate('users.role.editor') },
-      { value: 'VIEWER', label: this.t.translate('users.role.viewer') },
+      { value: 'ADMIN', label: 'Puede editar' },
+      { value: 'VIEWER', label: 'Solo ver' },
     ];
 
     const roleField: FieldConfig = {
       key: 'role',
-      label: 'Role',
-      labelKey: 'users.form.profileRole',
+      label: 'Nivel',
       type: 'select',
       required: true,
       options: roleOpts,
