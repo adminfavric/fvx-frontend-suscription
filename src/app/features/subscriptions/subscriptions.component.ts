@@ -50,6 +50,15 @@ interface Subscription {
       <div class="state state--error"><mat-icon>error_outline</mat-icon> {{ error() }}</div>
     } @else if (!loading()) {
       @if (rows().length) {
+        <div class="search-bar">
+          <mat-icon>search</mat-icon>
+          <input type="text" [value]="search()" (input)="onSearch($any($event.target).value)"
+                 placeholder="Buscar por nombre, correo, plan o ID…" />
+          @if (search()) {
+            <button class="search-clear" (click)="onSearch('')" aria-label="Limpiar búsqueda"><mat-icon>close</mat-icon></button>
+          }
+          @if (search()) { <span class="search-count">{{ filtered().length }} resultado(s)</span> }
+        </div>
         <div class="filters">
           <button class="chip-f" [class.chip-f--on]="filter() === 'all'" (click)="setFilter('all')">
             Todas <span class="chip-f__n">{{ rows().length }}</span>
@@ -64,6 +73,8 @@ interface Subscription {
 
       @if (!rows().length) {
         <div class="state"><mat-icon>subscriptions</mat-icon> Aún no hay suscripciones activas.</div>
+      } @else if (!filtered().length) {
+        <div class="state"><mat-icon>search_off</mat-icon> Sin resultados para "{{ search() }}".</div>
       } @else {
         <div class="table-wrap">
           <table mat-table [dataSource]="paged()">
@@ -124,6 +135,15 @@ interface Subscription {
   `,
   styles: [`
     :host { display: block; }
+    .search-bar {
+      display:flex; align-items:center; gap:8px; margin:0 0 12px; padding:8px 14px;
+      background:#fff; border:1px solid var(--fvx-border,#e0dbe9); border-radius:12px; max-width:520px;
+    }
+    .search-bar > mat-icon { color:var(--fvx-text-muted,#8a8398); font-size:20px; width:20px; height:20px; flex:0 0 auto; }
+    .search-bar input { flex:1; border:none; outline:none; background:transparent; font-size:.95rem; color:var(--fvx-text-primary,#2a2333); }
+    .search-clear { border:none; background:transparent; cursor:pointer; display:grid; place-items:center; color:var(--fvx-text-muted,#8a8398); padding:0; }
+    .search-clear mat-icon { font-size:18px; width:18px; height:18px; }
+    .search-count { color:var(--fvx-text-muted,#8a8398); font-size:.8rem; white-space:nowrap; }
     .filters { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 14px; }
     .chip-f { display:inline-flex; align-items:center; gap:6px; border:1px solid var(--fvx-border,#e0d6ec); background:#fff; color: var(--fvx-primary,#5b3a8a); border-radius:999px; padding:6px 14px; font-size:.85rem; font-weight:600; cursor:pointer; }
     .chip-f--on { background: var(--fvx-primary,#5b3a8a); color:#fff; border-color: var(--fvx-primary,#5b3a8a); }
@@ -153,6 +173,8 @@ export class SubscriptionsComponent implements OnInit {
   error = signal('');
   /** Filtro por origen ('all' o el provider). */
   filter = signal<string>('all');
+  /** Búsqueda de texto (nombre, correo, plan, ID) — filtra al instante. */
+  search = signal<string>('');
   /** Paginación client-side (los datos llegan completos en una sola carga). */
   pageSize = signal(20);
   pageIndex = signal(0);
@@ -172,10 +194,18 @@ export class SubscriptionsComponent implements OnInit {
     return [...map.values()];
   });
 
-  /** Filas según el filtro de origen seleccionado. */
-  filtered = computed(() =>
-    this.filter() === 'all' ? this.rows() : this.rows().filter(r => r.provider === this.filter()),
-  );
+  /** Filas según el filtro de origen + la búsqueda de texto. */
+  filtered = computed(() => {
+    const byProvider =
+      this.filter() === 'all' ? this.rows() : this.rows().filter(r => r.provider === this.filter());
+    const q = this.search().trim().toLowerCase();
+    if (!q) return byProvider;
+    return byProvider.filter(r =>
+      `${r.name} ${r.email} ${r.plan_name} ${r.provider_label} ${r.subscription_id}`
+        .toLowerCase()
+        .includes(q),
+    );
+  });
 
   /** Página actual de las filas filtradas (paginación client-side). */
   paged = computed(() => {
@@ -186,6 +216,12 @@ export class SubscriptionsComponent implements OnInit {
   /** Cambia el filtro y vuelve a la primera página (evita quedar fuera de rango). */
   setFilter(provider: string): void {
     this.filter.set(provider);
+    this.pageIndex.set(0);
+  }
+
+  /** Actualiza la búsqueda y vuelve a la primera página. */
+  onSearch(value: string): void {
+    this.search.set(value);
     this.pageIndex.set(0);
   }
 
