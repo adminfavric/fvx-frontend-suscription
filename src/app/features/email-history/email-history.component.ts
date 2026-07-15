@@ -36,6 +36,7 @@ interface EmailLog {
       [breadcrumbs]="crudBreadcrumbs"
       [columns]="columns"
       [actions]="tableActions()"
+      [showCreate]="false"
       [data]="data()"
       [totalCount]="totalCount()"
       [pageSize]="pageSize()"
