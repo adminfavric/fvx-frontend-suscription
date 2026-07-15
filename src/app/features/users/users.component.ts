@@ -1,5 +1,8 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { environment } from '../../../environments/environment';
 import { BaseCrudComponent } from '../../shared/base/base-crud.component';
 import { CrudPageComponent } from '../../shared/components/crud-page/crud-page.component';
 import { ColumnConfig, FieldConfig, TableAction, FilterConfig } from '../../core/models/api.model';
@@ -43,6 +46,10 @@ import type { PageBreadcrumb } from '../../shared/components/page-header/page-he
 export class UsersComponent extends BaseCrudComponent<User> implements OnInit {
   private readonly authUser = inject(AuthService).user;
   private readonly t = inject(TranslocoService);
+  private readonly http = inject(HttpClient);
+
+  /** Opciones para el multiselect "Páginas que puede ver" (todas las del menú). */
+  private pageOptions: { value: string; label: string }[] = [];
 
   readonly crudBreadcrumbs: PageBreadcrumb[] = [
     { labelKey: 'common.breadcrumbHome', link: '/admin/dashboard' },
@@ -151,10 +158,22 @@ export class UsersComponent extends BaseCrudComponent<User> implements OnInit {
       defaultValue: 'VIEWER',
     };
 
+    // Permisos por persona: marcar exactamente qué páginas ve. Vacío = según rol.
+    const pagesField: FieldConfig = {
+      key: 'menu_slugs',
+      label: 'Puede ver estas páginas',
+      type: 'multiselect',
+      required: false,
+      options: this.pageOptions,
+      initialFrom: 'menu_slugs',
+      colspan: 2,
+      info: 'Marca exactamente qué páginas verá esta persona en el menú. Déjalo vacío para que vea según su rol. (No aplica si marcas «staff»: ese ve todo.)',
+    };
+
     const base = entity ? this.formFields.filter(f => f.key !== 'password') : this.formFields;
     const lastNameIdx = base.findIndex(f => f.key === 'last_name');
     const insertAt = lastNameIdx >= 0 ? lastNameIdx + 1 : base.length;
-    const withRole = [...base.slice(0, insertAt), roleField, ...base.slice(insertAt)];
+    const withRole = [...base.slice(0, insertAt), roleField, pagesField, ...base.slice(insertAt)];
 
     const canManageStaff = !!this.authUser()?.is_staff;
     return withRole.map(f => {
@@ -173,6 +192,9 @@ export class UsersComponent extends BaseCrudComponent<User> implements OnInit {
           hint: !canManageStaff ? this.t.translate('users.form.roleRestrictedHint') : undefined,
         };
       }
+      if (f.key === 'menu_slugs') {
+        return { ...f, disabled: !canManageStaff };
+      }
       return { ...f };
     });
   }
@@ -186,6 +208,21 @@ export class UsersComponent extends BaseCrudComponent<User> implements OnInit {
 
   ngOnInit(): void {
     this.loadData();
+    // Opciones de páginas para "puede ver estas páginas" (permisos por persona).
+    firstValueFrom(
+      this.http.get<{ slug: string; name: string; section: string }[]>(
+        `${environment.apiUrl}/menus/pages/`,
+      ),
+    )
+      .then(pages => {
+        this.pageOptions = (pages ?? []).map(p => ({
+          value: p.slug,
+          label: p.section ? `${p.section} · ${p.name}` : p.name,
+        }));
+      })
+      .catch(() => {
+        /* sin opciones: el campo queda vacío, no bloquea crear/editar usuarios */
+      });
   }
 
   override onAction(event: { action: string; row: User }): void {

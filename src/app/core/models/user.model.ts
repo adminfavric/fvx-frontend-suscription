@@ -23,6 +23,8 @@ export interface User {
   role: string;
   /** Etiqueta traducida del rol (derivada por el serializer). */
   role_label?: string;
+  /** Permisos por persona: slugs de páginas que puede ver (vacío = según rol). */
+  menu_slugs?: string[];
   phone: string;
   photo_url: string;
   verified: boolean;
