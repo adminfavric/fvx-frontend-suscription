@@ -9,6 +9,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { EntityFormDialogComponent } from '../../shared/components/entity-form-dialog/entity-form-dialog.component';
+import { ConversationDialogComponent, type ConversationDialogData } from './conversation-dialog.component';
 import { environment } from '../../../environments/environment';
 
 interface Lead {
@@ -27,7 +28,7 @@ interface Lead {
 }
 
 const KIND_LABELS: Record<string, string> = {
-  newsletter: 'Newsletter', contact: 'Contacto', maraton: 'Maratón',
+  newsletter: 'Newsletter', contact: 'Contacto', maraton: 'Maratón', email: 'Correo',
 };
 
 /**
@@ -52,6 +53,7 @@ const KIND_LABELS: Record<string, string> = {
       <button class="chip" [class.chip--on]="kind() === 'contact'" (click)="kind.set('contact')">Contacto</button>
       <button class="chip" [class.chip--on]="kind() === 'newsletter'" (click)="kind.set('newsletter')">Newsletter</button>
       <button class="chip" [class.chip--on]="kind() === 'maraton'" (click)="kind.set('maraton')">Maratón</button>
+      <button class="chip" [class.chip--on]="kind() === 'email'" (click)="kind.set('email')">Correos</button>
     </div>
 
     @if (loading()) { <mat-progress-bar mode="indeterminate" /> }
@@ -104,6 +106,9 @@ const KIND_LABELS: Record<string, string> = {
               <button class="act act--reply" (click)="openReply(m)" title="Responder por correo">
                 <mat-icon>reply</mat-icon>
               </button>
+              <button class="act act--conv" (click)="openConversation(m)" title="Ver conversación">
+                <mat-icon>forum</mat-icon>
+              </button>
               @if (m.is_replied) {
                 <button class="act act--on" (click)="toggleReplied(m)" title="Quitar 'respondido'">
                   <mat-icon>task_alt</mat-icon>
@@ -134,6 +139,8 @@ const KIND_LABELS: Record<string, string> = {
     .act--on { color:var(--fvx-link,#5b3a8a); }
     .act--reply { color:#1f7a45; }
     .act--reply:hover { background:#e3f6ea; }
+    .act--conv { color:#5b3a8a; }
+    .act--conv:hover { background:#f0e9fa; }
     .act mat-icon { font-size:20px; width:20px; height:20px; }
     .row--unread td { font-weight:600; }
     .msg { color:var(--fvx-text-secondary,#6b6478); font-size:.88rem; }
@@ -175,6 +182,15 @@ export class MessagesComponent implements OnInit {
   }
 
   /** Abre el diálogo para escribir y ENVIAR una respuesta por correo al remitente. */
+  /** Abre el hilo de conversación con esa persona (sitio + correos). */
+  openConversation(m: Lead): void {
+    this.dialog.open(ConversationDialogComponent, {
+      data: { email: m.email, name: m.name } as ConversationDialogData,
+      panelClass: 'fvx-crud-dialog',
+      maxWidth: '94vw',
+    });
+  }
+
   openReply(m: Lead): void {
     const ref = this.dialog.open(EntityFormDialogComponent, {
       data: {
