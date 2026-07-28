@@ -115,17 +115,11 @@ interface Subscription {
                           <strong>{{ s.access_until ? (s.access_until | date: 'dd-MM-yyyy') : (s.created | date: 'dd-MM-yyyy') }}</strong>
                           · {{ s.provider_label }} <span class="hist__tag">actual</span>
                           <code class="hist__id">{{ s.subscription_id || ('#' + s.id) }}</code>
-                          @if (!s.is_period && s.subscription_id) {
-                            <button type="button" class="cancel-mini cancel-mini--sm" (click)="cancelSub(s.subscription_id, s.name || s.email)"><mat-icon>block</mat-icon></button>
-                          }
                         </li>
                         @for (h of s.history; track h.id) {
                           <li>
                             {{ h.access_until ? (h.access_until | date: 'dd-MM-yyyy') : (h.created | date: 'dd-MM-yyyy') }} · {{ h.provider_label }}
                             <code class="hist__id">{{ h.subscription_id || ('#' + h.id) }}</code>
-                            @if (h.subscription_id) {
-                              <button type="button" class="cancel-mini cancel-mini--sm" (click)="cancelSub(h.subscription_id, s.name || s.email)"><mat-icon>block</mat-icon></button>
-                            }
                           </li>
                         }
                       </ul>
