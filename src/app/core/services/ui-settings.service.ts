@@ -61,10 +61,9 @@ export class UiSettingsService {
     if (body?.theme_key && this.theme.isValidThemeKey(body.theme_key)) {
       this.theme.setTheme(body.theme_key);
     }
-    const title = body?.app_title?.trim();
-    if (title) {
-      document.title = title;
-    }
+    // NOTA: ya NO se toca `document.title` aquí. El título de la pestaña lo
+    // maneja `BrandTitleStrategy` por página («Página · Experiencias Lita
+    // Donoso»); el `app_title` remoto queda solo para el nombre del sidebar.
   }
 
   /**

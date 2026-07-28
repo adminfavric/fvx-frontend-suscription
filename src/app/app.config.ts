@@ -1,7 +1,7 @@
 import { ApplicationConfig, LOCALE_ID, inject, isDevMode, provideAppInitializer, provideZoneChangeDetection } from '@angular/core';
 import { registerLocaleData } from '@angular/common';
 import localeEs from '@angular/common/locales/es';
-import { provideRouter, withComponentInputBinding, withViewTransitions } from '@angular/router';
+import { provideRouter, withComponentInputBinding, withViewTransitions, TitleStrategy } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { DateAdapter, MAT_DATE_LOCALE } from '@angular/material/core';
@@ -21,6 +21,7 @@ import { DjangoUploadProvider } from './shared/components/file-uploader/provider
 import { environment } from '../environments/environment';
 import { routes } from './app.routes';
 import { provideAppConfig } from './core/config/app-config.token';
+import { BrandTitleStrategy } from './core/services/brand-title.strategy';
 import { RuntimeConfigService } from './core/config/runtime-config.service';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { credentialsInterceptor } from './core/interceptors/credentials.interceptor';
@@ -166,6 +167,9 @@ export const appConfig: ApplicationConfig = {
       // dejamos correr y así la consola queda limpia.
       withViewTransitions({ skipInitialTransition: true }),
     ),
+    // Título de pestaña por página: «Página · Experiencias Lita Donoso» (usa el
+    // `title` de cada ruta). Reemplaza el título quemado del proyecto (FVX).
+    { provide: TitleStrategy, useClass: BrandTitleStrategy },
     // errorInterceptor first → it sees responses LAST (reverse order), so 401/refresh
     // logic in authInterceptor runs against the raw HttpErrorResponse, and only
     // unrecoverable failures are normalized to HttpError for subscribers.

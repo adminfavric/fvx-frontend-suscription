@@ -12,6 +12,7 @@ import { environment } from '../environments/environment';
 export const routes: Routes = [
   {
     path: 'login',
+        title: 'Iniciar sesión',
     component: LoginComponent,
     canActivate: [loginGuard],
   },
@@ -20,6 +21,7 @@ export const routes: Routes = [
   // la pantalla. Requiere sesión de miembro; el backend valida plan + horario.
   {
     path: 'sala/:id',
+        title: 'Sala en vivo',
     canActivate: [memberGuard],
     loadComponent: () =>
       import('./public/zoom-room/zoom-room.component').then(m => m.ZoomRoomComponent),
@@ -35,35 +37,42 @@ export const routes: Routes = [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {
         path: 'dashboard',
+        title: 'Panel',
         loadComponent: () =>
           import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent),
       },
       {
         path: 'plans',
+        title: 'Planes',
         loadComponent: () => import('./features/plans/plans.component').then(m => m.PlansComponent),
       },
       {
         path: 'customers',
+        title: 'Clientes',
         loadComponent: () =>
           import('./features/customers/customers.component').then(m => m.CustomersComponent),
       },
       {
         path: 'subscriptions',
+        title: 'Suscripciones',
         loadComponent: () =>
           import('./features/subscriptions/subscriptions.component').then(m => m.SubscriptionsComponent),
       },
       {
         path: 'content',
+        title: 'Contenido',
         loadComponent: () =>
           import('./features/content/content.component').then(m => m.ContentComponent),
       },
       {
         path: 'programacion',
+        title: 'Programación',
         loadComponent: () =>
           import('./features/programacion/programacion.component').then(m => m.ProgramacionComponent),
       },
       {
         path: 'links-pago',
+        title: 'Links de pago',
         loadComponent: () =>
           import('./features/payment-links/payment-links.component').then(
             m => m.PaymentLinksComponent,
@@ -71,31 +80,37 @@ export const routes: Routes = [
       },
       {
         path: 'events',
+        title: 'Eventos',
         loadComponent: () =>
           import('./features/events/events.component').then(m => m.AdminEventsComponent),
       },
       {
         path: 'messages',
+        title: 'Mensajes',
         loadComponent: () =>
           import('./features/messages/messages.component').then(m => m.MessagesComponent),
       },
       {
         path: 'correos',
+        title: 'Correos masivos',
         loadComponent: () =>
           import('./features/broadcast/broadcast.component').then(m => m.BroadcastComponent),
       },
       {
         path: 'acceso-cortesia',
+        title: 'Accesos de cortesía',
         loadComponent: () =>
           import('./features/comp-access/comp-access.component').then(m => m.CompAccessComponent),
       },
       {
         path: 'usuarios',
+        title: 'Usuarios',
         loadComponent: () =>
           import('./features/users/users.component').then(m => m.UsersComponent),
       },
       {
         path: 'historial-correos',
+        title: 'Historial de correos',
         loadComponent: () =>
           import('./features/email-history/email-history.component').then(
             m => m.EmailHistoryComponent,
@@ -146,33 +161,40 @@ export const routes: Routes = [
       },
       {
         path: 'membresias',
+        title: 'Membresías',
         loadComponent: () =>
           import('./public/memberships/memberships.component').then(m => m.MembershipsComponent),
       },
       {
         path: 'membresias/:slug',
+        title: 'Membresía',
         loadComponent: () =>
           import('./public/checkout/checkout.component').then(m => m.CheckoutComponent),
       },
       {
         path: 'avance',
+        title: 'Avance',
         loadComponent: () =>
           import('./public/upcoming/upcoming.component').then(m => m.UpcomingComponent),
       },
       {
         path: 'eventos',
+        title: 'Eventos',
         loadComponent: () => import('./public/events/events.component').then(m => m.EventsComponent),
       },
       {
         path: 'viajes',
+        title: 'Viajes',
         loadComponent: () => import('./public/travel/travel.component').then(m => m.TravelComponent),
       },
       {
         path: 'noticias',
+        title: 'Noticias',
         loadComponent: () => import('./public/news/news.component').then(m => m.NewsComponent),
       },
       {
         path: 'maria-magdalena',
+        title: 'María Magdalena',
         loadComponent: () =>
           import('./public/maria-magdalena/maria-magdalena.component').then(
             m => m.MariaMagdalenaComponent,
@@ -180,11 +202,13 @@ export const routes: Routes = [
       },
       {
         path: 'acceso',
+        title: 'Acceso miembros',
         loadComponent: () =>
           import('./public/member-login/member-login.component').then(m => m.MemberLoginComponent),
       },
       {
         path: 'mi-contenido',
+        title: 'Mi contenido',
         canActivate: [memberGuard],
         loadComponent: () =>
           import('./public/member-content/member-content.component').then(m => m.MemberContentComponent),
