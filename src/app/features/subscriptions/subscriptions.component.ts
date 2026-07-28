@@ -6,7 +6,13 @@ import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDialog } from '@angular/material/dialog';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import {
+  PasswordConfirmDialogComponent,
+  type PasswordConfirmData,
+} from '../../shared/components/password-confirm-dialog/password-confirm-dialog.component';
+import { NotificationService } from '../../core/services/notification.service';
 import { environment } from '../../../environments/environment';
 
 /** Suscripción genérica (cualquier pasarela), desde el espejo local unificado. */
@@ -108,9 +114,19 @@ interface Subscription {
                         <li>
                           <strong>{{ s.access_until ? (s.access_until | date: 'dd-MM-yyyy') : (s.created | date: 'dd-MM-yyyy') }}</strong>
                           · {{ s.provider_label }} <span class="hist__tag">actual</span>
+                          <code class="hist__id">{{ s.subscription_id || ('#' + s.id) }}</code>
+                          @if (!s.is_period && s.subscription_id) {
+                            <button type="button" class="cancel-mini cancel-mini--sm" (click)="cancelSub(s.subscription_id, s.name || s.email)"><mat-icon>block</mat-icon></button>
+                          }
                         </li>
                         @for (h of s.history; track h.id) {
-                          <li>{{ h.access_until ? (h.access_until | date: 'dd-MM-yyyy') : (h.created | date: 'dd-MM-yyyy') }} · {{ h.provider_label }}</li>
+                          <li>
+                            {{ h.access_until ? (h.access_until | date: 'dd-MM-yyyy') : (h.created | date: 'dd-MM-yyyy') }} · {{ h.provider_label }}
+                            <code class="hist__id">{{ h.subscription_id || ('#' + h.id) }}</code>
+                            @if (h.subscription_id) {
+                              <button type="button" class="cancel-mini cancel-mini--sm" (click)="cancelSub(h.subscription_id, s.name || s.email)"><mat-icon>block</mat-icon></button>
+                            }
+                          </li>
                         }
                       </ul>
                     }
@@ -143,6 +159,16 @@ interface Subscription {
             <ng-container matColumnDef="id">
               <th mat-header-cell *matHeaderCellDef>ID</th>
               <td mat-cell *matCellDef="let s"><code>{{ s.subscription_id || ('#' + s.id) }}</code></td>
+            </ng-container>
+            <ng-container matColumnDef="acciones">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let s">
+                @if (!s.is_period && s.subscription_id) {
+                  <button type="button" class="cancel-mini" (click)="cancelSub(s.subscription_id, s.name || s.email)">
+                    <mat-icon>block</mat-icon> Cancelar
+                  </button>
+                }
+              </td>
             </ng-container>
             <tr mat-header-row *matHeaderRowDef="cols"></tr>
             <tr mat-row *matRowDef="let row; columns: cols"></tr>
@@ -186,6 +212,11 @@ interface Subscription {
     .hist { list-style:none; margin:6px 0 0; padding:6px 0 0 2px; border-top:1px dashed var(--fvx-border,#e6e6ef); }
     .hist li { font-size:.78rem; color:var(--fvx-text-muted,#6b6478); padding:2px 0; }
     .hist__tag { background:rgba(63,164,106,.15); color:#2f8a59; border-radius:999px; padding:0 6px; font-size:.68rem; font-weight:700; }
+    .hist__id { font-size:.7rem; color:#9a93a8; margin:0 6px; }
+    .cancel-mini { display:inline-flex; align-items:center; gap:4px; border:1px solid #e0b4b0; background:#fff; color:#c0392b; border-radius:999px; padding:4px 12px; font-size:.78rem; font-weight:600; cursor:pointer; white-space:nowrap; }
+    .cancel-mini:hover { background:#fdecea; }
+    .cancel-mini mat-icon { font-size:16px; width:16px; height:16px; }
+    .cancel-mini--sm { padding:1px 6px; }
     .cust__email { font-size: .78rem; color: var(--fvx-text-muted, #6b6478); }
     .origen { display:inline-block; padding:2px 10px; border-radius:999px; font-size:.78rem; background:#f0eaf6; color:#5b3a8a; font-weight:600; }
     .chip { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .78rem; background: #ececf2; color: #555; }
@@ -198,8 +229,10 @@ interface Subscription {
 })
 export class SubscriptionsComponent implements OnInit {
   private http = inject(HttpClient);
+  private dialog = inject(MatDialog);
+  private notify = inject(NotificationService);
 
-  cols = ['plan', 'customer', 'origen', 'estado', 'vence', 'id'];
+  cols = ['plan', 'customer', 'origen', 'estado', 'vence', 'id', 'acciones'];
   rows = signal<Subscription[]>([]);
   loading = signal(true);
   error = signal('');
@@ -271,6 +304,10 @@ export class SubscriptionsComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
+    await this.load();
+  }
+
+  private async load(): Promise<void> {
     this.loading.set(true);
     try {
       const res = await firstValueFrom(
@@ -283,5 +320,38 @@ export class SubscriptionsComponent implements OnInit {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /** Cancela una suscripción recurrente (Flow/PayPal) pidiendo la contraseña del
+   * admin. Los pagos por período (link de pago) no se cancelan (vencen solos). */
+  cancelSub(subscriptionId: string, who: string): void {
+    if (!subscriptionId) {
+      this.notify.error('Esta suscripción es por período (link de pago): no cobra sola, vence. No hay nada que cancelar.');
+      return;
+    }
+    const ref = this.dialog.open(PasswordConfirmDialogComponent, {
+      data: {
+        title: 'Cancelar suscripción',
+        message: `Vas a cancelar la suscripción de ${who}. Dejará de cobrarse automáticamente. Esta acción no se puede deshacer.`,
+        confirmText: 'Cancelar suscripción',
+      } as PasswordConfirmData,
+      width: '440px',
+      maxWidth: '94vw',
+    });
+    ref.afterClosed().subscribe(async (password?: string) => {
+      if (!password) return;
+      try {
+        await firstValueFrom(
+          this.http.post(`${environment.apiUrl}/subscriptions/admin-cancel/`, {
+            subscription_id: subscriptionId,
+            password,
+          }),
+        );
+        this.notify.success('Suscripción cancelada.');
+        await this.load();
+      } catch (e: any) {
+        this.notify.error(e?.error?.detail || 'No se pudo cancelar la suscripción.');
+      }
+    });
   }
 }
