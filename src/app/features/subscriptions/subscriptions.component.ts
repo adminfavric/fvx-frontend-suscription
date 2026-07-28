@@ -22,6 +22,16 @@ interface Subscription {
   access_until: string | null;
   is_active: boolean;
   created: string;
+  /** Pagos agrupados de esta persona+plan (renovaciones / pagos repetidos). */
+  count?: number;
+  history?: {
+    id: number;
+    provider_label: string;
+    access_until: string | null;
+    is_active: boolean;
+    created: string;
+    subscription_id: string;
+  }[];
 }
 
 /**
@@ -88,6 +98,23 @@ interface Subscription {
                 <div class="cust">
                   <span class="cust__name">{{ s.name || s.email }}</span>
                   @if (s.name && s.email) { <span class="cust__email">{{ s.email }}</span> }
+                  @if (s.count && s.count > 1) {
+                    <button type="button" class="pagos-chip" (click)="toggleHistory(s.id)">
+                      {{ s.count }} pagos
+                      <mat-icon>{{ expanded().has(s.id) ? 'expand_less' : 'expand_more' }}</mat-icon>
+                    </button>
+                    @if (expanded().has(s.id)) {
+                      <ul class="hist">
+                        <li>
+                          <strong>{{ s.access_until ? (s.access_until | date: 'dd-MM-yyyy') : (s.created | date: 'dd-MM-yyyy') }}</strong>
+                          · {{ s.provider_label }} <span class="hist__tag">actual</span>
+                        </li>
+                        @for (h of s.history; track h.id) {
+                          <li>{{ h.access_until ? (h.access_until | date: 'dd-MM-yyyy') : (h.created | date: 'dd-MM-yyyy') }} · {{ h.provider_label }}</li>
+                        }
+                      </ul>
+                    }
+                  }
                 </div>
               </td>
             </ng-container>
@@ -154,6 +181,11 @@ interface Subscription {
     code { font-size: .82rem; color: var(--fvx-text-muted, #6b6478); }
     .cust { display: flex; flex-direction: column; line-height: 1.25; }
     .cust__name { font-weight: 600; color: var(--fvx-text-primary, #2a2333); }
+    .pagos-chip { display:inline-flex; align-items:center; gap:2px; margin-top:4px; width:fit-content; border:1px solid var(--fvx-border,#e0dbe9); background:#f6f2fb; color:var(--fvx-primary,#5b3a8a); border-radius:999px; padding:2px 8px; font-size:.72rem; font-weight:700; cursor:pointer; }
+    .pagos-chip mat-icon { font-size:15px; width:15px; height:15px; }
+    .hist { list-style:none; margin:6px 0 0; padding:6px 0 0 2px; border-top:1px dashed var(--fvx-border,#e6e6ef); }
+    .hist li { font-size:.78rem; color:var(--fvx-text-muted,#6b6478); padding:2px 0; }
+    .hist__tag { background:rgba(63,164,106,.15); color:#2f8a59; border-radius:999px; padding:0 6px; font-size:.68rem; font-weight:700; }
     .cust__email { font-size: .78rem; color: var(--fvx-text-muted, #6b6478); }
     .origen { display:inline-block; padding:2px 10px; border-radius:999px; font-size:.78rem; background:#f0eaf6; color:#5b3a8a; font-weight:600; }
     .chip { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .78rem; background: #ececf2; color: #555; }
@@ -175,6 +207,14 @@ export class SubscriptionsComponent implements OnInit {
   filter = signal<string>('all');
   /** Búsqueda de texto (nombre, correo, plan, ID) — filtra al instante. */
   search = signal<string>('');
+  /** Filas con el historial de pagos desplegado (por id de la fila principal). */
+  expanded = signal<Set<number>>(new Set());
+
+  toggleHistory(id: number): void {
+    const next = new Set(this.expanded());
+    next.has(id) ? next.delete(id) : next.add(id);
+    this.expanded.set(next);
+  }
   /** Paginación client-side (los datos llegan completos en una sola carga). */
   pageSize = signal(20);
   pageIndex = signal(0);
