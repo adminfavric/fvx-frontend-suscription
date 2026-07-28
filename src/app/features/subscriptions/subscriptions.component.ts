@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { MatTableModule } from '@angular/material/table';
@@ -40,6 +40,16 @@ interface Subscription {
   }[];
 }
 
+/** Cobro (factura) de una suscripción Flow. */
+interface FlowInvoice {
+  period_start: string;
+  period_end: string;
+  amount: number | null;
+  currency: string | null;
+  status: string;
+  created: string;
+}
+
 /**
  * Suscripciones activas de TODAS las pasarelas (Flow, PayPal, link de pago,
  * manual) — espejo local unificado (`GET /api/v1/subscriptions/all/`), con
@@ -49,7 +59,7 @@ interface Subscription {
   selector: 'app-subscriptions',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, MatTableModule, MatPaginatorModule, MatProgressBarModule, MatIconModule, PageHeaderComponent],
+  imports: [DatePipe, DecimalPipe, MatTableModule, MatPaginatorModule, MatProgressBarModule, MatIconModule, PageHeaderComponent],
   template: `
    <div class="page-container">
     <app-page-header
@@ -114,7 +124,22 @@ interface Subscription {
                         <strong>{{ s.created | date: 'dd-MM-yyyy' }}</strong>
                         · {{ s.provider_label }} <span class="hist__tag">actual</span>
                         <code class="hist__id">{{ s.subscription_id || ('#' + s.id) }}</code>
+                        @if (!s.is_period && s.subscription_id) {
+                          <button type="button" class="link-btn" (click)="loadInvoices(s.subscription_id)">Ver cobros</button>
+                        }
                       </li>
+                      @if (!s.is_period && s.subscription_id && invoices()[s.subscription_id]; as inv) {
+                        <li class="inv-wrap">
+                          @if (inv === 'loading') { <span class="muted">Cargando cobros…</span> }
+                          @else if (inv.length) {
+                            <ul class="inv">
+                              @for (i of inv; track $index) {
+                                <li>{{ i.period_start }} → {{ i.period_end }} · {{ i.currency }} {{ i.amount | number: '1.0-0' }} <span class="inv__st">{{ i.status }}</span></li>
+                              }
+                            </ul>
+                          } @else { <span class="muted">Sin cobros registrados en Flow.</span> }
+                        </li>
+                      }
                       @for (h of s.history; track h.id) {
                         <li>
                           {{ h.created | date: 'dd-MM-yyyy' }} · {{ h.provider_label }}
@@ -209,6 +234,11 @@ interface Subscription {
     .cancel-mini:hover { background:#fdecea; }
     .cancel-mini mat-icon { font-size:16px; width:16px; height:16px; }
     .cancel-mini--sm { padding:1px 6px; }
+    .link-btn { border:none; background:none; color:var(--fvx-primary,#5b3a8a); font-size:.75rem; font-weight:700; cursor:pointer; text-decoration:underline; padding:0 4px; }
+    .inv-wrap { padding:4px 0 4px 6px !important; }
+    .inv { list-style:none; margin:0; padding:0; }
+    .inv li { font-size:.76rem; color:#4a4459; padding:1px 0; }
+    .inv__st { background:#f0eaf6; color:#5b3a8a; border-radius:999px; padding:0 6px; font-size:.66rem; font-weight:700; margin-left:4px; }
     .cust__email { font-size: .78rem; color: var(--fvx-text-muted, #6b6478); }
     .origen { display:inline-block; padding:2px 10px; border-radius:999px; font-size:.78rem; background:#f0eaf6; color:#5b3a8a; font-weight:600; }
     .chip { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .78rem; background: #ececf2; color: #555; }
@@ -234,11 +264,30 @@ export class SubscriptionsComponent implements OnInit {
   search = signal<string>('');
   /** Filas con el historial de pagos desplegado (por id de la fila principal). */
   expanded = signal<Set<number>>(new Set());
+  /** Cobros reales de Flow por subscription_id: 'loading' o el array de facturas. */
+  invoices = signal<Record<string, 'loading' | FlowInvoice[]>>({});
 
   toggleHistory(id: number): void {
     const next = new Set(this.expanded());
     next.has(id) ? next.delete(id) : next.add(id);
     this.expanded.set(next);
+  }
+
+  /** Trae de Flow el historial de cobros (facturas) de una suscripción. */
+  async loadInvoices(subId: string): Promise<void> {
+    if (!subId || this.invoices()[subId]) return;
+    this.invoices.set({ ...this.invoices(), [subId]: 'loading' });
+    try {
+      const res = await firstValueFrom(
+        this.http.get<{ invoices: FlowInvoice[] }>(`${environment.apiUrl}/subscriptions/invoices/`, {
+          params: { subscription_id: subId },
+        }),
+      );
+      this.invoices.set({ ...this.invoices(), [subId]: res?.invoices ?? [] });
+    } catch {
+      this.invoices.set({ ...this.invoices(), [subId]: [] });
+      this.notify.error('No se pudieron traer los cobros de Flow.');
+    }
   }
   /** Paginación client-side (los datos llegan completos en una sola carga). */
   pageSize = signal(20);
