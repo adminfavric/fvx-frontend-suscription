@@ -2,8 +2,8 @@ import { version as pkgVersion } from '../../package.json';
 
 export const environment = {
   production: true,
-  apiUrl: 'https://suscription-services.favric.cl/api/v1',
-  authUrl: 'https://suscription-services.favric.cl/api/auth',
+  apiUrl: 'https://suscription-services.astromelia.space/api/v1',
+  authUrl: 'https://suscription-services.astromelia.space/api/auth',
   httpLogging: false,
   /** Versión visible en el menú de usuario (sincronizada con package.json). */
   version: pkgVersion,

@@ -43,20 +43,20 @@ import { MemberAuthService, MemberContentItem, MemberSubscription } from '../ser
             <div class="sub-card">
               <div class="sub-card__top">
                 <strong>{{ s.plan_name }}</strong>
-                <span class="badge" [class.badge--ok]="s.status === 1 && !s.cancel_at_period_end" [class.badge--off]="s.status !== 1">{{ subStatus(s) }}</span>
+                <span class="badge" [class.badge--ok]="isActive(s) && !s.cancel_at_period_end" [class.badge--off]="!isActive(s)">{{ subStatus(s) }}</span>
               </div>
               <div class="sub-card__meta">
                 @if (s.card?.last4) { <span><mat-icon>credit_card</mat-icon> {{ s.card?.type }} ••••{{ s.card?.last4 }}</span> }
-                @if (s.status === 1 && !s.cancel_at_period_end && s.next_invoice_date) { <span><mat-icon>event</mat-icon> Próximo cobro: {{ s.next_invoice_date | date: 'dd-MM-yyyy' }}</span> }
+                @if (isActive(s) && !s.cancel_at_period_end && s.next_invoice_date) { <span><mat-icon>event</mat-icon> Próximo cobro: {{ s.next_invoice_date | date: 'dd-MM-yyyy' }}</span> }
                 @if (s.cancel_at_period_end) { <span class="warn"><mat-icon>info</mat-icon> Acceso hasta el {{ s.period_end | date: 'dd-MM-yyyy' }} (cancelada)</span> }
               </div>
               <div class="sub-card__actions">
-                @if (s.status === 1) {
+                @if (isActive(s)) {
                   <button class="switch-btn" (click)="switchPlan(s)">
                     <mat-icon>swap_horiz</mat-icon> Cambiar de plan
                   </button>
                 }
-                @if (s.status === 1 && !s.cancel_at_period_end && !s.is_manual) {
+                @if (isActive(s) && !s.cancel_at_period_end && !s.is_manual) {
                   <button class="cancel-btn" (click)="cancel(s)" [disabled]="busy()">
                     {{ busy() ? 'Cancelando…' : 'Cancelar suscripción' }}
                   </button>
@@ -565,8 +565,15 @@ export class MemberContentComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** Activa según la pasarela: Flow usa el número 1; PayPal el texto "ACTIVE".
+   * Antes solo se comparaba con 1, así que TODA suscripción PayPal se veía
+   * "Inactiva" y se le ocultaba el botón de cancelar. */
+  isActive(s: MemberSubscription): boolean {
+    return s.status === 1 || s.status === 'ACTIVE';
+  }
+
   subStatus(s: MemberSubscription): string {
-    if (s.status !== 1) return 'Inactiva';
+    if (!this.isActive(s)) return 'Inactiva';
     return s.cancel_at_period_end ? 'Cancelada (acceso hasta fin de período)' : 'Activa';
   }
 

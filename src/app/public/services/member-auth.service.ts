@@ -55,7 +55,9 @@ export interface MemberSubscription {
   plan_slug: string;
   amount: number | null;
   interval: number;
-  status: number | null;
+  /** Estado de la pasarela: Flow usa el número 1 (activa); PayPal usa el texto
+   * "ACTIVE"/"CANCELLED"/… — por eso puede ser number o string. */
+  status: number | string | null;
   period_end: string | null;
   next_invoice_date: string | null;
   cancel_at_period_end: number | null;
