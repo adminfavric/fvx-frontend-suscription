@@ -104,26 +104,24 @@ interface Subscription {
                 <div class="cust">
                   <span class="cust__name">{{ s.name || s.email }}</span>
                   @if (s.name && s.email) { <span class="cust__email">{{ s.email }}</span> }
-                  @if (s.count && s.count > 1) {
-                    <button type="button" class="pagos-chip" (click)="toggleHistory(s.id)">
-                      {{ s.count }} pagos
-                      <mat-icon>{{ expanded().has(s.id) ? 'expand_less' : 'expand_more' }}</mat-icon>
-                    </button>
-                    @if (expanded().has(s.id)) {
-                      <ul class="hist">
+                  <button type="button" class="pagos-chip" (click)="toggleHistory(s.id)">
+                    {{ (s.count || 1) }} pago{{ (s.count || 1) === 1 ? '' : 's' }}
+                    <mat-icon>{{ expanded().has(s.id) ? 'expand_less' : 'expand_more' }}</mat-icon>
+                  </button>
+                  @if (expanded().has(s.id)) {
+                    <ul class="hist">
+                      <li>
+                        <strong>{{ s.created | date: 'dd-MM-yyyy' }}</strong>
+                        · {{ s.provider_label }} <span class="hist__tag">actual</span>
+                        <code class="hist__id">{{ s.subscription_id || ('#' + s.id) }}</code>
+                      </li>
+                      @for (h of s.history; track h.id) {
                         <li>
-                          <strong>{{ s.access_until ? (s.access_until | date: 'dd-MM-yyyy') : (s.created | date: 'dd-MM-yyyy') }}</strong>
-                          · {{ s.provider_label }} <span class="hist__tag">actual</span>
-                          <code class="hist__id">{{ s.subscription_id || ('#' + s.id) }}</code>
+                          {{ h.created | date: 'dd-MM-yyyy' }} · {{ h.provider_label }}
+                          <code class="hist__id">{{ h.subscription_id || ('#' + h.id) }}</code>
                         </li>
-                        @for (h of s.history; track h.id) {
-                          <li>
-                            {{ h.access_until ? (h.access_until | date: 'dd-MM-yyyy') : (h.created | date: 'dd-MM-yyyy') }} · {{ h.provider_label }}
-                            <code class="hist__id">{{ h.subscription_id || ('#' + h.id) }}</code>
-                          </li>
-                        }
-                      </ul>
-                    }
+                      }
+                    </ul>
                   }
                 </div>
               </td>
@@ -328,24 +326,21 @@ export class SubscriptionsComponent implements OnInit {
         title: 'Cancelar suscripción',
         message: `Vas a cancelar la suscripción de ${who}. Dejará de cobrarse automáticamente. Esta acción no se puede deshacer.`,
         confirmText: 'Cancelar suscripción',
+        action: (password: string) =>
+          firstValueFrom(
+            this.http.post(`${environment.apiUrl}/subscriptions/admin-cancel/`, {
+              subscription_id: subscriptionId,
+              password,
+            }),
+          ).then(() => undefined),
       } as PasswordConfirmData,
       width: '440px',
       maxWidth: '94vw',
     });
-    ref.afterClosed().subscribe(async (password?: string) => {
-      if (!password) return;
-      try {
-        await firstValueFrom(
-          this.http.post(`${environment.apiUrl}/subscriptions/admin-cancel/`, {
-            subscription_id: subscriptionId,
-            password,
-          }),
-        );
-        this.notify.success('Suscripción cancelada.');
-        await this.load();
-      } catch (e: any) {
-        this.notify.error(e?.error?.detail || 'No se pudo cancelar la suscripción.');
-      }
+    ref.afterClosed().subscribe(async (ok?: boolean) => {
+      if (!ok) return; // cerró sin confirmar o hubo error (ya mostrado inline)
+      this.notify.success('Suscripción cancelada.');
+      await this.load();
     });
   }
 }
