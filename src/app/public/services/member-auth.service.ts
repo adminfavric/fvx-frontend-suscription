@@ -159,6 +159,20 @@ export class MemberAuthService {
     );
   }
 
+  /** Inicia el cambio de la tarjeta registrada (solo suscripciones Flow con
+   * cargo automático). Devuelve la URL de Flow a la que redirigir al miembro;
+   * al terminar, Flow lo devuelve a /mi-contenido?tarjeta=ok|error. */
+  async startCardChange(subscriptionId: string): Promise<string> {
+    const res = await firstValueFrom(
+      this.http.post<{ redirect_url: string }>(
+        `${this.base}/card-change/start/`,
+        { subscription_id: subscriptionId },
+        { headers: this.authHeaders() },
+      ),
+    );
+    return res.redirect_url;
+  }
+
   async cancelSubscription(subscriptionId: string): Promise<void> {
     await firstValueFrom(
       this.http.post(

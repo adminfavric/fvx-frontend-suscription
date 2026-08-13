@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
@@ -29,6 +29,12 @@ import { MemberAuthService, MemberContentItem, MemberSubscription } from '../ser
         <button class="logout" (click)="logout()"><mat-icon>logout</mat-icon> Salir</button>
       </header>
 
+      @if (cardResult() === 'ok') {
+        <p class="card-note card-note--ok"><mat-icon>check_circle</mat-icon> Tu tarjeta fue actualizada. Los próximos cobros automáticos se harán a la nueva tarjeta.</p>
+      } @else if (cardResult() === 'error') {
+        <p class="card-note card-note--err"><mat-icon>error_outline</mat-icon> No se pudo registrar la nueva tarjeta. Inténtalo de nuevo desde "Mi suscripción y pagos".</p>
+      }
+
       @if (subs().length) {
         <section class="subs">
           <button class="subs__toggle" (click)="showSubs.set(!showSubs())" [class.is-open]="showSubs()">
@@ -54,6 +60,11 @@ import { MemberAuthService, MemberContentItem, MemberSubscription } from '../ser
                 @if (isActive(s)) {
                   <button class="switch-btn" (click)="switchPlan(s)">
                     <mat-icon>swap_horiz</mat-icon> Cambiar de plan
+                  </button>
+                }
+                @if (isActive(s) && !s.is_manual && s.provider === 'flow') {
+                  <button class="switch-btn" (click)="changeCard(s)" [disabled]="busy()">
+                    <mat-icon>credit_card</mat-icon> Cambiar tarjeta
                   </button>
                 }
                 @if (isActive(s) && !s.cancel_at_period_end && !s.is_manual) {
@@ -380,6 +391,10 @@ import { MemberAuthService, MemberContentItem, MemberSubscription } from '../ser
     .hist-card__body p { margin:0; color: var(--texto-suave); font-size:.82rem; }
     .hist-note { color: var(--texto-tenue) !important; font-style:italic; margin-top:4px !important; }
 
+    .card-note { display:flex; align-items:center; gap:8px; padding:12px 16px; border-radius:12px; font-size:.9rem; margin:0 0 16px; }
+    .card-note--ok { background:#e8f5ec; color:#1d6b3a; }
+    .card-note--err { background:#fdecec; color:#a33; }
+
     @media (max-width:560px) {
       .live-banner { padding:20px; }
       .tile { min-width:52px; }
@@ -389,6 +404,7 @@ import { MemberAuthService, MemberContentItem, MemberSubscription } from '../ser
 export class MemberContentComponent implements OnInit, OnDestroy {
   member = inject(MemberAuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private dialog = inject(MatDialog);
 
   loading = signal(true);
@@ -400,6 +416,8 @@ export class MemberContentComponent implements OnInit, OnDestroy {
   kind = signal<string>('all');
   /** "Mi suscripción y pagos" colapsada por defecto: la biblioteca es la prioridad. */
   showSubs = signal(false);
+  /** Resultado del retorno de Flow tras un cambio de tarjeta (?tarjeta=ok|error). */
+  cardResult = signal<'' | 'ok' | 'error'>('');
 
   /** Reloj que avanza cada segundo para la cuenta regresiva de las sesiones Zoom. */
   private now = signal(Date.now());
@@ -519,6 +537,14 @@ export class MemberContentComponent implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     if (!this.member.isLoggedIn()) { this.router.navigate(['/acceso']); return; }
+    // Retorno del cambio de tarjeta en Flow: mostrar el aviso, abrir la sección
+    // de suscripción y limpiar el parámetro de la URL.
+    const tarjeta = this.route.snapshot.queryParamMap.get('tarjeta');
+    if (tarjeta === 'ok' || tarjeta === 'error') {
+      this.cardResult.set(tarjeta);
+      this.showSubs.set(true);
+      this.router.navigate([], { queryParams: { tarjeta: null }, queryParamsHandling: 'merge', replaceUrl: true });
+    }
     try {
       const [content, account] = await Promise.all([
         this.member.getContent(),
@@ -608,6 +634,20 @@ export class MemberContentComponent implements OnInit, OnDestroy {
   }
   kindLabel(kind: string): string {
     return { video: 'Video', audio: 'Audio', pdf: 'Documento', text: 'Texto', image: 'Imagen', zoom: 'Zoom en vivo', link: 'Enlace' }[kind] ?? kind;
+  }
+
+  /** Inicia el cambio de la tarjeta del cargo automático (Flow): redirige al
+   * registro de tarjeta de Flow; la nueva reemplaza a la registrada y la
+   * suscripción sigue igual. Al volver se muestra el aviso (?tarjeta=ok|error). */
+  async changeCard(s: MemberSubscription): Promise<void> {
+    this.busy.set(true);
+    try {
+      const url = await this.member.startCardChange(s.subscription_id);
+      window.location.href = url;
+    } catch {
+      this.error.set('No se pudo iniciar el cambio de tarjeta. Intenta nuevamente.');
+      this.busy.set(false);
+    }
   }
 
   /** Inicia el cambio de plan: va al catálogo en modo "cambiar". El checkout

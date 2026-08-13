@@ -15,6 +15,8 @@ interface CompMembership {
   plans: number[];
   plan_names?: string;
   is_active: boolean;
+  /** Acceso válido hasta esta fecha inclusive (YYYY-MM-DD); null = indefinido. */
+  expires_at?: string | null;
   note?: string;
 }
 
@@ -67,6 +69,7 @@ export class CompAccessComponent extends BaseCrudComponent<CompMembership> imple
     { key: 'full_name', label: 'Nombre', render: r => r.full_name || '—' },
     { key: 'plan_names', label: 'Membresías', render: r => r.all_plans ? 'Todas' : (r.plan_names || '—') },
     { key: 'is_active', label: 'Activo', type: 'boolean' },
+    { key: 'expires_at', label: 'Caduca', render: r => this.expiryLabel(r) },
   ];
 
   formFields: FieldConfig[] = [
@@ -78,6 +81,8 @@ export class CompAccessComponent extends BaseCrudComponent<CompMembership> imple
     { key: 'plans', label: 'Membresías', type: 'multiselect', colspan: 2, options: [],
       info: 'Solo si "Acceso a TODAS" está desmarcado: las membresías cuyo contenido podrá ver.',
       showWhen: { field: 'all_plans', equals: false } },
+    { key: 'expires_at', label: 'Caduca el (opcional)', type: 'date',
+      info: 'El acceso vale hasta esta fecha inclusive. Déjalo en blanco para acceso indefinido.' },
     { key: 'note', label: 'Nota (opcional)', type: 'text', colspan: 2,
       info: 'Para tu referencia (ej. "cuenta de prueba", "invitado taller").' },
     { key: 'is_active', label: 'Activo', type: 'boolean', defaultValue: true,
@@ -88,6 +93,14 @@ export class CompAccessComponent extends BaseCrudComponent<CompMembership> imple
     { icon: 'edit', label: '', labelKey: 'crud.actions.edit', action: 'edit', color: 'primary' },
     { icon: 'delete', label: '', labelKey: 'crud.actions.delete', action: 'delete', color: 'warn' },
   ];
+
+  /** "—" si es indefinido; la fecha en dd-mm-aaaa, con "(caducado)" si ya pasó. */
+  expiryLabel(r: CompMembership): string {
+    if (!r.expires_at) return '—';
+    const [y, m, d] = r.expires_at.split('-');
+    const label = `${d}-${m}-${y}`;
+    return r.expires_at < new Date().toISOString().slice(0, 10) ? `${label} (caducado)` : label;
+  }
 
   async ngOnInit(): Promise<void> {
     this.loadData();

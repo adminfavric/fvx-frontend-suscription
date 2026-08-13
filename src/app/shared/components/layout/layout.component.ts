@@ -36,6 +36,7 @@ import { EntityDrawerService } from '../../../core/services/entity-drawer.servic
 import { UiSettingsService } from '../../../core/services/ui-settings.service';
 import { UserUiPreferencesService } from '../../../core/services/user-ui-preferences.service';
 import { InboxService } from '../../../core/services/inbox.service';
+import { AppUpdateService } from '../../../core/services/app-update.service';
 import { BreadcrumbsService } from '../../../core/services/breadcrumbs.service';
 import { CommandPaletteService } from '../../../core/commands/command-palette.service';
 import type { InboxNotification, InboxNotificationKind } from '../../../core/models/inbox-notification.model';
@@ -302,12 +303,15 @@ function menuSectionsToNavGroups(sections: MenuSectionDto[]): NavGroup[] {
       </nav>
 
       <div class="sidebar-footer">
-        @if (envBadge(); as badge) {
-          @if (!collapsed() || isMobile()) {
+        @if (!collapsed() || isMobile()) {
+          @if (envBadge(); as badge) {
             <div class="sidebar-env" [attr.data-variant]="badge.variant" role="status">
               <span class="sidebar-env__dot" aria-hidden="true"></span>
               v{{ appVersion }} · {{ envLongKey() | transloco }}
             </div>
+          } @else {
+            <!-- Producción: versión siempre visible para saber con cuál se trabaja. -->
+            <div class="sidebar-version" role="status">v{{ appVersion }}</div>
           }
         }
         <app-config-user [narrow]="collapsed() && !isMobile()" />
@@ -347,6 +351,19 @@ function menuSectionsToNavGroups(sections: MenuSectionDto[]): NavGroup[] {
         </nav>
 
         <span class="spacer"></span>
+
+        <!-- Aviso de build nuevo desplegado: recargar toma los bundles nuevos. -->
+        @if (update.newVersion(); as nv) {
+          <button
+            type="button"
+            class="topbar-update"
+            (click)="update.reload()"
+            matTooltip="Hay una nueva versión desplegada. Recarga para actualizar."
+            matTooltipPosition="below">
+            <mat-icon aria-hidden="true">system_update_alt</mat-icon>
+            <span>Nueva versión v{{ nv }} · Actualizar</span>
+          </button>
+        }
 
         <!-- Búsqueda / palette completa (placeholder + shortcut), ahora a la derecha. -->
         <button
@@ -531,6 +548,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
   private readonly appConfig = inject(APP_CONFIG);
   private readonly themeService = inject(ThemeService);
   readonly inbox = inject(InboxService);
+  readonly update = inject(AppUpdateService);
   readonly palette = inject(CommandPaletteService);
   readonly breadcrumbs = inject(BreadcrumbsService);
   private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
@@ -852,6 +870,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
     this.menu.load();
     // Inbox: empieza polling cuando el shell se monta (usuario autenticado).
     this.inbox.start();
+    // Detector de versión nueva del build (aviso "Actualizar" en el topbar).
+    this.update.start();
     this.routerSub = this.router.events.subscribe((event) => {
       if (event instanceof NavigationStart) {
         // Solo mostrar la barra de progreso en cambios de RUTA reales, no cuando
@@ -884,6 +904,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
     this.renderer.removeClass(document.body, 'sidebar-open-no-scroll');
     this.routerSub?.unsubscribe();
     this.inbox.stop();
+    this.update.stop();
   }
 
   @HostListener('window:resize')

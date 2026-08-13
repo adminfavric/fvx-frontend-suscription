@@ -289,8 +289,48 @@ $topbar-h: 52px;
   background: var(--fvx-warning, #f59e0b); // staging
 }
 
+// Versión del build en producción (sin chip de entorno): siempre visible para
+// saber con qué versión se está trabajando.
+.sidebar-version {
+  padding: 4px 8px 8px;
+  font-size: var(--fvx-text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--fvx-text-muted);
+  white-space: nowrap;
+}
+
 .sidebar.collapsed .sidebar-footer {
   padding: 5px 5px 7px;
+}
+
+// Botón "Nueva versión disponible · Actualizar" del topbar: aparece solo cuando
+// hay un build nuevo desplegado (AppUpdateService).
+.topbar-update {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  margin-right: 8px;
+  border: 1px solid var(--fvx-accent, #6366f1);
+  border-radius: var(--fvx-radius, 9px);
+  background: var(--fvx-accent-soft, rgba(99, 102, 241, 0.12));
+  color: var(--fvx-link, var(--fvx-accent, #6366f1));
+  font-size: var(--fvx-text-xs, 12px);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    filter: brightness(0.95);
+  }
 }
 
 // ── Main wrapper — lienzo más tenue que la card / topbar ──

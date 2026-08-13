@@ -27,13 +27,27 @@ interface Lead {
   is_replied: boolean;
 }
 
+/** Fila de la bandeja: UNA persona (email normalizado) con todos sus mensajes. */
+interface Thread {
+  key: string;
+  email: string;
+  name: string;
+  last: Lead;
+  count: number;
+  unread: number;
+  kinds: string[];
+}
+
 const KIND_LABELS: Record<string, string> = {
   newsletter: 'Newsletter', contact: 'Contacto', maraton: 'Maratón', email: 'Correo',
 };
 
 /**
- * Mensajes entrantes del sitio (contacto, newsletter, inscripciones). Solo
- * lectura — los crea el público vía /public/leads/.
+ * Mensajes entrantes del sitio (contacto, newsletter, inscripciones y respuestas
+ * por correo). La bandeja agrupa por PERSONA (email, sin distinguir mayúsculas):
+ * una clienta = una fila, aunque haya escrito varias veces; el hilo completo se
+ * ve en "Ver conversación". Los leads los crea el público vía /public/leads/ y
+ * la ingesta IMAP.
  */
 @Component({
   selector: 'app-messages',
@@ -44,7 +58,7 @@ const KIND_LABELS: Record<string, string> = {
    <div class="page-container">
     <app-page-header
       title="Mensajes"
-      subtitle="Contacto, newsletter e inscripciones recibidas desde el sitio."
+      subtitle="Contacto, newsletter e inscripciones recibidas desde el sitio, agrupados por persona."
       [breadcrumbs]="breadcrumbs">
     </app-page-header>
 
@@ -67,57 +81,60 @@ const KIND_LABELS: Record<string, string> = {
         <table mat-table [dataSource]="filtered()">
           <ng-container matColumnDef="kind">
             <th mat-header-cell *matHeaderCellDef>Tipo</th>
-            <td mat-cell *matCellDef="let m"><span class="badge">{{ label(m.kind) }}</span></td>
+            <td mat-cell *matCellDef="let t">
+              @for (k of t.kinds; track k) { <span class="badge">{{ label(k) }}</span> }
+            </td>
           </ng-container>
           <ng-container matColumnDef="name">
             <th mat-header-cell *matHeaderCellDef>Nombre</th>
-            <td mat-cell *matCellDef="let m">{{ m.name || '—' }}</td>
+            <td mat-cell *matCellDef="let t">{{ t.name || '—' }}</td>
           </ng-container>
           <ng-container matColumnDef="email">
             <th mat-header-cell *matHeaderCellDef>Email</th>
-            <td mat-cell *matCellDef="let m"><a [href]="'mailto:' + m.email">{{ m.email }}</a></td>
+            <td mat-cell *matCellDef="let t"><a [href]="'mailto:' + t.email">{{ t.email }}</a></td>
           </ng-container>
           <ng-container matColumnDef="message">
-            <th mat-header-cell *matHeaderCellDef>Mensaje</th>
-            <td mat-cell *matCellDef="let m">
-              @if (m.subject) { <strong>{{ m.subject }}</strong><br /> }
-              <span class="msg">{{ m.message || (m.country ? ('País: ' + m.country) : '—') }}</span>
+            <th mat-header-cell *matHeaderCellDef>Último mensaje</th>
+            <td mat-cell *matCellDef="let t">
+              @if (t.last.subject) { <strong>{{ t.last.subject }}</strong><br /> }
+              <span class="msg">{{ t.last.message || (t.last.country ? ('País: ' + t.last.country) : '—') }}</span>
+              @if (t.count > 1) { <span class="count">{{ t.count }} mensajes</span> }
             </td>
           </ng-container>
           <ng-container matColumnDef="status">
             <th mat-header-cell *matHeaderCellDef>Estado</th>
-            <td mat-cell *matCellDef="let m">
-              @if (m.is_replied) { <span class="badge badge--replied">Respondido</span> }
-              @else if (m.is_read) { <span class="badge badge--read">Leído</span> }
-              @else { <span class="badge badge--new">Nuevo</span> }
+            <td mat-cell *matCellDef="let t">
+              @if (t.unread > 0) { <span class="badge badge--new">{{ t.unread > 1 ? t.unread + ' nuevos' : 'Nuevo' }}</span> }
+              @else if (t.last.is_replied) { <span class="badge badge--replied">Respondido</span> }
+              @else { <span class="badge badge--read">Leído</span> }
             </td>
           </ng-container>
           <ng-container matColumnDef="created">
             <th mat-header-cell *matHeaderCellDef>Fecha</th>
-            <td mat-cell *matCellDef="let m">{{ m.created | date: 'dd-MM-yyyy HH:mm' }}</td>
+            <td mat-cell *matCellDef="let t">{{ t.last.created | date: 'dd-MM-yyyy HH:mm' }}</td>
           </ng-container>
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>Acciones</th>
-            <td mat-cell *matCellDef="let m">
-              <button class="act" [class.act--on]="m.is_read" (click)="toggleRead(m)"
-                      [title]="m.is_read ? 'Marcar como no leído' : 'Marcar como leído'">
-                <mat-icon>{{ m.is_read ? 'mark_email_read' : 'mark_email_unread' }}</mat-icon>
+            <td mat-cell *matCellDef="let t">
+              <button class="act" [class.act--on]="t.unread === 0" (click)="toggleRead(t)"
+                      [title]="t.unread > 0 ? 'Marcar todo como leído' : 'Marcar como no leído'">
+                <mat-icon>{{ t.unread > 0 ? 'mark_email_unread' : 'mark_email_read' }}</mat-icon>
               </button>
-              <button class="act act--reply" (click)="openReply(m)" title="Responder por correo">
+              <button class="act act--reply" (click)="openReply(t)" title="Responder por correo">
                 <mat-icon>reply</mat-icon>
               </button>
-              <button class="act act--conv" (click)="openConversation(m)" title="Ver conversación">
+              <button class="act act--conv" (click)="openConversation(t)" title="Ver conversación">
                 <mat-icon>forum</mat-icon>
               </button>
-              @if (m.is_replied) {
-                <button class="act act--on" (click)="toggleReplied(m)" title="Quitar 'respondido'">
+              @if (t.last.is_replied) {
+                <button class="act act--on" (click)="toggleReplied(t)" title="Quitar 'respondido'">
                   <mat-icon>task_alt</mat-icon>
                 </button>
               }
             </td>
           </ng-container>
           <tr mat-header-row *matHeaderRowDef="cols"></tr>
-          <tr mat-row *matRowDef="let row; columns: cols" [class.row--unread]="!row.is_read"></tr>
+          <tr mat-row *matRowDef="let row; columns: cols" [class.row--unread]="row.unread > 0"></tr>
         </table>
       </div>
     }
@@ -130,10 +147,11 @@ const KIND_LABELS: Record<string, string> = {
     .chip--on { background:var(--fvx-link,#5b3a8a); color:#fff; }
     .table-wrap { overflow-x:auto; background:var(--fvx-surface,#fff); border:1px solid var(--fvx-border,#e6e6ef); border-radius:12px; }
     table { width:100%; }
-    .badge { display:inline-block; padding:2px 10px; border-radius:999px; font-size:.75rem; background:#ececf2; color:#555; }
+    .badge { display:inline-block; padding:2px 10px; border-radius:999px; font-size:.75rem; background:#ececf2; color:#555; margin-right:4px; }
     .badge--new { background:#fde68a; color:#92400e; }
     .badge--read { background:#e0e7ff; color:#3730a3; }
     .badge--replied { background:#d1fae5; color:#065f46; }
+    .count { display:inline-block; margin-left:8px; padding:1px 8px; border-radius:999px; font-size:.72rem; background:#f0e9fa; color:#5b3a8a; font-weight:600; white-space:nowrap; }
     .act { border:none; background:transparent; cursor:pointer; color:var(--fvx-text-muted,#6b6478); padding:4px; border-radius:6px; }
     .act:hover { background:var(--fvx-bg-surface-2,#f1f1f6); }
     .act--on { color:var(--fvx-link,#5b3a8a); }
@@ -162,45 +180,72 @@ export class MessagesComponent implements OnInit {
     { label: 'Mensajes' },
   ];
 
+  /** Agrupa los leads por persona (email en minúsculas). Los leads llegan
+   * ordenados por -created, así que el primero de cada email es el último
+   * mensaje recibido y las filas quedan ordenadas por actividad reciente. */
+  threads = computed<Thread[]>(() => {
+    const map = new Map<string, Thread>();
+    for (const m of this.rows()) {
+      const key = (m.email || '').trim().toLowerCase();
+      let t = map.get(key);
+      if (!t) {
+        t = { key, email: m.email, name: m.name || '', last: m, count: 0, unread: 0, kinds: [] };
+        map.set(key, t);
+      }
+      t.count++;
+      if (!m.is_read) t.unread++;
+      if (!t.kinds.includes(m.kind)) t.kinds.push(m.kind);
+      if (!t.name && m.name) t.name = m.name;
+    }
+    return [...map.values()];
+  });
+
   filtered = computed(() =>
-    this.kind() === 'all' ? this.rows() : this.rows().filter(m => m.kind === this.kind()),
+    this.kind() === 'all' ? this.threads() : this.threads().filter(t => t.kinds.includes(this.kind())),
   );
 
   label(k: string): string {
     return KIND_LABELS[k] ?? k;
   }
 
-  /** Marca leído/no leído. */
-  toggleRead(m: Lead): void {
-    this.patchMark(m, { is_read: !m.is_read });
+  /** Marca TODO el hilo como leído (o el último mensaje como no leído). */
+  toggleRead(t: Thread): void {
+    if (t.unread > 0) {
+      this.markThread(t, { is_read: true });
+    } else {
+      this.markThread(t, { is_read: false });
+    }
   }
 
-  /** Marca respondido/no; al responder, además queda leído. */
-  toggleReplied(m: Lead): void {
-    const next = !m.is_replied;
-    this.patchMark(m, next ? { is_read: true, is_replied: true } : { is_replied: false });
+  /** Marca respondido/no todo el hilo; al responder, además queda leído. */
+  toggleReplied(t: Thread): void {
+    const next = !t.last.is_replied;
+    this.markThread(t, next ? { is_read: true, is_replied: true } : { is_replied: false });
   }
 
-  /** Abre el diálogo para escribir y ENVIAR una respuesta por correo al remitente. */
   /** Abre el hilo de conversación con esa persona (sitio + correos). */
-  openConversation(m: Lead): void {
+  openConversation(t: Thread): void {
     this.dialog.open(ConversationDialogComponent, {
-      data: { email: m.email, name: m.name } as ConversationDialogData,
+      data: { email: t.email, name: t.name } as ConversationDialogData,
       panelClass: 'fvx-crud-dialog',
       maxWidth: '94vw',
     });
+    // Abrir la conversación deja el hilo como leído (como cualquier bandeja).
+    if (t.unread > 0) this.markThread(t, { is_read: true });
   }
 
-  openReply(m: Lead): void {
+  /** Responde por correo al ÚLTIMO mensaje de la persona. */
+  openReply(t: Thread): void {
+    const m = t.last;
     const ref = this.dialog.open(EntityFormDialogComponent, {
       data: {
-        title: `Responder a ${m.name || m.email}`,
+        title: `Responder a ${t.name || t.email}`,
         mode: 'create',
         fields: [
           { key: 'subject', label: 'Asunto', type: 'text', colspan: 2,
             defaultValue: m.subject ? `Re: ${m.subject}` : 'Respuesta a tu mensaje' },
           { key: 'body', label: 'Mensaje', type: 'textarea', required: true, colspan: 2,
-            info: `Se enviará por correo a ${m.email}` },
+            info: `Se enviará por correo a ${t.email}` },
         ],
         submitHandler: (value: Record<string, any>) =>
           this.http.post<Lead>(`${environment.apiUrl}/leads/${m.id}/reply/`, value),
@@ -214,10 +259,14 @@ export class MessagesComponent implements OnInit {
     });
   }
 
-  private patchMark(m: Lead, body: { is_read?: boolean; is_replied?: boolean }): void {
-    this.http.patch<Lead>(`${environment.apiUrl}/leads/${m.id}/mark/`, body).subscribe({
-      next: updated => this.rows.update(list =>
-        list.map(x => (x.id === m.id ? { ...x, ...updated } : x)),
+  /** Actualiza leído/respondido de TODOS los mensajes de la persona (backend
+   * ``/leads/mark-thread/``) y refleja el cambio en las filas locales. */
+  private markThread(t: Thread, body: { is_read?: boolean; is_replied?: boolean }): void {
+    this.http.post(`${environment.apiUrl}/leads/mark-thread/`, { email: t.email, ...body }).subscribe({
+      next: () => this.rows.update(list =>
+        list.map(x =>
+          (x.email || '').trim().toLowerCase() === t.key ? { ...x, ...body } : x,
+        ),
       ),
       error: () => this.error.set('No se pudo actualizar el mensaje. Intenta de nuevo.'),
     });
