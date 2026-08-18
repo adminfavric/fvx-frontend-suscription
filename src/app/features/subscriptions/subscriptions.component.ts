@@ -27,6 +27,10 @@ interface Subscription {
   is_period: boolean;
   access_until: string | null;
   is_active: boolean;
+  /** 'subscribed' | 'failed' (cancelada / terminada en la pasarela). */
+  status?: string;
+  /** Bitácora: quién canceló, cuándo y si fue al final del período. */
+  cancellation?: Cancellation | null;
   created: string;
   /** Pagos agrupados de esta persona+plan (renovaciones / pagos repetidos). */
   count?: number;
@@ -35,9 +39,21 @@ interface Subscription {
     provider_label: string;
     access_until: string | null;
     is_active: boolean;
+    status?: string;
+    cancellation?: Cancellation | null;
     created: string;
     subscription_id: string;
   }[];
+}
+
+/** Registro de cancelación de una suscripción recurrente. */
+interface Cancellation {
+  actor: 'member' | 'admin' | 'gateway';
+  actor_label: string;
+  actor_detail: string;
+  at_period_end: boolean;
+  reason: string;
+  created: string;
 }
 
 /** Cobro (factura) de una suscripción Flow. */
@@ -64,7 +80,7 @@ interface FlowInvoice {
    <div class="page-container">
     <app-page-header
       title="Suscripciones"
-      subtitle="Suscripciones activas de todos los medios de pago (Flow, PayPal, link de pago y manual)."
+      subtitle="Suscripciones de todos los medios de pago (Flow, PayPal, link de pago y manual). Activa 'Mostrar canceladas' para ver quién y cuándo canceló."
       [breadcrumbs]="breadcrumbs">
     </app-page-header>
 
@@ -94,6 +110,11 @@ interface FlowInvoice {
               {{ p.label }} <span class="chip-f__n">{{ p.count }}</span>
             </button>
           }
+          <label class="toggle-inactive">
+            <input type="checkbox" [checked]="showInactive()" (change)="toggleInactive($any($event.target).checked)" />
+            Mostrar canceladas
+            @if (showInactive()) { <span class="chip-f__n">{{ inactiveCount() }}</span> }
+          </label>
         </div>
       }
 
@@ -144,6 +165,11 @@ interface FlowInvoice {
                         <li>
                           {{ h.created | date: 'dd-MM-yyyy' }} · {{ h.provider_label }}
                           <code class="hist__id">{{ h.subscription_id || ('#' + h.id) }}</code>
+                          @if (h.cancellation; as hc) {
+                            <span class="hist__canc" [title]="cancelTitle(hc)">cancelada · {{ cancelWho(hc) }} · {{ hc.created | date: 'dd-MM-yyyy' }}</span>
+                          } @else if (h.status === 'failed') {
+                            <span class="hist__canc">cancelada</span>
+                          }
                         </li>
                       }
                     </ul>
@@ -159,8 +185,16 @@ interface FlowInvoice {
               <th mat-header-cell *matHeaderCellDef>Estado</th>
               <td mat-cell *matCellDef="let s">
                 <span class="chip" [class.chip--ok]="s.is_active" [class.chip--bad]="!s.is_active">
-                  {{ s.is_active ? 'Activa' : 'Vencida' }}
+                  {{ statusLabel(s) }}
                 </span>
+                @if (s.cancellation; as c) {
+                  <div class="canc" [title]="cancelTitle(c)">
+                    <mat-icon>{{ cancelIcon(c) }}</mat-icon>
+                    <span>{{ cancelWho(c) }} · {{ c.created | date: 'dd-MM-yyyy HH:mm' }}</span>
+                  </div>
+                  @if (c.at_period_end && !s.is_period) { <div class="canc__sub">al final del período</div> }
+                  @if (c.reason) { <div class="canc__sub">"{{ c.reason }}"</div> }
+                }
               </td>
             </ng-container>
             <ng-container matColumnDef="vence">
@@ -180,7 +214,7 @@ interface FlowInvoice {
             <ng-container matColumnDef="acciones">
               <th mat-header-cell *matHeaderCellDef></th>
               <td mat-cell *matCellDef="let s">
-                @if (!s.is_period && s.subscription_id) {
+                @if (!s.is_period && s.subscription_id && s.status !== 'failed') {
                   <button type="button" class="cancel-mini" (click)="cancelSub(s.subscription_id, s.name || s.email)">
                     <mat-icon>block</mat-icon> Cancelar
                   </button>
@@ -244,6 +278,12 @@ interface FlowInvoice {
     .chip { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .78rem; background: #ececf2; color: #555; }
     .chip--ok { background: #e3f6ea; color: #1f7a45; }
     .chip--bad { background: #fdecea; color: #c0392b; }
+    .toggle-inactive { display:inline-flex; align-items:center; gap:6px; margin-left:auto; font-size:.82rem; color:var(--fvx-text-secondary,#4a4459); cursor:pointer; user-select:none; }
+    .toggle-inactive input { accent-color: var(--fvx-primary,#5b3a8a); }
+    .canc { display:flex; align-items:center; gap:4px; margin-top:4px; font-size:.74rem; color:var(--fvx-text-secondary,#4a4459); white-space:nowrap; }
+    .canc mat-icon { font-size:15px; width:15px; height:15px; color:#c0392b; }
+    .canc__sub { font-size:.7rem; color:var(--fvx-text-muted,#8a8398); padding-left:19px; }
+    .hist__canc { background:#fdecea; color:#c0392b; border-radius:999px; padding:0 6px; font-size:.66rem; font-weight:700; margin-left:4px; }
     .muted { color: var(--fvx-text-muted, #828aa0); }
     .state { display: flex; align-items: center; gap: 8px; padding: 32px; color: var(--fvx-text-muted, #6b6478); justify-content: center; }
     .state--error { color: #c0392b; }
@@ -266,6 +306,41 @@ export class SubscriptionsComponent implements OnInit {
   expanded = signal<Set<number>>(new Set());
   /** Cobros reales de Flow por subscription_id: 'loading' o el array de facturas. */
   invoices = signal<Record<string, 'loading' | FlowInvoice[]>>({});
+  /** Incluir suscripciones canceladas/terminadas (con su bitácora). */
+  showInactive = signal(false);
+  inactiveCount = computed(() => this.rows().filter(r => r.status === 'failed').length);
+
+  toggleInactive(on: boolean): void {
+    this.showInactive.set(on);
+    this.pageIndex.set(0);
+    void this.load();
+  }
+
+  statusLabel(s: Subscription): string {
+    if (s.status === 'failed') return 'Cancelada';
+    return s.is_active ? 'Activa' : 'Vencida';
+  }
+
+  /** Quién canceló, en palabras: la clienta / admin (correo) / la pasarela. */
+  cancelWho(c: Cancellation): string {
+    switch (c.actor) {
+      case 'member': return 'la clienta (Mi suscripción)';
+      case 'admin': return c.actor_detail ? `admin (${c.actor_detail})` : 'admin';
+      default: return 'la pasarela';
+    }
+  }
+
+  cancelIcon(c: Cancellation): string {
+    return c.actor === 'member' ? 'person' : c.actor === 'admin' ? 'admin_panel_settings' : 'sync_problem';
+  }
+
+  cancelTitle(c: Cancellation): string {
+    const parts = [`Cancelada por ${this.cancelWho(c)}`];
+    if (c.actor === 'gateway' && c.actor_detail) parts.push(c.actor_detail);
+    parts.push(c.at_period_end ? 'al final del período' : 'de inmediato');
+    if (c.reason) parts.push(`motivo: ${c.reason}`);
+    return parts.join(' · ');
+  }
 
   toggleHistory(id: number): void {
     const next = new Set(this.expanded());
@@ -352,7 +427,9 @@ export class SubscriptionsComponent implements OnInit {
     this.loading.set(true);
     try {
       const res = await firstValueFrom(
-        this.http.get<{ data: Subscription[] }>(`${environment.apiUrl}/subscriptions/all/`),
+        this.http.get<{ data: Subscription[] }>(`${environment.apiUrl}/subscriptions/all/`, {
+          params: this.showInactive() ? { include_inactive: '1' } : {},
+        }),
       );
       this.rows.set(res?.data ?? []);
       this.error.set('');
