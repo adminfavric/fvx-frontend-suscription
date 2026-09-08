@@ -15,6 +15,7 @@ import type { PageBreadcrumb } from '../../shared/components/page-header/page-he
 import { crudDialogSizing } from '../../shared/base/crud-dialogs';
 import { EntityFormDialogComponent, EntityFormDialogData } from '../../shared/components/entity-form-dialog/entity-form-dialog.component';
 import { environment } from '../../../environments/environment';
+import { ContentSchedulesEditorComponent } from './content-schedules-editor.component';
 
 interface ContentItem {
   id: number;
@@ -138,10 +139,14 @@ export class ContentComponent extends BaseCrudComponent<ContentItem> implements 
     { key: 'zoom_passcode', label: 'Zoom · Clave', type: 'text', colspan: 1,
       info: 'Clave de la reunión Zoom. Se guarda en el servidor; el miembro nunca ve el link.',
       showWhen: { field: 'kind', equals: 'zoom' } },
-    { key: 'live_start', label: 'Inicio en vivo', type: 'datetime', colspan: 1,
+    // El prefijo "Zoom ·" no es decoración: al crear una sesión Zoom estos dos
+    // campos aparecen justo encima de "Disponible desde/hasta", y cuatro
+    // selectores de fecha seguidos sin distintivo se leen como duplicados. Uno
+    // es la hora de la reunión; el otro, la ventana en que se ve el material.
+    { key: 'live_start', label: 'Zoom · Inicio en vivo', type: 'datetime', colspan: 1,
       info: 'Fecha y hora de inicio de la sesión Zoom. El acceso se abre unos minutos antes.',
       showWhen: { field: 'kind', equals: 'zoom' } },
-    { key: 'live_end', label: 'Fin en vivo', type: 'datetime', colspan: 1,
+    { key: 'live_end', label: 'Zoom · Fin en vivo', type: 'datetime', colspan: 1,
       info: 'Fin de la sesión Zoom (opcional). Vacío = duración por defecto desde el inicio.',
       showWhen: { field: 'kind', equals: 'zoom' } },
     { key: 'is_published', label: 'Publicado', type: 'boolean', defaultValue: true,
@@ -152,15 +157,41 @@ export class ContentComponent extends BaseCrudComponent<ContentItem> implements 
   scheduleFields: FieldConfig[] = [
     { key: 'sched_plans', label: 'Programar en membresías', type: 'multiselect', colspan: 2, options: [],
       info: 'Opcional: elige a qué membresías queda asignado este contenido ahora mismo (equivale a "Programación"). Puedes dejarlo vacío y programarlo después.' },
-    { key: 'sched_starts_at', label: 'Disponible desde', type: 'date', colspan: 1,
+    { key: 'sched_starts_at', label: 'Visible en las membresías desde', type: 'date', colspan: 1,
       info: 'Fecha desde la que aparece en las membresías elegidas. Vacío = desde hoy.' },
-    { key: 'sched_ends_at', label: 'Disponible hasta', type: 'date', colspan: 1,
+    { key: 'sched_ends_at', label: 'Visible en las membresías hasta', type: 'date', colspan: 1,
       info: 'Vacío = disponible sin fin (hasta que elimines la programación).' },
   ];
 
-  /** Crear: contenido + bloque de programación. Editar: solo el contenido. */
+  /**
+   * Crear: contenido + el bloque simple de programación (multiselect + un rango
+   * para todas), que cubre el caso normal —subo la pieza y la lanzo a varias
+   * membresías el mismo día—. Editar: solo el contenido, porque ahí la
+   * programación se maneja con la lista real de `getExtraSection`.
+   */
   protected override getFormDialogFields(entity?: ContentItem): FieldConfig[] {
     return entity ? this.formFields : [...this.formFields, ...this.scheduleFields];
+  }
+
+  /**
+   * Al editar, bajo el formulario va la lista REAL de programaciones de la
+   * pieza, con sus fechas y su modo de fecha, y se puede agregar, editar o
+   * quitar cada una. Es donde la usuaria las viene a buscar cuando su contenido
+   * no aparece: antes el bloque solo existía al crear, así que desde su lado
+   * parecía que la edición "no guardaba los cambios".
+   */
+  protected override getExtraSection(entity?: ContentItem) {
+    if (!entity) return undefined;
+    return {
+      component: ContentSchedulesEditorComponent,
+      inputs: {
+        contentId: entity.id,
+        // Refresca el listado en cuanto cambia una programación: se guardan al
+        // momento, así que cerrar con Cancelar no debe dejar la columna
+        // "Membresías" mostrando lo de antes.
+        onChange: () => this.loadData(),
+      },
+    };
   }
 
   override actions: TableAction[] = [
@@ -183,6 +214,9 @@ export class ContentComponent extends BaseCrudComponent<ContentItem> implements 
       return;
     }
     const ent = this.tEntity();
+    // Membresías elegidas en el último envío: el aviso de "sin programar" se da
+    // al cerrar el diálogo, cuando el valor del formulario ya no está a mano.
+    let lastSchedPlans: number[] = [];
     const dialogData: EntityFormDialogData = {
       title: this.transloco.translate('crud.dialog.createTitle', { entity: ent }),
       fields: this.getFormDialogFields(),
@@ -193,6 +227,7 @@ export class ContentComponent extends BaseCrudComponent<ContentItem> implements 
         return this.api.create<ContentItem>(this.endpoint, content as Partial<ContentItem>).pipe(
           switchMap(created => {
             const plans = (sched_plans as number[] | undefined) ?? [];
+            lastSchedPlans = plans;
             if (!plans.length) return of(created);
             const payload: Record<string, any> = { content: created.id, plans };
             if (sched_starts_at) payload['starts_at'] = sched_starts_at;
@@ -213,6 +248,14 @@ export class ContentComponent extends BaseCrudComponent<ContentItem> implements 
     dialogRef.afterClosed().subscribe(result => {
       if (!result) return;
       this.notify.success(this.transloco.translate('crud.notify.created', { entity: ent }));
+      // Guardar sin membresías deja el contenido publicado pero invisible, y
+      // hasta ahora no lo decía nadie: se veía "creado con éxito" y el material
+      // no aparecía en ninguna parte. Ahora se avisa en el momento.
+      if (!lastSchedPlans.length) {
+        this.notify.warn(
+          'Contenido creado, pero sin programar: nadie lo verá hasta que lo asignes a una membresía.',
+        );
+      }
       this.loadData();
     });
   }

@@ -216,6 +216,15 @@ export abstract class BaseCrudComponent<T extends { id: number }> {
   }
 
   /**
+   * Bloque propio que el diálogo dibuja bajo el formulario. Por defecto no hay.
+   * Lo usan las pantallas cuya entidad tiene registros hijos que no caben en un
+   * campo (p. ej. las programaciones de una pieza de contenido).
+   */
+  protected getExtraSection(_entity?: T): EntityFormDialogData['extraSection'] {
+    return undefined;
+  }
+
+  /**
    * Columnas export; por defecto `exportColumns` estático.
    * Sobreescribir para etiquetas según idioma.
    */
@@ -272,6 +281,7 @@ export abstract class BaseCrudComponent<T extends { id: number }> {
         entity
           ? this.api.update<T>(this.endpoint, entity.id, value as Partial<T>)
           : this.api.create<T>(this.endpoint, value as Partial<T>),
+      extraSection: this.getExtraSection(entity),
     };
 
     const dialogRef = this.dialog.open(EntityFormDialogComponent, {

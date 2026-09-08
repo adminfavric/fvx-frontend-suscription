@@ -1,5 +1,5 @@
-import { Component, Inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Inject, OnInit, Type } from '@angular/core';
+import { CommonModule, NgComponentOutlet } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -19,7 +19,7 @@ import { FieldConfig } from '../../../core/models/api.model';
 import { isHttpError } from '../../../core/http/http-error';
 import { FileUploaderComponent } from '../file-uploader/file-uploader.component';
 import type { FileUploadResult } from '../file-uploader/providers/file-upload-provider';
-import { CalendarComponent } from '../calendar/calendar.component';
+import { DatePickerComponent } from '../date-picker/date-picker.component';
 
 export interface EntityFormDialogData {
   title: string;
@@ -34,6 +34,16 @@ export interface EntityFormDialogData {
    * (comportamiento legacy).
    */
   submitHandler?: (value: Record<string, any>) => Observable<unknown>;
+  /**
+   * Bloque propio que se dibuja DEBAJO del formulario, dentro del mismo diálogo.
+   * Sirve para lo que no cabe en un campo suelto: la lista de programaciones de
+   * una pieza de contenido, por ejemplo, donde cada fila es un registro aparte
+   * con sus propias fechas.
+   *
+   * El componente se gestiona solo (carga y guarda lo suyo); el formulario de
+   * arriba y su botón Guardar siguen funcionando igual, sin enterarse.
+   */
+  extraSection?: { component: Type<unknown>; inputs?: Record<string, unknown> };
 }
 
 function getAtPath(obj: Record<string, unknown> | null | undefined, path: string): unknown {
@@ -52,6 +62,7 @@ function getAtPath(obj: Record<string, unknown> | null | undefined, path: string
   standalone: true,
   imports: [
     CommonModule,
+    NgComponentOutlet,
     ReactiveFormsModule,
     MatDialogModule,
     MatFormFieldModule,
@@ -64,7 +75,7 @@ function getAtPath(obj: Record<string, unknown> | null | undefined, path: string
     MatIconModule,
     MatTooltipModule,
     FileUploaderComponent,
-    CalendarComponent,
+    DatePickerComponent,
     TranslocoPipe,
   ],
   template: `
@@ -142,7 +153,14 @@ function getAtPath(obj: Record<string, unknown> | null | undefined, path: string
             @case ('datetime') {
               <div class="field-wrapper" [style.grid-column]="isMobile ? '' : (field.colspan ? 'span ' + field.colspan : '')">
                 <span class="field-label">@if (field.labelKey) { {{ field.labelKey | transloco }} } @else { {{ field.label }} }@if (field.required) { <span class="required">*</span> }@if (field.info) { <mat-icon class="field-info" [matTooltip]="field.info" matTooltipPosition="above" matTooltipClass="field-info-tip">info_outline</mat-icon> }</span>
-                <app-calendar [withTime]="true" timeInterval="15min" [formControlName]="field.key"></app-calendar>
+                <!-- app-date-picker y no app-calendar: el calendario inline
+                     despliega la grilla completa del mes dentro del formulario, y
+                     dos campos de fecha y hora seguidos (el inicio y el fin de una
+                     sesión en vivo) llenaban la pantalla de calendarios. Este abre
+                     en un popup, ocupa una línea y admite la misma hora. -->
+                <app-date-picker [withTime]="true" timeInterval="15min"
+                                 [placeholder]="field.placeholder || ''"
+                                 [formControlName]="field.key"></app-date-picker>
                 @if (field.hint) { <span class="field-hint">{{ field.hint }}</span> }
               </div>
             }
@@ -208,6 +226,14 @@ function getAtPath(obj: Record<string, unknown> | null | undefined, path: string
           }
         }
       </form>
+
+      @if (data.extraSection) {
+        <div class="extra-section">
+          <ng-container
+            *ngComponentOutlet="data.extraSection.component; inputs: data.extraSection.inputs">
+          </ng-container>
+        </div>
+      }
     </mat-dialog-content>
 
     @if (submitError) {
@@ -233,6 +259,14 @@ function getAtPath(obj: Record<string, unknown> | null | undefined, path: string
     @use 'variables' as v;
 
     /* Banner de error del servidor (el dialog se queda abierto). */
+    /* Bloque propio bajo el formulario, separado por una línea para que se lea
+       como otra cosa y no como un campo más. */
+    .extra-section {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--fvx-border, #e5e7eb);
+    }
+
     .dialog-error {
       display: flex;
       align-items: center;

@@ -153,8 +153,10 @@ export class ProgramacionComponent extends BaseCrudComponent<Schedule> implement
   editFields: FieldConfig[] = [
     { key: 'content', label: 'Contenido', type: 'select', required: true, colspan: 2, options: [],
       info: 'La pieza de contenido a asignar (de la biblioteca).' },
+    // El "una fila = una membresía" iba escondido en el ícono de info, donde no
+    // lo veía nadie hasta después de intentar lo contrario. Va como hint, visible.
     { key: 'plan', label: 'Membresía', type: 'select', required: true, colspan: 2, options: [],
-      info: 'Membresía de esta programación. Para agregar otras, crea una nueva programación.' },
+      hint: 'Cada programación es de UNA membresía. Para sumar otra, agrégala desde el contenido o crea una programación nueva.' },
     { key: 'starts_at', label: 'Disponible desde', type: 'date', required: true,
       info: 'Fecha desde la que el contenido aparece en este plan.' },
     { key: 'ends_at', label: 'Disponible hasta', type: 'date',
