@@ -28,7 +28,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
 import { TruncateTooltipDirective } from '../../directives/truncate-tooltip.directive';
 import { DateFormatPipe } from '../../pipes/date-format.pipe';
-import { ColumnConfig, TableAction } from '../../../core/models/api.model';
+import { ColumnAvatar, ColumnChip, ColumnConfig, TableAction } from '../../../core/models/api.model';
 import { EntityDrawerService } from '../../../core/services/entity-drawer.service';
 import { UserUiPreferencesService } from '../../../core/services/user-ui-preferences.service';
 import { EmptyStateComponent } from '../empty-state/empty-state.component';
@@ -217,18 +217,53 @@ import { StatusChipComponent, StatusChipVariant } from '../status-chip/status-ch
               [matColumnDef]="col.key"
               [sticky]="isStickyStart(col.key)"
               [stickyEnd]="isStickyEnd(col.key)">
-              <th mat-header-cell *matHeaderCellDef [mat-sort-header]="col.sortable !== false ? col.key : ''">
+              <th mat-header-cell *matHeaderCellDef [mat-sort-header]="col.sortable !== false ? col.key : ''"
+                  [style.width]="col.width" [style.min-width]="col.width">
                 @if (col.labelKey) {
                   {{ col.labelKey | transloco }}
                 } @else {
                   {{ col.label }}
                 }
               </th>
-              <td mat-cell *matCellDef="let row" 
+              <td mat-cell *matCellDef="let row"
                   appTruncateTooltip
-                  [matTooltip]="getCellTooltip(row, col)" 
+                  [style.width]="col.width" [style.min-width]="col.width"
+                  [matTooltip]="getCellTooltip(row, col)"
                   matTooltipPosition="above">
                 @switch (col.type) {
+                  @case ('avatar') {
+                    <!-- Miniatura circular. Sin imagen (o si falla la carga)
+                         cae a iniciales, y sin texto a un icono. -->
+                    @if (avatarOf(row, col); as av) {
+                      @if (av.url && !brokenImages.has(av.url)) {
+                        <img class="cell-avatar" [src]="av.url" [alt]="av.label || ''"
+                             loading="lazy" (error)="onAvatarError(av.url!)" />
+                      } @else if (av.label) {
+                        <span class="cell-avatar cell-avatar--initials">{{ initialsOf(av.label) }}</span>
+                      } @else {
+                        <span class="cell-avatar cell-avatar--icon">
+                          <mat-icon>{{ av.icon || 'image' }}</mat-icon>
+                        </span>
+                      }
+                    }
+                  }
+                  @case ('chips') {
+                    @if (chipsOf(row, col); as chips) {
+                      @if (chips.length) {
+                        <span class="cell-chips">
+                          @for (chip of chips; track chip.label) {
+                            <app-status-chip
+                              [variant]="chip.variant || 'neutral'"
+                              [icon]="chip.icon"
+                              [label]="chip.label"
+                            />
+                          }
+                        </span>
+                      } @else {
+                        {{ 'common.dash' | transloco }}
+                      }
+                    }
+                  }
                   @case ('boolean') {
                     <app-status-chip
                       [variant]="row[col.key] ? 'success' : 'muted'"
@@ -252,6 +287,11 @@ import { StatusChipComponent, StatusChipVariant } from '../status-chip/status-ch
                     } @else {
                       {{ row[col.key] ?? ('common.dash' | transloco) }}
                     }
+                  }
+                }
+                @if (col.renderSub) {
+                  @if (col.renderSub(row); as sub) {
+                    @if (sub) { <span class="cell-sub">{{ sub }}</span> }
                   }
                 }
               </td>
@@ -344,6 +384,53 @@ import { StatusChipComponent, StatusChipVariant } from '../status-chip/status-ch
     </div>
   `,
   styles: [`
+    /* ── Celda 'avatar': miniatura circular (portada / foto) ───────────── */
+    .cell-avatar {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex: 0 0 auto;
+      background: var(--fvx-chip-muted-bg, #f1f5f9);
+      border: 1px solid var(--fvx-chip-muted-border, #e2e8f0);
+      overflow: hidden;
+    }
+    .cell-avatar--initials {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--fvx-chip-muted-fg, #64748b);
+      letter-spacing: 0.02em;
+    }
+    .cell-avatar--icon mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: var(--fvx-chip-muted-fg, #64748b);
+    }
+
+    /* ── Celda 'chips': varias etiquetas, con salto de línea si no caben ── */
+    .cell-chips {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 0;
+    }
+
+    /* Segunda línea gris bajo el contenido principal de la celda. */
+    .cell-sub {
+      display: block;
+      font-size: 0.72rem;
+      line-height: 1.25;
+      color: var(--fvx-chip-muted-fg, #64748b);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
     /* Columna Acciones sticky a la derecha (ancho fijo). */
     .actions-column {
       width: 130px;
@@ -1220,7 +1307,39 @@ export class DataTableComponent implements OnChanges {
     return 'neutral';
   }
 
+  /** URLs de portada que fallaron al cargar → se muestran las iniciales. */
+  readonly brokenImages = new Set<string>();
+
+  onAvatarError(url: string): void {
+    this.brokenImages.add(url);
+  }
+
+  /** Miniatura de la fila para `type: 'avatar'`. Sin `avatar()` usa la celda como URL. */
+  avatarOf(row: any, col: ColumnConfig): ColumnAvatar {
+    return col.avatar ? col.avatar(row) : { url: row[col.key] };
+  }
+
+  /** Etiquetas de la fila para `type: 'chips'`. */
+  chipsOf(row: any, col: ColumnConfig): ColumnChip[] {
+    return col.chips ? col.chips(row) : [];
+  }
+
+  /** Hasta dos iniciales del texto, como respaldo cuando no hay portada. */
+  initialsOf(label: string): string {
+    return (label || '')
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map(w => w.charAt(0).toUpperCase())
+      .join('');
+  }
+
   getCellTooltip(row: any, col: ColumnConfig): string {
+    // Las celdas gráficas no llevan tooltip de texto: la imagen ya tiene `alt`
+    // y los chips se leen enteros (no se truncan).
+    if (col.type === 'avatar' || col.type === 'chips') {
+      return col.type === 'chips' ? this.chipsOf(row, col).map(c => c.label).join(', ') : '';
+    }
     if (col.type === 'boolean') {
       return row[col.key]
         ? this.transloco.translate('common.yes')

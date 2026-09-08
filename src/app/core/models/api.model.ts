@@ -53,15 +53,52 @@ export interface FieldConfig {
   showWhen?: { field: string; equals: unknown | unknown[] };
 }
 
+/** Variantes de color disponibles en `app-status-chip` (ver status-chip.component). */
+export type ColumnChipVariant =
+  | 'success' | 'warn' | 'danger' | 'info' | 'muted' | 'neutral' | 'accent' | 'teal';
+
+/** Una etiqueta de la celda `type: 'chips'` (varias por fila). */
+export interface ColumnChip {
+  label: string;
+  variant?: ColumnChipVariant;
+  icon?: string;
+}
+
+/** Miniatura circular de la celda `type: 'avatar'`. */
+export interface ColumnAvatar {
+  /** URL de la imagen. Si falta (o falla al cargar), se muestra el respaldo. */
+  url?: string | null;
+  /** Texto del que se sacan las iniciales cuando no hay imagen. */
+  label?: string;
+  /** Icono Material de respaldo si tampoco hay `label`. */
+  icon?: string;
+}
+
 export interface ColumnConfig {
   key: string;
   labelKey?: string;
   label: string;
-  type?: 'text' | 'boolean' | 'date' | 'chip' | 'link';
+  type?: 'text' | 'boolean' | 'date' | 'chip' | 'link' | 'avatar' | 'chips';
   chipMap?: Record<string, string>;
   format?: string;
   sortable?: boolean;
   render?: (row: any) => string;
+  /**
+   * Segunda línea, en gris y más pequeña, bajo el contenido principal de la
+   * celda. Para datos que acompañan sin competir (p. ej. "sin fin" bajo la
+   * fecha de inicio). Devolver `''` la omite.
+   */
+  renderSub?: (row: any) => string;
+  /**
+   * Ancho de la columna (cualquier medida CSS: `'320px'`, `'22%'`). Se aplica
+   * como `width` + `min-width`, así que en tablas anchas actúa de reparto y en
+   * angostas de suelo. Sin esto, la columna reparte el espacio sobrante.
+   */
+  width?: string;
+  /** `type: 'avatar'` — miniatura circular de la fila. */
+  avatar?: (row: any) => ColumnAvatar;
+  /** `type: 'chips'` — lista de etiquetas de la fila (vacía → guion). */
+  chips?: (row: any) => ColumnChip[];
 }
 
 /**

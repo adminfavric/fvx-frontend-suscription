@@ -8,7 +8,11 @@ export type StatusChipVariant =
   | 'danger'
   | 'info'
   | 'muted'
-  | 'neutral';
+  | 'neutral'
+  // Dos tonos más, sin carga de "estado": sirven para categorizar (p. ej. el
+  // tipo de contenido) cuando las seis anteriores ya están tomadas.
+  | 'accent'
+  | 'teal';
 
 /**
  * Chip tipado para estados (success / warn / danger / info / muted / neutral).
@@ -97,6 +101,16 @@ export interface StatusChipMapEntry {
       background: var(--fvx-chip-neutral-bg, #e2e8f0);
       color: var(--fvx-chip-neutral-fg, #334155);
       border-color: var(--fvx-chip-neutral-border, #cbd5e1);
+    }
+    .status-chip--accent {
+      background: var(--fvx-chip-accent-bg, #ede9fe);
+      color: var(--fvx-chip-accent-fg, #5b21b6);
+      border-color: var(--fvx-chip-accent-border, #ddd6fe);
+    }
+    .status-chip--teal {
+      background: var(--fvx-chip-teal-bg, #ccfbf1);
+      color: var(--fvx-chip-teal-fg, #115e59);
+      border-color: var(--fvx-chip-teal-border, #99f6e4);
     }
   `],
 })

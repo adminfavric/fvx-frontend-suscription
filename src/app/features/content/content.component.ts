@@ -1,10 +1,16 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { BaseCrudComponent } from '../../shared/base/base-crud.component';
 import { CrudPageComponent } from '../../shared/components/crud-page/crud-page.component';
 import { ColumnConfig, FieldConfig, FilterConfig, TableAction } from '../../core/models/api.model';
+import {
+  CONTENT_KIND_FILTER_OPTIONS,
+  CONTENT_KIND_FORM_OPTIONS,
+  contentKind,
+  contentKindChips,
+} from '../../core/models/content-kind';
 import type { PageBreadcrumb } from '../../shared/components/page-header/page-header.component';
 import { crudDialogSizing } from '../../shared/base/crud-dialogs';
 import { EntityFormDialogComponent, EntityFormDialogData } from '../../shared/components/entity-form-dialog/entity-form-dialog.component';
@@ -15,11 +21,11 @@ interface ContentItem {
   title: string;
   kind: string;
   is_published: boolean;
+  image_url?: string;
+  /** Membresías donde está programado (sin repetir), calculado en el backend. */
+  plan_names?: string[];
+  created?: string;
 }
-
-const KIND_LABELS: Record<string, string> = {
-  video: 'Video', audio: 'Audio', pdf: 'PDF', text: 'Texto', image: 'Imagen', zoom: 'Zoom', link: 'Enlace',
-};
 
 /**
  * Biblioteca de contenido (piezas independientes). Se asignan a planes mediante
@@ -61,6 +67,7 @@ const KIND_LABELS: Record<string, string> = {
 })
 export class ContentComponent extends BaseCrudComponent<ContentItem> implements OnInit {
   private http = inject(HttpClient);
+  private cdr = inject(ChangeDetectorRef);
 
   readonly crudBreadcrumbs: PageBreadcrumb[] = [
     { labelKey: 'common.breadcrumbHome', link: '/admin/dashboard' },
@@ -71,42 +78,46 @@ export class ContentComponent extends BaseCrudComponent<ContentItem> implements 
   entityName = 'Contenido';
 
   columns: ColumnConfig[] = [
-    { key: 'title', label: 'Título', sortable: true },
-    { key: 'kind', label: 'Tipo', render: r => KIND_LABELS[r.kind] ?? r.kind },
-    { key: 'is_published', label: 'Publicado', type: 'boolean' },
+    // La portada va primera y en círculo: la pieza se reconoce por la imagen
+    // antes que por el texto. Sin portada caen las iniciales del título.
+    { key: 'image_url', label: '', type: 'avatar', sortable: false, width: '56px',
+      avatar: (r: ContentItem) => ({
+        url: r.image_url,
+        label: r.title,
+        icon: contentKind(r.kind)?.icon ?? 'image',
+      }) },
+    // Es la columna que se lee de verdad: se lleva el ancho.
+    { key: 'title', label: 'Título', sortable: true, width: '320px' },
+    { key: 'kind', label: 'Tipo', type: 'chips', sortable: true,
+      chips: (r: ContentItem) => contentKindChips(r.kind) },
+    // Membresías donde está programado, sin repetir y separadas por coma.
+    // Vacío = publicado pero invisible para todo el mundo, así que lo decimos
+    // con todas sus letras en vez de dejar un guion mudo.
+    { key: 'plan_names', label: 'Membresías', sortable: false, width: '200px',
+      render: (r: ContentItem) => (r.plan_names?.length ? r.plan_names.join(', ') : 'Sin programar') },
+    { key: 'is_published', label: 'Publicado', type: 'boolean', sortable: true },
     { key: 'order', label: 'Orden', sortable: true },
+    { key: 'created', label: 'Creado', type: 'date', sortable: true },
   ];
 
-  /** Filtros de la tabla: por tipo de contenido y por estado de publicación. */
+  /** Filtros de la tabla: tipo, estado de publicación y membresía. */
   override filterConfigs: FilterConfig[] = [
-    { key: 'kind', label: 'Tipo', type: 'select', options: [
-      { value: 'video', label: 'Video' },
-      { value: 'audio', label: 'Audio' },
-      { value: 'pdf', label: 'PDF' },
-      { value: 'text', label: 'Texto' },
-      { value: 'image', label: 'Imagen' },
-      { value: 'zoom', label: 'Zoom' },
-      { value: 'link', label: 'Enlace' },
-    ] },
+    { key: 'kind', label: 'Tipo', type: 'select', options: CONTENT_KIND_FILTER_OPTIONS },
     { key: 'is_published', label: 'Publicado', type: 'select', options: [
       { value: 'true', label: 'Publicado' },
       { value: 'false', label: 'Oculto' },
     ] },
+    // La clave es el lookup del backend (`ContentItem` → sus programaciones →
+    // plan), porque `loadData()` manda la clave del filtro tal cual como
+    // parámetro de la consulta. Las opciones se cargan en `ngOnInit`.
+    { key: 'schedules__plan', label: 'Membresía', type: 'select', options: [] },
   ];
 
   formFields: FieldConfig[] = [
     { key: 'title', label: 'Título', type: 'text', required: true, colspan: 2 },
     { key: 'kind', label: 'Tipo', type: 'select', defaultValue: 'video',
       info: 'Tipo de contenido: video, audio, PDF, texto, imagen, sesión Zoom o enlace.',
-      options: [
-        { value: 'video', label: 'Video' },
-        { value: 'audio', label: 'Audio' },
-        { value: 'pdf', label: 'PDF / documento' },
-        { value: 'text', label: 'Texto' },
-        { value: 'image', label: 'Imagen' },
-        { value: 'zoom', label: 'Sesión Zoom (en vivo)' },
-        { value: 'link', label: 'Enlace' },
-      ],
+      options: CONTENT_KIND_FORM_OPTIONS,
     },
     { key: 'order', label: 'Orden', type: 'number', defaultValue: 0, info: 'Orden en la biblioteca (menor primero).' },
     { key: 'text', label: 'Texto / descripción', type: 'textarea', colspan: 2,
@@ -208,7 +219,8 @@ export class ContentComponent extends BaseCrudComponent<ContentItem> implements 
 
   async ngOnInit(): Promise<void> {
     this.loadData();
-    // Opciones de membresías para el bloque "Programar" del diálogo de creación.
+    // Opciones de membresías: alimentan el bloque "Programar" del diálogo de
+    // creación y el filtro "Membresía" de la tabla.
     try {
       const plans = await firstValueFrom(
         this.http.get<any>(`${environment.apiUrl}/plans/?page_size=200&is_active=true`),
@@ -217,6 +229,12 @@ export class ContentComponent extends BaseCrudComponent<ContentItem> implements 
       const opts = items.map(p => ({ value: p.id, label: p.name }));
       const f = this.scheduleFields.find(x => x.key === 'sched_plans');
       if (f) f.options = opts;
+      // El filtro se pasa por `@Input`, así que hay que cambiar la REFERENCIA
+      // del array (no solo su contenido) para que la vista OnPush lo vuelva a leer.
+      this.filterConfigs = this.filterConfigs.map(fc =>
+        fc.key === 'schedules__plan' ? { ...fc, options: opts } : fc,
+      );
+      this.cdr.markForCheck();
     } catch {
       /* sin opciones; se puede programar luego en Programación */
     }
