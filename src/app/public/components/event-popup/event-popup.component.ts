@@ -42,11 +42,14 @@ function todayKey(): string {
       animation: fade .2s ease;
     }
     .popup-card {
-      position: relative; max-width: min(90vw, 420px); width: 100%;
+      position: relative; max-width: min(90vw, 560px); max-height: calc(100vh - 48px);
       border-radius: 20px; overflow: hidden; box-shadow: 0 30px 70px -20px rgba(0,0,0,.55);
-      animation: pop .25s ease;
+      animation: pop .25s ease; line-height: 0;
     }
-    .popup-card img { display: block; width: 100%; height: auto; cursor: pointer; }
+    /* Alto como límite principal (imagen retrato) y ancho como tope en
+       pantallas chicas — así en desktop se ve grande de verdad, y en una
+       ventana baja no se corta ni empuja la X fuera de pantalla. */
+    .popup-card img { display: block; width: auto; height: auto; max-width: 100%; max-height: calc(100vh - 48px); cursor: pointer; }
     .popup-close {
       position: absolute; top: 10px; right: 10px; z-index: 1;
       width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer;
