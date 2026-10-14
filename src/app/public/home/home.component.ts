@@ -7,6 +7,7 @@ import { AboutComponent } from '../components/about/about.component';
 import { ExperiencesComponent } from '../components/experiences/experiences.component';
 import { HealingComponent } from '../components/healing/healing.component';
 import { NewsletterComponent } from '../components/newsletter/newsletter.component';
+import { EventPopupComponent } from '../components/event-popup/event-popup.component';
 import { Membership, INSCRIPTION_OPENS, formatPrice } from '../data/catalog';
 import { ContentService } from '../../core/services/content.service';
 
@@ -27,8 +28,10 @@ import { ContentService } from '../../core/services/content.service';
     ExperiencesComponent,
     HealingComponent,
     NewsletterComponent,
+    EventPopupComponent,
   ],
   template: `
+    <app-event-popup />
     <app-hero />
     <app-about />
 
