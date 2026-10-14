@@ -112,18 +112,18 @@ import { ContentService, PublicEvent } from '../../core/services/content.service
     .event__action { text-align:center; display:flex; flex-direction:column; gap:10px; }
     .event__price { font-weight:800; color: var(--lita-violet-deep); }
 
-    /* Desktop/tablet: imagen retrato fija a la izquierda, contenido a la
-       derecha con cuerpo y acción repartidos (en vez de apilados). */
+    /* Desktop/tablet: dos columnas — imagen retrato fija a la izquierda,
+       contenido a la derecha. Adentro de esa columna, cuerpo y acción (precio
+       + Comprar) siguen apilados igual que en mobile, así "Comprar" queda al
+       final del texto y no flotando aparte en una tercera columna. */
     @media (min-width: 760px) {
       /* align-items:flex-start (no stretch): la imagen mantiene su propio
          aspect-ratio 4/5 en vez de estirarse a la altura del texto, que
          puede ser mucho más alto (descripciones largas) y la dejaba
          recortada/zoomeada por los costados con object-fit:cover. */
       .event { flex-direction:row; align-items:flex-start; }
-      .event__media { width:300px; max-height:none; aspect-ratio: 4 / 5; flex:none; }
-      .event__content { flex:1; flex-direction:row; align-items:flex-start; gap:28px; padding-top:30px; }
-      .event__body { flex:1; }
-      .event__action { min-width:190px; flex:none; }
+      .event__media { width:340px; max-height:none; aspect-ratio: 4 / 5; flex:none; }
+      .event__content { flex:1; }
     }
 
     .buy { display:flex; flex-direction:column; gap:8px; }
