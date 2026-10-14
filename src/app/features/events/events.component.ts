@@ -65,6 +65,8 @@ export class AdminEventsComponent extends BaseCrudComponent<AdminEvent> implemen
     { key: 'name', label: 'Nombre', type: 'text', required: true, colspan: 2,
       info: 'Nombre del evento (ej. "Taller Básico de Alkymia Solar").' },
     { key: 'subtitle', label: 'Subtítulo', type: 'text', colspan: 2 },
+    { key: 'location', label: 'Lugar', type: 'text', colspan: 2,
+      info: 'Dónde ocurre el evento (ej. "Punta Griega"). Se muestra destacado junto a la fecha.' },
     { key: 'price', label: 'Precio (CLP)', type: 'number',
       info: 'Precio de la compra única en pesos. Vacío = "Valor por confirmar" (no comprable aún).' },
     { key: 'date', label: 'Fecha', type: 'date', info: 'Fecha del evento. Vacío = "Próximamente".' },

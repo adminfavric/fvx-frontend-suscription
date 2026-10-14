@@ -50,6 +50,7 @@ export interface PublicEvent {
   slug: string;
   name: string;
   subtitle: string;
+  location: string;
   description: string;
   date: string | null;
   price: number | null;
