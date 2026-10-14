@@ -115,9 +115,13 @@ import { ContentService, PublicEvent } from '../../core/services/content.service
     /* Desktop/tablet: imagen retrato fija a la izquierda, contenido a la
        derecha con cuerpo y acción repartidos (en vez de apilados). */
     @media (min-width: 760px) {
-      .event { flex-direction:row; align-items:stretch; }
-      .event__media { width:300px; max-height:none; aspect-ratio:auto; }
-      .event__content { flex:1; flex-direction:row; align-items:center; gap:28px; }
+      /* align-items:flex-start (no stretch): la imagen mantiene su propio
+         aspect-ratio 4/5 en vez de estirarse a la altura del texto, que
+         puede ser mucho más alto (descripciones largas) y la dejaba
+         recortada/zoomeada por los costados con object-fit:cover. */
+      .event { flex-direction:row; align-items:flex-start; }
+      .event__media { width:300px; max-height:none; aspect-ratio: 4 / 5; flex:none; }
+      .event__content { flex:1; flex-direction:row; align-items:flex-start; gap:28px; padding-top:30px; }
       .event__body { flex:1; }
       .event__action { min-width:190px; flex:none; }
     }
