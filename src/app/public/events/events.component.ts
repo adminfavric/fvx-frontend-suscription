@@ -1,14 +1,17 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { firstValueFrom } from 'rxjs';
 import { formatPrice } from '../data/catalog';
 import { ContentService, PublicEvent } from '../../core/services/content.service';
+import { FirebaseService } from '../services/firebase.service';
 
 /**
- * Eventos especiales (compra ÚNICA, estilo Tiendup). Lista los eventos públicos
- * desde Django y permite comprarlos directo: nombre + email → pago en Flow.
+ * Eventos especiales (presenciales, pago por transferencia directa — NO
+ * pasan por Flow). Lista los eventos públicos desde Django; "Quiero ir" solo
+ * deja nombre + email como Lead (bandeja de mensajes del admin) para que el
+ * equipo escriba y coordine el pago a mano.
  */
 @Component({
   selector: 'app-events',
@@ -20,14 +23,14 @@ import { ContentService, PublicEvent } from '../../core/services/content.service
       <div class="inner">
         <span class="eyebrow">Eventos especiales</span>
         <h1>Talleres y encuentros únicos</h1>
-        <p>Experiencias que ocurren una sola vez. Cómpralas directamente aquí.</p>
+        <p>Experiencias que ocurren una sola vez. Reserva tu cupo aquí.</p>
       </div>
     </header>
 
     @if (result()) {
       <div class="result" [class.result--ok]="result() === 'ok'" [class.result--fail]="result() === 'fail'">
         <mat-icon>{{ result() === 'ok' ? 'check_circle' : 'error_outline' }}</mat-icon>
-        {{ result() === 'ok' ? '¡Compra exitosa! Te enviaremos los detalles por correo.' : 'El pago no se completó. Puedes intentarlo nuevamente.' }}
+        {{ result() === 'ok' ? '¡Listo! Te escribiremos a tu correo para coordinar el pago por transferencia.' : 'No pudimos enviar tus datos. Intenta nuevamente.' }}
       </div>
     }
 
@@ -56,18 +59,19 @@ import { ContentService, PublicEvent } from '../../core/services/content.service
             </div>
             <div class="event__action">
               <span class="event__price">{{ price(e.price) }}</span>
+              @if (e.price) { <span class="event__note">Pago por transferencia — te contactamos por correo</span> }
               @if (selected()?.slug === e.slug) {
                 <form class="buy" (ngSubmit)="confirm(e)">
                   <input type="text" [(ngModel)]="name" name="name" placeholder="Tu nombre" />
                   <input type="email" [(ngModel)]="email" name="email" placeholder="tu@correo.cl" />
                   @if (error()) { <span class="buy__err">{{ error() }}</span> }
                   <button class="btn btn--gold" type="submit" [disabled]="submitting()">
-                    {{ submitting() ? 'Redirigiendo…' : 'Pagar ' + price(e.price) }}
+                    {{ submitting() ? 'Enviando…' : 'Reservar cupo' }}
                   </button>
                   <button class="btn btn--ghost" type="button" (click)="cancel()">Cancelar</button>
                 </form>
               } @else if (e.price) {
-                <button class="btn btn--gold" type="button" (click)="select(e)">Comprar</button>
+                <button class="btn btn--gold" type="button" (click)="select(e)">Quiero ir</button>
               } @else {
                 <button class="btn btn--gold" type="button" disabled>Valor por confirmar</button>
               }
@@ -111,6 +115,7 @@ import { ContentService, PublicEvent } from '../../core/services/content.service
     .event__desc { margin:0; color: var(--lita-ink); line-height:1.6; white-space:pre-line; }
     .event__action { text-align:center; display:flex; flex-direction:column; gap:10px; }
     .event__price { font-weight:800; color: var(--lita-violet-deep); }
+    .event__note { font-size:.78rem; color: var(--lita-muted); margin-top:-4px; }
 
     /* Desktop/tablet: dos columnas — imagen retrato fija a la izquierda,
        contenido a la derecha. Adentro de esa columna, cuerpo y acción (precio
@@ -140,7 +145,7 @@ import { ContentService, PublicEvent } from '../../core/services/content.service
 })
 export class EventsComponent implements OnInit {
   private content = inject(ContentService);
-  private route = inject(ActivatedRoute);
+  private firebase = inject(FirebaseService);
 
   events = signal<PublicEvent[]>([]);
   selected = signal<PublicEvent | null>(null);
@@ -153,8 +158,6 @@ export class EventsComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     this.events.set(await this.content.getEvents());
-    const r = this.route.snapshot.queryParamMap.get('pago');
-    if (r === 'ok' || r === 'fail') this.result.set(r);
   }
 
   select(e: PublicEvent): void {
@@ -174,15 +177,23 @@ export class EventsComponent implements OnInit {
     this.submitting.set(true);
     this.error.set('');
     try {
-      const url = await this.content.startEventCheckout({
-        event_slug: e.slug,
-        name: this.name.trim(),
-        email: this.email.trim(),
-      });
-      window.location.href = url;
+      await firstValueFrom(
+        this.firebase.saveEventInterest({
+          name: this.name.trim(),
+          email: this.email.trim(),
+          eventName: e.name,
+          eventSlug: e.slug,
+          price: e.price,
+        }),
+      );
+      this.submitting.set(false);
+      this.selected.set(null);
+      this.name = '';
+      this.email = '';
+      this.result.set('ok');
     } catch {
       this.submitting.set(false);
-      this.error.set('No se pudo iniciar el pago. Intenta nuevamente.');
+      this.result.set('fail');
     }
   }
 }

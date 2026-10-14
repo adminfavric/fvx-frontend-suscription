@@ -39,6 +39,14 @@ export interface MaratonForm {
   countryCode?: string;
 }
 
+export interface EventInterestForm {
+  name: string;
+  email: string;
+  eventName: string;
+  eventSlug: string;
+  price: number | null;
+}
+
 type LeadKind = 'newsletter' | 'contact' | 'maraton';
 
 @Injectable({ providedIn: 'root' })
@@ -72,5 +80,25 @@ export class FirebaseService {
   /** Inscripción a maratón / evento puntual. */
   saveMaratonInscription(data: MaratonForm, source = 'maria-magdalena'): Observable<void> {
     return this.post('maraton', { ...data, email: data.email.toLowerCase().trim() }, source);
+  }
+
+  /**
+   * Interés en un evento especial (/eventos) de pago por transferencia
+   * directa — NO pasa por Flow ni ninguna pasarela. Solo deja el contacto en
+   * la bandeja de mensajes (Lead, kind="maraton") para que el equipo escriba
+   * por correo y coordine la transferencia a mano.
+   */
+  saveEventInterest(data: EventInterestForm): Observable<void> {
+    const priceTxt = data.price ? `$${data.price.toLocaleString('es-CL')} CLP` : 'valor por confirmar';
+    return this.post(
+      'maraton',
+      {
+        name: data.name,
+        email: data.email.toLowerCase().trim(),
+        subject: data.eventName,
+        message: `Quiere reservar cupo para "${data.eventName}" (${priceTxt}). Contactar por correo para coordinar la transferencia.`,
+      },
+      'eventos',
+    );
   }
 }

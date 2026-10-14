@@ -192,17 +192,6 @@ export class ContentService {
     }
   }
 
-  /** Inicia el pago ÚNICO de un evento en Flow; devuelve la URL de redirección. */
-  async startEventCheckout(payload: { event_slug: string; name: string; email: string }): Promise<string> {
-    const res = await firstValueFrom(
-      this.http.post<{ redirect_url: string }>(
-        `${environment.apiUrl}/public/events/checkout/`,
-        payload,
-      ),
-    );
-    return res.redirect_url;
-  }
-
   /**
    * Registra la intención de inscripción de un visitante. Devuelve true si se
    * guardó en Firestore. Requiere que las Security Rules permitan crear en
