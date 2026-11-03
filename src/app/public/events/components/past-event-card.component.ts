@@ -18,6 +18,8 @@ export class PastEventCardComponent {
 
   meta = computed(() => {
     const e = this.event();
-    return [e.date ? formatShortDate(e.date) : '', e.location, e.subtitle].filter(Boolean).join(' · ');
+    // En la tarjeta resumida va el subtítulo corto (hasta la primera coma); el completo queda en el detalle.
+    const shortSubtitle = (e.subtitle ?? '').split(',')[0].trim();
+    return [e.date ? formatShortDate(e.date) : '', e.location, shortSubtitle].filter(Boolean).join(' · ');
   });
 }

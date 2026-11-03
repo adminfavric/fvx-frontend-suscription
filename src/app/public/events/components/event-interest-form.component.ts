@@ -48,7 +48,9 @@ export class EventInterestFormComponent {
   fieldId = computed(() => `interest-${this.event().slug}`);
   lodgingLabel = computed(() => {
     const place = this.event().location ? ` en ${this.event().location}` : '';
-    return `Quiero alojar${place} (+${formatPrice(this.event().lodging_price ?? null)} por persona)`;
+    // La primera frase de la nota («por persona en habitación doble») completa la casilla.
+    const terms = (this.event().lodging_note ?? '').split(/[.\n]/)[0].trim() || 'por persona';
+    return `Quiero alojar${place} (+${formatPrice(this.event().lodging_price ?? null)} ${terms})`;
   });
 
   async submit(): Promise<void> {

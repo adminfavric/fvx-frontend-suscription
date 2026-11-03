@@ -36,7 +36,7 @@
   p { margin: 0 auto; max-width: 46ch; color: #e9e2f2; }
 }
 .ev-hero .ev-eyebrow {
-  color: var(--lita-gold); letter-spacing: 0.16em; text-transform: uppercase; font-size: 13px; font-weight: 600; margin: 0;
+  color: var(--lita-gold); letter-spacing: 0.16em; text-transform: uppercase; font-size: 13px; font-weight: 600; margin: 0 auto;
 }
 
 .ev-section { padding: 36px 0 8px; }
@@ -95,7 +95,7 @@
 .ev-active__body { padding: 22px 20px 24px; }
 .ev-active h3 { margin: 12px 0 2px; font-size: 26px; line-height: 1.15; color: var(--lita-violet-deep); letter-spacing: -0.01em; }
 .ev-subtitle { margin: 0; font-size: 18px; font-weight: 600; color: var(--lita-violet); }
-.ev-active__summary { margin: 14px 0 0; color: var(--lita-ink); }
+.ev-active__summary { margin: 14px 0 0; color: var(--lita-ink); font-size: 1rem; }
 .ev-active__price {
   display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; margin: 18px 0 0; padding-top: 16px;
   border-top: 1px solid var(--lita-line);
@@ -136,6 +136,8 @@
   h2 { margin: 0 0 12px; font-size: 20px; color: var(--lita-violet-deep); }
   p { margin: 0 0 12px; }
 }
+// Texto de lectura a 16 px (el sitio hereda 14/15 px; el público de Lita es mayor).
+.ev-block p.ev-description, .ev-block p.ev-audience { font-size: 1rem; }
 .ev-description { white-space: pre-line; }
 .ev-audience { padding: 14px 16px; border-left: 4px solid var(--lita-gold); background: #fff; border-radius: 0 12px 12px 0; }
 
