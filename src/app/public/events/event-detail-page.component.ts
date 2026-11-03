@@ -5,7 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ContentService, PublicEvent } from '../../core/services/content.service';
-import { formatWeekdayDay, splitParagraphs } from './event-format';
+import { formatWeekdayDay, isEventPast, splitParagraphs } from './event-format';
 import { EventBookingCardComponent } from './components/event-booking-card.component';
 import { EventFactsComponent } from './components/event-facts.component';
 import { EventFinishedNoticeComponent } from './components/event-finished-notice.component';
@@ -65,13 +65,15 @@ export class EventDetailPageComponent {
 
   private async load(slug: string): Promise<void> {
     this.event.set(null);
-    const [event, all] = await Promise.all([this.content.getEvent(slug), this.content.getEvents()]);
-    if (!event) {
+    const all = await this.content.getEvents();
+    const found = all.find((e) => e.slug === slug);
+    if (!found) {
       void this.router.navigate(['/eventos'], { replaceUrl: true });
       return;
     }
+    const event = { ...found, is_past: isEventPast(found) };
     this.event.set(event);
-    this.next.set(all.find((e) => !e.is_past && e.slug !== slug) ?? null);
+    this.next.set(all.find((e) => !isEventPast(e) && e.slug !== slug) ?? null);
     this.title.setTitle(`${[event.name, event.subtitle].filter(Boolean).join(': ')} · ${SITE_NAME}`);
   }
 

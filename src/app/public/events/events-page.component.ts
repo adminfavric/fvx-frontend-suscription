@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, ViewEncapsulation, computed, inject, signal } from '@angular/core';
 import { ContentService, PublicEvent } from '../../core/services/content.service';
+import { isEventPast } from './event-format';
 import { ActiveEventCardComponent } from './components/active-event-card.component';
 import { PastEventCardComponent } from './components/past-event-card.component';
 
@@ -10,7 +11,7 @@ function sortKey(event: PublicEvent): number {
 
 /**
  * /eventos: «Próximos encuentros» y «Encuentros anteriores». Qué evento ya
- * terminó lo decide el servidor (`is_past`), no el reloj del navegador.
+ * terminó lo decide el servidor (`is_past`) si lo envía; si no, `isEventPast`.
  * Presenciales con pago por transferencia: «Quiero ir» deja un Lead.
  */
 @Component({
@@ -28,8 +29,8 @@ export class EventsPageComponent implements OnInit {
 
   events = signal<PublicEvent[]>([]);
   loaded = signal(false);
-  upcoming = computed(() => this.events().filter((e) => !e.is_past));
-  past = computed(() => this.events().filter((e) => e.is_past).sort((a, b) => sortKey(b) - sortKey(a)));
+  upcoming = computed(() => this.events().filter((e) => !isEventPast(e)));
+  past = computed(() => this.events().filter((e) => isEventPast(e)).sort((a, b) => sortKey(b) - sortKey(a)));
 
   async ngOnInit(): Promise<void> {
     this.events.set(await this.content.getEvents());

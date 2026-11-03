@@ -216,14 +216,14 @@ export class ContentService {
     }
   }
 
-  /** Un evento por slug (`/eventos/:slug`). `null` si no existe o no es público. */
+  /**
+   * Un evento por slug (`/eventos/:slug`), `null` si no existe o no es
+   * público. Sale de la misma lista pública: así funciona igual con el backend
+   * de hoy, que no tiene endpoint de detalle.
+   */
   async getEvent(slug: string): Promise<PublicEvent | null> {
-    try {
-      const url = `${environment.apiUrl}/public/events/${encodeURIComponent(slug)}/`;
-      return await firstValueFrom(this.http.get<PublicEvent>(url));
-    } catch {
-      return null;
-    }
+    const events = await this.getEvents();
+    return events.find((e) => e.slug === slug) ?? null;
   }
 
   /**

@@ -60,3 +60,22 @@ export function splitParagraphs(text: string | undefined): string[] {
     .map((paragraph) => paragraph.trim())
     .filter(Boolean);
 }
+
+/**
+ * ¿Ya terminó? Manda el `is_past` del servidor. Si el backend no lo envía (el
+ * de hoy), se calcula aquí: `end_date` o, si falta, el final del día de `date`
+ * en Santiago (un evento sin hora de término no pasa a «anteriores» a la hora
+ * en que empieza). Sin fecha = no terminó.
+ */
+export function isEventPast(event: { is_past?: boolean; date: string | null; end_date?: string | null }): boolean {
+  if (typeof event.is_past === 'boolean') return event.is_past;
+  const endsAt = event.end_date ?? (event.date ? endOfSantiagoDay(event.date) : null);
+  return endsAt !== null && new Date(endsAt).getTime() < Date.now();
+}
+
+/** 23:59:59 del día de `iso` en Santiago, como ISO con el desfase de ese día. */
+function endOfSantiagoDay(iso: string): string {
+  const p = getParts(iso, { year: 'numeric', month: '2-digit', day: '2-digit', timeZoneName: 'longOffset' });
+  const offset = (p.timeZoneName ?? 'GMT-03:00').replace('GMT', '') || '+00:00';
+  return `${p.year}-${p.month}-${p.day}T23:59:59${offset}`;
+}
