@@ -11,10 +11,22 @@ function todayKey(): string {
 }
 
 /**
- * Popup de la home con la imagen del próximo evento especial (/eventos).
- * Se muestra una sola vez por día por visitante (localStorage), y al hacer
- * clic en la imagen lleva directo a la página de eventos. Si no hay eventos
- * públicos con imagen, o ya se mostró hoy, el componente no renderiza nada.
+ * Campaña fija de la home (NO viene del backend de `/eventos`): se usa para
+ * promocionar entradas vendidas por fuera, como Ticketmaster, sin crear un
+ * `Event` en el admin. Poner en `null` para volver al popup automático de
+ * eventos especiales.
+ */
+const STATIC_CAMPAIGN: { image?: string; video?: string; alt: string; href: string } | null = {
+  video: '/assets/campaigns/congreso-reel.mp4',
+  alt: 'Primer Congreso Internacional de Medicina y Psicología Transpersonal — 8 de noviembre',
+  href: 'https://www.ticketmaster.cl/event/primer-congreso-internacional-de-medicina-y-psicologa-transpersonal-metropolitan-santiago',
+};
+
+/**
+ * Popup de la home con la imagen del próximo evento especial (/eventos), o
+ * de `STATIC_CAMPAIGN` si está definida (tiene prioridad). Se muestra una
+ * sola vez por día por visitante (localStorage). Si no hay nada que mostrar,
+ * o ya se mostró hoy, el componente no renderiza nada.
  */
 @Component({
   selector: 'app-event-popup',
@@ -22,7 +34,22 @@ function todayKey(): string {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, MatIconModule],
   template: `
-    @if (event(); as e) {
+    @if (campaign(); as c) {
+      <div class="popup-backdrop" (click)="dismiss()">
+        <div class="popup-card" (click)="$event.stopPropagation()">
+          <button class="popup-close" type="button" (click)="dismiss()" aria-label="Cerrar">
+            <mat-icon>close</mat-icon>
+          </button>
+          <a [href]="c.href" target="_blank" rel="noopener" (click)="dismiss()">
+            @if (c.video) {
+              <video [src]="c.video" [attr.aria-label]="c.alt" autoplay loop muted playsinline></video>
+            } @else {
+              <img [src]="c.image" [alt]="c.alt" />
+            }
+          </a>
+        </div>
+      </div>
+    } @else if (event(); as e) {
       <div class="popup-backdrop" (click)="dismiss()">
         <div class="popup-card" (click)="$event.stopPropagation()">
           <button class="popup-close" type="button" (click)="dismiss()" aria-label="Cerrar">
@@ -49,7 +76,7 @@ function todayKey(): string {
     /* Alto como límite principal (imagen retrato) y ancho como tope en
        pantallas chicas — así en desktop se ve grande de verdad, y en una
        ventana baja no se corta ni empuja la X fuera de pantalla. */
-    .popup-card img { display: block; width: auto; height: auto; max-width: 100%; max-height: calc(100vh - 48px); cursor: pointer; }
+    .popup-card img, .popup-card video { display: block; width: auto; height: auto; max-width: 100%; max-height: calc(100vh - 48px); cursor: pointer; }
     .popup-close {
       position: absolute; top: 10px; right: 10px; z-index: 1;
       width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer;
@@ -63,10 +90,18 @@ function todayKey(): string {
 })
 export class EventPopupComponent implements OnInit {
   private content = inject(ContentService);
+  campaign = signal(STATIC_CAMPAIGN);
   event = signal<PublicEvent | null>(null);
 
   async ngOnInit(): Promise<void> {
-    if (localStorage.getItem(STORAGE_KEY) === todayKey()) return;
+    if (localStorage.getItem(STORAGE_KEY) === todayKey()) {
+      this.campaign.set(null);
+      return;
+    }
+    if (STATIC_CAMPAIGN) {
+      localStorage.setItem(STORAGE_KEY, todayKey());
+      return;
+    }
 
     const events = await this.content.getEvents();
     const withImage = events.find((e) => e.image_url);
@@ -77,6 +112,7 @@ export class EventPopupComponent implements OnInit {
   }
 
   dismiss(): void {
+    this.campaign.set(null);
     this.event.set(null);
   }
 }
