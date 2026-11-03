@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, OnInit, effect, inject, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { ContentService, PublicEvent } from '../../../core/services/content.service';
@@ -16,8 +16,21 @@ function todayKey(): string {
  * `Event` en el admin. Poner en `null` para volver al popup automático de
  * eventos especiales.
  */
-const STATIC_CAMPAIGN: { image?: string; video?: string; alt: string; href: string } | null = {
+interface Campaign {
+  image?: string;
+  video?: string;
+  /** Cuadro que se ve mientras el video carga (o si el navegador no lo reproduce solo). */
+  poster?: string;
+  /** Imagen fija si el video falla al cargar. */
+  fallbackImage?: string;
+  alt: string;
+  href: string;
+}
+
+const STATIC_CAMPAIGN: Campaign | null = {
   video: '/assets/campaigns/congreso-reel.mp4',
+  poster: '/assets/campaigns/congreso-reel-poster.jpg',
+  fallbackImage: '/assets/campaigns/congreso-transpersonal.jpg',
   alt: 'Primer Congreso Internacional de Medicina y Psicología Transpersonal — 8 de noviembre',
   href: 'https://www.ticketmaster.cl/event/primer-congreso-internacional-de-medicina-y-psicologa-transpersonal-metropolitan-santiago',
 };
@@ -42,7 +55,10 @@ const STATIC_CAMPAIGN: { image?: string; video?: string; alt: string; href: stri
           </button>
           <a [href]="c.href" target="_blank" rel="noopener" (click)="dismiss()">
             @if (c.video) {
-              <video [src]="c.video" [attr.aria-label]="c.alt" autoplay loop muted playsinline></video>
+              <!-- [muted] como PROPIEDAD: el atributo solo no deja la propiedad en true en
+                   Angular y el navegador bloqueaba el autoplay (quedaba el cuadro de estrellas). -->
+              <video #reel [src]="c.video" [poster]="c.poster ?? ''" [attr.aria-label]="c.alt" [muted]="true"
+                     autoplay loop playsinline preload="auto" (error)="useFallbackImage()"></video>
             } @else {
               <img [src]="c.image" [alt]="c.alt" />
             }
@@ -92,6 +108,19 @@ export class EventPopupComponent implements OnInit {
   private content = inject(ContentService);
   campaign = signal(STATIC_CAMPAIGN);
   event = signal<PublicEvent | null>(null);
+  private reel = viewChild<ElementRef<HTMLVideoElement>>('reel');
+
+  constructor() {
+    // Algunos navegadores ignoran `autoplay` aunque el video venga silenciado:
+    // se fuerza con play(). Si igual lo bloquean (p. ej. modo ahorro en iOS),
+    // queda el póster con el título, que se lee bien.
+    effect(() => {
+      const video = this.reel()?.nativeElement;
+      if (!video) return;
+      video.muted = true;
+      video.play().catch(() => undefined);
+    });
+  }
 
   async ngOnInit(): Promise<void> {
     if (localStorage.getItem(STORAGE_KEY) === todayKey()) {
@@ -109,6 +138,12 @@ export class EventPopupComponent implements OnInit {
 
     this.event.set(withImage);
     localStorage.setItem(STORAGE_KEY, todayKey());
+  }
+
+  /** El video no cargó: queda la imagen fija de la campaña. */
+  useFallbackImage(): void {
+    const c = this.campaign();
+    if (c?.fallbackImage) this.campaign.set({ ...c, video: undefined, image: c.fallbackImage });
   }
 
   dismiss(): void {
