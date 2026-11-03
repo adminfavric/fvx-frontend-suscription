@@ -1,0 +1,17 @@
+:host { display: block; }
+.rows { display: grid; gap: 8px; }
+.row {
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px;
+  border: 1px solid var(--color-border, #e2e2e8); border-radius: 10px;
+}
+.cell {
+  min-width: 0; min-height: 38px; padding: 0 10px; border: 1px solid var(--color-border, #d6d6de);
+  border-radius: 8px; font: inherit; background: var(--color-surface, #fff); color: inherit;
+}
+.cell--grow { flex: 1; }
+.cell--check { flex: none; }
+.row__actions { display: flex; margin-left: auto; }
+.rows__add { justify-self: start; }
+@media (max-width: 600px) {
+  .row:not(.row--text) .cell:not(.cell--check) { flex-basis: 100% !important; }
+}

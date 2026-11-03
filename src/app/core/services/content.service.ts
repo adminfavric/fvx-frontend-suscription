@@ -45,7 +45,19 @@ export interface LaunchSchedule {
   signature: string;
 }
 
-/** Evento especial (compra única) que viene del backend Django. */
+/** Una fila del programa de un evento («10:45 – 13:00 · Master class»). */
+export interface EventProgramItem {
+  start: string;
+  end: string;
+  title: string;
+  detail: string;
+  highlight: boolean;
+}
+
+/**
+ * Evento especial que viene del backend Django. Los campos del detalle (fase 2
+ * de /eventos) son opcionales: un evento sin ellos se ve con su `description`.
+ */
 export interface PublicEvent {
   slug: string;
   name: string;
@@ -56,6 +68,18 @@ export interface PublicEvent {
   price: number | null;
   icon: string;
   image_url?: string;
+  end_date?: string | null;
+  /** Lo decide el servidor (no el reloj del navegador). */
+  is_past?: boolean;
+  summary?: string;
+  audience?: string;
+  price_note?: string;
+  program?: EventProgramItem[];
+  includes?: string[];
+  lodging_price?: number | null;
+  lodging_note?: string;
+  conditions?: string[];
+  image_alt?: string;
 }
 
 /**
@@ -189,6 +213,16 @@ export class ContentService {
       return list ?? [];
     } catch {
       return [];
+    }
+  }
+
+  /** Un evento por slug (`/eventos/:slug`). `null` si no existe o no es público. */
+  async getEvent(slug: string): Promise<PublicEvent | null> {
+    try {
+      const url = `${environment.apiUrl}/public/events/${encodeURIComponent(slug)}/`;
+      return await firstValueFrom(this.http.get<PublicEvent>(url));
+    } catch {
+      return null;
     }
   }
 

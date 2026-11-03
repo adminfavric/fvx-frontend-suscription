@@ -1,0 +1,21 @@
+<h2 class="ev-booking__title" id="booking-title">Reserva tu cupo</h2>
+<p class="ev-booking__price">
+  <strong>{{ priceText() }}</strong>
+  @if (event().price_note) { <span>{{ event().price_note }}</span> }
+</p>
+@if (offersLodging()) {
+  <div class="ev-booking__lodging">
+    <strong>Alojamiento opcional: {{ lodgingPriceText() }}</strong>
+    @if (event().lodging_note) { {{ event().lodging_note }} }
+  </div>
+}
+@if (event().price) {
+  <app-event-interest-form [event]="event()" [offersLodging]="offersLodging()" />
+} @else {
+  <p class="ev-form__note">El valor está por confirmar: pronto abriremos las reservas.</p>
+}
+@if (event().conditions?.length) {
+  <ul class="ev-conditions">
+    @for (condition of event().conditions; track $index) { <li>{{ condition }}</li> }
+  </ul>
+}

@@ -25,6 +25,8 @@ interface Lead {
   created: string;
   is_read: boolean;
   is_replied: boolean;
+  /** «Quiero ir» de /eventos: pidió alojamiento (null = no aplica). */
+  lodging?: boolean | null;
 }
 
 /** Fila de la bandeja: UNA persona (email normalizado) con todos sus mensajes. */
@@ -97,6 +99,7 @@ const KIND_LABELS: Record<string, string> = {
             <th mat-header-cell *matHeaderCellDef>Último mensaje</th>
             <td mat-cell *matCellDef="let t">
               @if (t.last.subject) { <strong>{{ t.last.subject }}</strong><br /> }
+              @if (t.last.lodging) { <span class="badge badge--lodging">Alojamiento: sí</span> }
               <span class="msg">{{ t.last.message || (t.last.country ? ('País: ' + t.last.country) : '—') }}</span>
               @if (t.count > 1) { <span class="count">{{ t.count }} mensajes</span> }
             </td>
@@ -151,6 +154,7 @@ const KIND_LABELS: Record<string, string> = {
     .badge--new { background:#fde68a; color:#92400e; }
     .badge--read { background:#e0e7ff; color:#3730a3; }
     .badge--replied { background:#d1fae5; color:#065f46; }
+    .badge--lodging { background:#fbf1dc; color:#7a5410; }
     .count { display:inline-block; margin-left:8px; padding:1px 8px; border-radius:999px; font-size:.72rem; background:#f0e9fa; color:#5b3a8a; font-weight:600; white-space:nowrap; }
     .act { border:none; background:transparent; cursor:pointer; color:var(--fvx-text-muted,#6b6478); padding:4px; border-radius:6px; }
     .act:hover { background:var(--fvx-bg-surface-2,#f1f1f6); }

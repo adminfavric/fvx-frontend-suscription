@@ -1,0 +1,25 @@
+@if (done()) {
+  <p class="ev-form__done" role="status">¡Listo! Te escribiremos a tu correo para coordinar el pago por transferencia.</p>
+} @else {
+  <form class="ev-form" (ngSubmit)="submit()" novalidate>
+    <div class="ev-field">
+      <label [for]="fieldId() + '-name'">Tu nombre</label>
+      <input [id]="fieldId() + '-name'" name="name" autocomplete="name" [(ngModel)]="name" />
+    </div>
+    <div class="ev-field">
+      <label [for]="fieldId() + '-email'">Tu correo</label>
+      <input [id]="fieldId() + '-email'" name="email" type="email" autocomplete="email" [(ngModel)]="email" />
+    </div>
+    @if (offersLodging()) {
+      <label class="ev-checkbox">
+        <input type="checkbox" name="lodging" [(ngModel)]="lodging" />
+        <span>{{ lodgingLabel() }}</span>
+      </label>
+    }
+    @if (error()) { <p class="ev-form__error" role="alert">{{ error() }}</p> }
+    <button class="ev-btn ev-btn--gold ev-btn--block" type="submit" [disabled]="submitting()">
+      {{ submitting() ? 'Enviando…' : 'Quiero ir' }}
+    </button>
+    <p class="ev-form__note">No pagas nada aquí: te escribimos para coordinar la transferencia.</p>
+  </form>
+}

@@ -92,6 +92,23 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "preview": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.preview.ts"
+                }
+              ],
+              "outputHashing": "all",
+              "optimization": {
+                "scripts": true,
+                "styles": {
+                  "minify": true,
+                  "inlineCritical": false
+                },
+                "fonts": true
+              }
             }
           },
           "defaultConfiguration": "production"

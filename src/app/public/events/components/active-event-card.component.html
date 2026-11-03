@@ -1,0 +1,20 @@
+<article class="ev-active">
+  <div class="ev-active__media"><app-event-image [event]="event()" [lazy]="false" /></div>
+  <div class="ev-active__body">
+    <div><app-event-status-chip status="upcoming" /></div>
+    <h3>{{ event().name }}</h3>
+    @if (event().subtitle) { <p class="ev-subtitle">{{ event().subtitle }}</p> }
+    @if (event().summary) { <p class="ev-active__summary">{{ event().summary }}</p> }
+    <app-event-facts [event]="event()" [withPrice]="false" />
+    <p class="ev-active__price">
+      <strong>{{ priceText() }}</strong>
+      @if (priceNote()) { <span>{{ priceNote() }}</span> }
+    </p>
+    <div class="ev-active__actions">
+      @if (event().price) {
+        <a class="ev-btn ev-btn--gold" [routerLink]="['/eventos', event().slug]" fragment="reservar">Quiero ir</a>
+      }
+      <a class="ev-btn ev-btn--text" [routerLink]="['/eventos', event().slug]">Ver programa y detalles</a>
+    </div>
+  </div>
+</article>

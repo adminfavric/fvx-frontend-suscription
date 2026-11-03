@@ -1,0 +1,56 @@
+<div class="lita-events">
+  <div class="ev-container">
+    <nav class="ev-breadcrumb" aria-label="Migas"><a routerLink="/eventos">← Todos los eventos</a></nav>
+
+    @if (event(); as e) {
+      <header class="ev-detail-head" [class.ev-detail-head--past]="e.is_past">
+        <div class="ev-detail-head__media"><app-event-image [event]="e" [lazy]="false" /></div>
+        <div>
+          <app-event-status-chip [status]="e.is_past ? 'finished' : 'upcoming'" />
+          <h1>{{ e.name }}</h1>
+          @if (e.subtitle) { <p class="ev-subtitle">{{ e.subtitle }}</p> }
+          <app-event-facts [event]="e" />
+          @if (!e.is_past && e.price) {
+            <p class="ev-detail-head__cta">
+              <a class="ev-btn ev-btn--gold" [routerLink]="[]" fragment="reservar" (click)="scrollToBooking()">Quiero ir</a>
+            </p>
+          }
+        </div>
+      </header>
+
+      <div class="ev-detail-body">
+        @if (e.is_past) {
+          <aside class="ev-finished" aria-label="Encuentro finalizado">
+            <app-event-finished-notice [event]="e" [next]="next()" />
+          </aside>
+        } @else {
+          <aside class="ev-booking" id="reservar" aria-labelledby="booking-title">
+            <app-event-booking-card [event]="e" />
+          </aside>
+        }
+
+        @if (e.audience || paragraphs().length) {
+          <section class="ev-block">
+            <h2>Sobre el encuentro</h2>
+            @if (e.audience) { <p class="ev-audience">{{ e.audience }}</p> }
+            @for (paragraph of paragraphs(); track $index) { <p class="ev-description">{{ paragraph }}</p> }
+          </section>
+        }
+        @if (e.program?.length) {
+          <section class="ev-block">
+            <h2>{{ programTitle() }}</h2>
+            <app-event-program [items]="e.program!" />
+          </section>
+        }
+        @if (e.includes?.length) {
+          <section class="ev-block">
+            <h2>{{ e.is_past ? 'Incluía' : 'Incluye' }}</h2>
+            <app-event-includes [items]="e.includes!" />
+          </section>
+        }
+      </div>
+    } @else {
+      <p class="ev-loading" role="status">Cargando el encuentro…</p>
+    }
+  </div>
+</div>

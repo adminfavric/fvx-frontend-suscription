@@ -1,0 +1,5 @@
+@if (event().image_url) {
+  <img class="ev-image" [src]="event().image_url" [alt]="altText()" [attr.loading]="lazy() ? 'lazy' : null" />
+} @else {
+  <span class="ev-image ev-image--icon" aria-hidden="true"><mat-icon>{{ event().icon || 'celebration' }}</mat-icon></span>
+}

@@ -27,7 +27,10 @@ import { FooterComponent } from '../components/footer/footer.component';
     /* overflow-x: hidden contiene el sitio público en móvil (evita scroll
        horizontal por elementos a 100vw/videos). Scoped al layout público: no
        afecta el admin ni los overlays. */
-    :host { display: block; min-height: 100vh; background: var(--color-bg); overflow-x: hidden; }
+    /* clip (no hidden) para que funcione position: sticky adentro (la reserva de
+       /eventos/:slug): hidden convierte al :host en contenedor de scroll y el
+       sticky deja de pegarse. hidden queda de respaldo para navegadores viejos. */
+    :host { display: block; min-height: 100vh; background: var(--color-bg); overflow-x: hidden; overflow-x: clip; }
     .public-content--offset { padding-top: 88px; }
     @media (max-width: 768px) { .public-content--offset { padding-top: 70px; } }
   `],

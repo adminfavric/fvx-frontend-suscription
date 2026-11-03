@@ -45,6 +45,8 @@ export interface EventInterestForm {
   eventName: string;
   eventSlug: string;
   price: number | null;
+  /** Pidió alojamiento; `null` si el evento no lo ofrece. */
+  lodging: boolean | null;
 }
 
 type LeadKind = 'newsletter' | 'contact' | 'maraton';
@@ -87,18 +89,25 @@ export class FirebaseService {
    * directa — NO pasa por Flow ni ninguna pasarela. Solo deja el contacto en
    * la bandeja de mensajes (Lead, kind="maraton") para que el equipo escriba
    * por correo y coordine la transferencia a mano.
+   *
+   * A diferencia de los otros formularios, los errores NO se tragan: el
+   * formulario tiene que avisar si no quedó registrado, y el backend responde
+   * `400 {error: "evento_finalizado"}` si el evento ya ocurrió.
    */
   saveEventInterest(data: EventInterestForm): Observable<void> {
     const priceTxt = data.price ? `$${data.price.toLocaleString('es-CL')} CLP` : 'valor por confirmar';
-    return this.post(
-      'maraton',
-      {
-        name: data.name,
-        email: data.email.toLowerCase().trim(),
-        subject: data.eventName,
-        message: `Quiere reservar cupo para "${data.eventName}" (${priceTxt}). Contactar por correo para coordinar la transferencia.`,
-      },
-      'eventos',
-    );
+    const lodgingTxt = data.lodging ? ' Alojamiento: sí.' : '';
+    const payload = {
+      kind: 'maraton' as LeadKind,
+      source: 'eventos',
+      name: data.name,
+      email: data.email.toLowerCase().trim(),
+      subject: data.eventName,
+      message: `Quiere reservar cupo para "${data.eventName}" (${priceTxt}).${lodgingTxt} Contactar por correo para coordinar la transferencia.`,
+      event_slug: data.eventSlug,
+      lodging: data.lodging,
+    };
+    return this.http.post(this.endpoint, payload).pipe(map(() => void 0));
   }
+
 }

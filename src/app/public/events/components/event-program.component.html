@@ -1,0 +1,11 @@
+<ol class="ev-program">
+  @for (item of items(); track $index) {
+    <li [class.ev-program__highlight]="item.highlight">
+      @if (item.start) {
+        <span class="ev-program__time">{{ item.start }}@if (item.end) { – {{ item.end }} }</span>
+      }
+      <strong>{{ item.title }}</strong>
+      @if (item.detail) { <span class="ev-program__detail">{{ item.detail }}</span> }
+    </li>
+  }
+</ol>

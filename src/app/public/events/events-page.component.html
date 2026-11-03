@@ -1,0 +1,27 @@
+<div class="lita-events">
+  <header class="ev-hero">
+    <p class="ev-eyebrow">Eventos especiales</p>
+    <h1>Talleres y encuentros únicos</h1>
+    <p>Experiencias que ocurren una sola vez. Reserva tu cupo aquí.</p>
+  </header>
+
+  <div class="ev-container">
+    <section class="ev-section" aria-labelledby="upcoming-title">
+      <h2 class="ev-section__title" id="upcoming-title">Próximos encuentros</h2>
+      @for (event of upcoming(); track event.slug) {
+        <app-active-event-card [event]="event" />
+      } @empty {
+        @if (loaded()) { <p class="ev-empty">Pronto anunciaremos nuevos encuentros.</p> }
+      }
+    </section>
+
+    @if (past().length) {
+      <section class="ev-section ev-section--last" aria-labelledby="past-title">
+        <h2 class="ev-section__title" id="past-title">Encuentros anteriores <small>Así fueron</small></h2>
+        <div class="ev-past-list">
+          @for (event of past(); track event.slug) { <app-past-event-card [event]="event" /> }
+        </div>
+      </section>
+    }
+  </div>
+</div>

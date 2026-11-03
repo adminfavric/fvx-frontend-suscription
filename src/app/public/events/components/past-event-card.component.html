@@ -1,0 +1,9 @@
+<a class="ev-past" [routerLink]="['/eventos', event().slug]">
+  <app-event-image [event]="event()" [decorative]="true" />
+  <div class="ev-past__text">
+    <app-event-status-chip status="finished" />
+    <h3>{{ event().name }}</h3>
+    <p>{{ meta() }}</p>
+  </div>
+  <span class="ev-past__see" aria-hidden="true">Ver</span>
+</a>

@@ -20,6 +20,7 @@ import { isHttpError } from '../../../core/http/http-error';
 import { FileUploaderComponent } from '../file-uploader/file-uploader.component';
 import type { FileUploadResult } from '../file-uploader/providers/file-upload-provider';
 import { DatePickerComponent } from '../date-picker/date-picker.component';
+import { RowsEditorComponent } from '../rows-editor/rows-editor.component';
 
 export interface EntityFormDialogData {
   title: string;
@@ -63,6 +64,7 @@ function getAtPath(obj: Record<string, unknown> | null | undefined, path: string
   imports: [
     CommonModule,
     NgComponentOutlet,
+    RowsEditorComponent,
     ReactiveFormsModule,
     MatDialogModule,
     MatFormFieldModule,
@@ -209,6 +211,14 @@ function getAtPath(obj: Record<string, unknown> | null | undefined, path: string
                   buttonLabel="Subir archivo"
                   (uploaded)="onImageUploaded(field.key, $event)">
                 </app-file-uploader>
+                @if (field.hint) { <span class="field-hint">{{ field.hint }}</span> }
+              </div>
+            }
+            @case ('rows') {
+              <div class="field-wrapper" [style.grid-column]="isMobile ? '' : (field.colspan ? 'span ' + field.colspan : '')">
+                <span class="field-label">@if (field.labelKey) { {{ field.labelKey | transloco }} } @else { {{ field.label }} }@if (field.info) { <mat-icon class="field-info" [matTooltip]="field.info" matTooltipPosition="above" matTooltipClass="field-info-tip">info_outline</mat-icon> }</span>
+                <app-rows-editor [columns]="field.rowColumns || []" [addLabel]="field.addLabel || 'Agregar fila'"
+                                 [placeholder]="field.placeholder || ''" [formControlName]="field.key"></app-rows-editor>
                 @if (field.hint) { <span class="field-hint">{{ field.hint }}</span> }
               </div>
             }
@@ -483,6 +493,10 @@ export class EntityFormDialogComponent implements OnInit {
       // (p. ej. ``plan`` vía initialFrom) en un array.
       if (field.type === 'multiselect') {
         value = Array.isArray(value) ? value : (value !== '' && value != null ? [value] : []);
+      }
+      // rows: lista (de filas o de textos); nunca '' ni null.
+      if (field.type === 'rows') {
+        value = Array.isArray(value) ? value : [];
       }
       const validators = [];
       if (field.required) validators.push(Validators.required);

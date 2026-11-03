@@ -1,0 +1,32 @@
+<div class="rows">
+  @for (row of rows; track $index; let i = $index; let first = $first; let last = $last) {
+    <div class="row" [class.row--text]="isTextList">
+      @if (isTextList) {
+        <input class="cell cell--grow" [ngModel]="row['text']" (ngModelChange)="update(i, 'text', $event)"
+               [placeholder]="placeholder" [disabled]="disabled" [attr.aria-label]="placeholder || 'Texto'" />
+      } @else {
+        @for (col of columns; track col.key) {
+          @if (col.type === 'boolean') {
+            <mat-checkbox class="cell cell--check" [ngModel]="row[col.key]" (ngModelChange)="update(i, col.key, $event)"
+                          [disabled]="disabled">{{ col.label }}</mat-checkbox>
+          } @else {
+            <input class="cell" [style.flex]="flexOf(col)" [ngModel]="row[col.key]"
+                   (ngModelChange)="update(i, col.key, $event)" [placeholder]="col.label" [attr.aria-label]="col.label"
+                   [disabled]="disabled" />
+          }
+        }
+      }
+      <div class="row__actions">
+        <button mat-icon-button type="button" (click)="move(i, -1)" [disabled]="disabled || first" matTooltip="Subir"
+                aria-label="Subir fila"><mat-icon>arrow_upward</mat-icon></button>
+        <button mat-icon-button type="button" (click)="move(i, 1)" [disabled]="disabled || last" matTooltip="Bajar"
+                aria-label="Bajar fila"><mat-icon>arrow_downward</mat-icon></button>
+        <button mat-icon-button type="button" (click)="remove(i)" [disabled]="disabled" matTooltip="Quitar"
+                aria-label="Quitar fila"><mat-icon>delete_outline</mat-icon></button>
+      </div>
+    </div>
+  }
+  <button mat-stroked-button type="button" class="rows__add" (click)="add()" [disabled]="disabled">
+    <mat-icon>add</mat-icon> {{ addLabel }}
+  </button>
+</div>

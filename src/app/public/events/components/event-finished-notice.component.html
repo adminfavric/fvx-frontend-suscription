@@ -1,0 +1,18 @@
+<p><strong>Este encuentro ya ocurrió</strong>{{ dateText() }}. Gracias a todas las que vinieron.</p>
+@if (next(); as nextEvent) {
+  <a class="ev-mini-next" [routerLink]="['/eventos', nextEvent.slug]">
+    <app-event-image [event]="nextEvent" [decorative]="true" />
+    <div>
+      <app-event-status-chip status="upcoming" [compact]="true" />
+      <strong>{{ nextTitle() }}</strong>
+      <span>{{ nextMeta() }}</span>
+    </div>
+  </a>
+  <p class="ev-finished__action">
+    <a class="ev-btn ev-btn--gold ev-btn--block" [routerLink]="['/eventos', nextEvent.slug]">Ver el próximo encuentro</a>
+  </p>
+} @else {
+  <p class="ev-finished__action">
+    <a class="ev-btn ev-btn--outline ev-btn--block" routerLink="/eventos">Ver todos los encuentros</a>
+  </p>
+}

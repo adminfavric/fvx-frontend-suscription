@@ -180,7 +180,14 @@ export const routes: Routes = [
       {
         path: 'eventos',
         title: 'Eventos',
-        loadComponent: () => import('./public/events/events.component').then(m => m.EventsComponent),
+        loadComponent: () => import('./public/events/events-page.component').then(m => m.EventsPageComponent),
+      },
+      {
+        // Detalle compartible por WhatsApp; el título lo pone la página con el nombre del evento.
+        path: 'eventos/:slug',
+        title: 'Eventos',
+        loadComponent: () =>
+          import('./public/events/event-detail-page.component').then(m => m.EventDetailPageComponent),
       },
       {
         path: 'viajes',

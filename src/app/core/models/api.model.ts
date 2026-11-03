@@ -18,12 +18,25 @@ export interface TokenResponse {
   refresh: string;
 }
 
+/** Una columna del editor de filas (`FieldConfig.type === 'rows'`). */
+export interface RowColumn {
+  key: string;
+  label: string;
+  type?: 'text' | 'boolean';
+  /** Ancho relativo dentro de la fila (flex-grow). */
+  flex?: number;
+}
+
 export interface FieldConfig {
   key: string;
   /** i18n key (Transloco); if set, overrides `label` in UI. */
   labelKey?: string;
   label: string;
-  type: 'text' | 'number' | 'email' | 'select' | 'multiselect' | 'textarea' | 'boolean' | 'date' | 'datetime' | 'password' | 'autocomplete' | 'image' | 'file';
+  type: 'text' | 'number' | 'email' | 'select' | 'multiselect' | 'textarea' | 'boolean' | 'date' | 'datetime' | 'password' | 'autocomplete' | 'image' | 'file' | 'rows';
+  /** Para type 'rows': columnas de cada fila. Sin columnas = lista de textos. */
+  rowColumns?: RowColumn[];
+  /** Para type 'rows': texto del botón para agregar una fila. */
+  addLabel?: string;
   /** Para type 'file'/'image': filtro de tipos aceptados (atributo accept del input). */
   accept?: string;
   /**
