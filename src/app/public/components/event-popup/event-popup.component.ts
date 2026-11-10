@@ -28,11 +28,11 @@ interface Campaign {
 }
 
 const STATIC_CAMPAIGN: Campaign | null = {
-  video: '/assets/campaigns/congreso-reel.mp4',
-  poster: '/assets/campaigns/congreso-reel-poster.jpg',
-  fallbackImage: '/assets/campaigns/congreso-transpersonal.jpg',
-  alt: 'Primer Congreso Internacional de Medicina y Psicología Transpersonal — 8 de noviembre',
-  href: 'https://www.ticketmaster.cl/event/primer-congreso-internacional-de-medicina-y-psicologa-transpersonal-metropolitan-santiago',
+  video: '/assets/campaigns/un-dia-con-lita-reel.mp4',
+  poster: '/assets/campaigns/un-dia-con-lita-reel-poster.jpg',
+  fallbackImage: '/assets/campaigns/un-dia-con-lita-reel-poster.jpg',
+  alt: 'Un día con Lita — La edad de oro de la mujer Alkymista, 28 de noviembre',
+  href: '/eventos/un-dia-con-lita-la-edad-de-oro-de-la-mujer-alkymista',
 };
 
 /**
@@ -53,7 +53,7 @@ const STATIC_CAMPAIGN: Campaign | null = {
           <button class="popup-close" type="button" (click)="dismiss()" aria-label="Cerrar">
             <mat-icon>close</mat-icon>
           </button>
-          <a [href]="c.href" target="_blank" rel="noopener" (click)="dismiss()">
+          <a [routerLink]="c.href" (click)="dismiss()">
             @if (c.video) {
               <!-- [muted] como PROPIEDAD: el atributo solo no deja la propiedad en true en
                    Angular y el navegador bloqueaba el autoplay (quedaba el cuadro de estrellas). -->
